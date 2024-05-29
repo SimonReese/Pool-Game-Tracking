@@ -10,5 +10,5 @@ int main(int argc, char* argv[]){
     
     cv::Mat testImage = cv::imread(PATH_TEST_IMAGE);
     cv::imshow("Test Image", testImage);
-    cv::waitKey(5);
+    cv::waitKey(5000);
 }
