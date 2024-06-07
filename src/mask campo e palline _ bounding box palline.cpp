@@ -12,6 +12,12 @@ void my_HSV_callback2(int event, int x, int y, int flags, void* userdata){
     if(event == cv::EVENT_LBUTTONDOWN){
         cv::Mat image = *(cv::Mat*) userdata;
 
+        cv::Mat less_blur_image = image.clone();
+
+        cv::GaussianBlur(less_blur_image,less_blur_image,cv::Size(3,3),0,0); // used to find balls later on
+
+        cv::GaussianBlur(image,image,cv::Size(7,7),0,0); // used to find field mask
+
         // takes central pixel of the image
         x = image.size().width/2;
         y = image.size().height/2;
@@ -46,9 +52,9 @@ void my_HSV_callback2(int event, int x, int y, int flags, void* userdata){
         }
         cv::Vec3b mean_color(h/k,s/k,v/k);
         
-        uchar h_threshold = 35;
-        uchar s_threshold = 60;  //parameters were obtained by various manual tries
-        uchar v_threshold = 255;
+        uchar h_threshold = 9;
+        uchar s_threshold = 130;  //parameters were obtained by various manual tries
+        uchar v_threshold = 135;
         cv::Mat mask(image.size().height,image.size().width,CV_8U);
         uchar h_low,s_low,v_low,h_high,s_high,v_high;
 
@@ -79,55 +85,51 @@ void my_HSV_callback2(int event, int x, int y, int flags, void* userdata){
             
         }
 
-        // region grow algorithm to find a mask to help find balls later, 
+        // region grow algorithm to find a mask to help find balls later, NOT USED ANYMORE!!!
 
-        vector<pair<int, int>> seed_set; // Stores the seeds
-        seed_set.push_back(pair<int, int>(x, y)); //center of image
+        // vector<pair<int, int>> seed_set; // Stores the seeds
+        // seed_set.push_back(pair<int, int>(x, y)); //center of image
+        // vector<cv::Mat> channels;
+        // cv::split(image,channels);
 
-        cv::Mat visited_matrix_h = cv::Mat::zeros(image.size().height,image.size().width,CV_8UC1);
-        cv::Mat hsv_image_help(image.size().height,image.size().width,CV_8UC3);
-        cv::cvtColor(image,hsv_image_help,cv::COLOR_BGR2HSV);
-        vector<cv::Mat> channels;
-        cv::split(hsv_image_help,channels);
+        // cv::Mat visited_matrix_v = cv::Mat::zeros(image.size().height,image.size().width,CV_8UC1);
 
-        cv::Mat visited_matrix_v = cv::Mat::zeros(image.size().height,image.size().width,CV_8UC1);
-
-        while ( ! seed_set.empty() ){
-            // Get a point from the list
-            pair<int, int> this_point = seed_set.back();
-            seed_set.pop_back();
+        // while ( ! seed_set.empty() ){
+        //     // Get a point from the list
+        //     pair<int, int> this_point = seed_set.back();
+        //     seed_set.pop_back();
             
-            int x = this_point.first;
-            int y = this_point.second;
-            unsigned char pixel_value = channels[2].at<unsigned char>(cv::Point(x,y));
+        //     int x = this_point.first;
+        //     int y = this_point.second;
+        //     unsigned char pixel_value = channels[2].at<unsigned char>(cv::Point(x,y));
                                                                                                                                 
-            // Visit the point
-            visited_matrix_v.at<unsigned char>(cv::Point(x, y)) = 255;
+        //     // Visit the point
+        //     visited_matrix_v.at<unsigned char>(cv::Point(x, y)) = 255;
 
-            // for each neighbour of this_point
-            for (int j = y - 1; j <= y + 1; ++j)
-            {
-                // vertical index is valid
-                if (0 <= j && j < channels[2].rows)
-                {
-                    for (int i = x - 1; i <= x + 1; ++i)
-                    {
-                        // hozirontal index is valid
-                        if (0 <= i && i < channels[2].cols)
-                        {
-                            unsigned char neighbour_value = channels[2].at<unsigned char>(cv::Point(i, j));
-                            unsigned char neighbour_visited = visited_matrix_v.at<unsigned char>(cv::Point(i, j));
+        //     // for each neighbour of this_point
+        //     for (int j = y - 1; j <= y + 1; ++j)
+        //     {
+        //         // vertical index is valid
+        //         if (0 <= j && j < channels[2].rows)
+        //         {
+        //             for (int i = x - 1; i <= x + 1; ++i)
+        //             {
+        //                 // hozirontal index is valid
+        //                 if (0 <= i && i < channels[2].cols)
+        //                 {
+        //                     unsigned char neighbour_value = channels[2].at<unsigned char>(cv::Point(i, j));
+        //                     unsigned char neighbour_visited = visited_matrix_v.at<unsigned char>(cv::Point(i, j));
                             
-                            if (!neighbour_visited &&
-                                fabs(neighbour_value - pixel_value) <= (0.9 / 100.0 * 255.0)) // neighbour is similar to this_point
-                            {
-                                seed_set.push_back(pair<int, int>(i, j));
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        //                     if (!neighbour_visited &&
+        //                         fabs(neighbour_value - pixel_value) <= (1.5 / 100.0 * 255.0)) // neighbour is similar to this_point
+        //                     {
+        //                         seed_set.push_back(pair<int, int>(i, j));
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
 
         // evaluates the contour of the field
         cv::Mat field_contour(image.size().height,image.size().width,CV_8U);
@@ -193,22 +195,13 @@ void my_HSV_callback2(int event, int x, int y, int flags, void* userdata){
 
         /* NEED TO WRITE CODE TO FIND CORNER POINTS FROM INTERSECTION OF 4 LINES --> USE HARRIS CORNER DETECTOR OR SOMETHING SIMILAR*/
 
-        cv::Mat only_table_image = image.clone();
+        cv::Mat only_table_image = less_blur_image.clone();
 
         //removes everything from the initial image apart from the pixels defined by the mask that segments the field
         for (int i = 0; i < mask.size().height; i++){
             for (int j = 0; j < mask.size().width; j++){
                 if( field_contour.at<uchar>(i,j) == 0){
                     only_table_image.at<cv::Vec3b>(i,j) = cv::Vec3b(0,0,0);
-                }
-            }
-        }
-
-        // colors all the pixels under the mask found with region grow algorithm with a fucsia color to try to help finding the balls better later
-        for (int i = 0; i < visited_matrix_v.size().height; i++){
-            for (int j = 0; j < visited_matrix_v.size().width; j++){
-                if( visited_matrix_v.at<uchar>(i,j) == 255){
-                    only_table_image.at<cv::Vec3b>(i,j) = cv::Vec3b(150,255,255);
                 }
             }
         }
@@ -220,12 +213,28 @@ void my_HSV_callback2(int event, int x, int y, int flags, void* userdata){
         //find the circles around the balls --> parameters of hough_circles found after some manual testing to find a trade-off between all initial frames of the 10 clips
         vector<cv::Mat> channels_masked_table;
         cv::split(only_table_image,channels_masked_table);
-        cv::cvtColor(only_table_image,only_table_image,cv::COLOR_HSV2BGR);
         ///
-        cv::Mat exit1(image.size().height,image.size().width,CV_8UC3); // MMat that contains circles that will be used to find bounding boxes
+        cv::Mat exit1(image.size().height,image.size().width,CV_8UC3); // Mat that contains circles that will be used to find bounding boxes
         ///
         vector<cv::Vec3f> circles;
-        HoughCircles(channels_masked_table[1], circles, cv::HOUGH_GRADIENT, 1.253, channels_masked_table[1].rows/27, 180, 17, 6, 16);
+        HoughCircles(channels_masked_table[1], circles, cv::HOUGH_GRADIENT, 1.253, channels_masked_table[1].rows/28, 150, 13.5, 6, 15);
+
+
+        //////
+        uchar h_thr = 5;
+        uchar s_thr = 2;  //parameters were obtained by various manual tries
+        uchar v_thr = 2;
+        uchar h_l,s_l,v_l,h_h,s_h,v_h;
+
+        h_l = (mean_color[0]-h_thr < 0) ? 0 : mean_color[0]-h_thr;
+        h_h = (mean_color[0]+h_thr > 179) ? 179 : mean_color[0]+h_thr;
+
+        s_l = (mean_color[1]-s_thr < 0) ? 0 : mean_color[1]-s_thr;
+        s_h = (mean_color[1]+s_thr > 255) ? 255 : mean_color[1]+s_thr;
+
+        v_l = (mean_color[2]-v_thr < 0) ? 0 : mean_color[2]-v_thr;
+        v_h = (mean_color[2]+v_thr > 255) ? 255 : mean_color[2]+v_thr;
+        //////
 
 
         //draws the circles around the balls
@@ -233,7 +242,14 @@ void my_HSV_callback2(int event, int x, int y, int flags, void* userdata){
             cv::Vec3i c = circles[i];
             cv::Point center = cv::Point(c[0], c[1]);
             int radius = c[2];
-            cv::circle( exit1, center, radius, cv::Scalar(122, 255, 20), 1, cv::LINE_AA);
+            // if(image.at<cv::Vec3b>(c[0], c[1])[0] < h_l || image.at<cv::Vec3b>(c[0], c[1])[0] > h_h){
+            //     }else if(image.at<cv::Vec3b>(c[0], c[1])[1] < s_l || image.at<cv::Vec3b>(c[0], c[1])[1] > s_h){
+            //     }else if(image.at<cv::Vec3b>(c[0], c[1])[2] < v_l || image.at<cv::Vec3b>(c[0], c[1])[2] > v_h){
+            //     }else{
+                    cv::circle( exit1, center, radius, cv::Scalar(122, 255, 20), 1, cv::LINE_AA);
+                    cv::circle( only_table_image, center, radius, cv::Scalar(122, 255, 20), 1, cv::LINE_AA);
+                // }
+            
         }
 
         // NEED TO WRITE CODE TO ERASE ALL THE OUTLIERS CIRCLES BEFORE DRAWING THEM --> COULD BE USEFUL TO LOOK AT COLORS INFORMATIONS
@@ -266,14 +282,17 @@ void my_HSV_callback2(int event, int x, int y, int flags, void* userdata){
             rectangle( exit1, boundRect[i].tl(), boundRect[i].br(), cv::Scalar(0,255,0), 1 );
         }
 
-        // cv::namedWindow("mask display");
-        // cv::imshow("mask display", mask);
+        cv::namedWindow("mask display");
+        cv::imshow("mask display", mask);
         // cv::namedWindow("edges display");
         // cv::imshow("edges display", edges);
-        // cv::namedWindow("field display");
-        // cv::imshow("field display", field_contour);
+        cv::namedWindow("field display");
+        cv::imshow("field display", field_contour);
+        // cv::namedWindow("cropped field display");
+        // cv::imshow("cropped field display", exit1);
         cv::namedWindow("cropped field display");
-        cv::imshow("cropped field display", exit1);
+        cv::cvtColor(only_table_image,only_table_image,cv::COLOR_HSV2BGR);
+        cv::imshow("cropped field display", only_table_image);
 
 
     }
@@ -282,9 +301,9 @@ void my_HSV_callback2(int event, int x, int y, int flags, void* userdata){
 
 int main(int argc, char** argv)
 {
-    cv::Mat image = cv::imread("C:/Users/Alebo/Desktop/Dataset-20240529T161618Z-001/game1_clip1/frames/frame_first.png");
+    cv::Mat image = cv::imread("C:/Users/Alebo/Desktop/Dataset-20240529T161618Z-001/game4_clip1/frames/frame_first.png");
     cv::Mat image2;
-    cv::Mat image3 = cv::imread("C:/Users/Alebo/Desktop/Dataset-20240529T161618Z-001/game1_clip2/frames/frame_first.png");
+    cv::Mat image3 = cv::imread("C:/Users/Alebo/Desktop/Dataset-20240529T161618Z-001/game4_clip2/frames/frame_first.png");
     cv::Mat image4;
     cv::cvtColor(image,image2,cv::COLOR_BGR2HSV);
     cv::cvtColor(image3,image4,cv::COLOR_BGR2HSV);
@@ -302,4 +321,4 @@ int main(int argc, char** argv)
 
 // ONLY 1 MISSING BALL!!!
 // game 4 frame 2 green ball is not detected
-// not all circles are perfectly centered on the balls
+// circles are more or less centered on the balls
