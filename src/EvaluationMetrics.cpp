@@ -39,12 +39,15 @@ double EvaluationMetrics::computeIntersectionOverUnion(const std::vector<int>& f
     int width = Dx - Ax;
     int height = Dy - Ay;
 
+    std::cout << "Sizes: " << width << "x" << height << std::endl;
+
     // Compute intersection area
     double intersection = width * height;
+    std::cout << "Intersection: " << intersection << std::endl; 
 
     // Compute union area
     double un_ion = (w1*h1) + (w2*h2);
-    
+    std::cout << "Union: " << intersection << std::endl;
     // Return IoU
     return intersection / un_ion;
 }
@@ -67,6 +70,8 @@ std::vector<std::vector<int> > EvaluationMetrics::readBoundingBoxFile(std::strin
         std::vector<int> boundingBox;
         // Unpack line
         boundingBoxFile >> x >> y >> w >> h >> cls;
+        // Discard newline
+        boundingBoxFile.ignore();
         // Append elements in vector
         boundingBox.insert(boundingBox.end(), { x, y, w, h, cls });
 
@@ -85,6 +90,7 @@ double EvaluationMetrics::evaluateBoundingBoxes(std::string trueFile, std::strin
 
     // Find how many boxes we predicted
     int boxes = predictedBoudingBoxes.size();
+    std::cout << "Found " << boxes << " predictions" << std::endl;
     // Mean score
     double meanScore = 0;
     // Match each prediction against all groud truth and keep the best
@@ -92,7 +98,9 @@ double EvaluationMetrics::evaluateBoundingBoxes(std::string trueFile, std::strin
         double best_IoU = 0;
         for(std::vector<int> groundBox : trueBoudingBoxes){
             double IoU = computeIntersectionOverUnion(groundBox, boundingBox);
-            if (IoU > best_IoU) { best_IoU = IoU;}
+            std::cout<<"IoU was " << IoU;
+            if (IoU > best_IoU) { best_IoU = IoU; std::cout << " keeped" << std::endl;}
+            std::cout << std::endl;
         }
         meanScore += best_IoU;
     }

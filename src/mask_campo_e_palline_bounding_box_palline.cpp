@@ -9,6 +9,9 @@
 
 using namespace std;
 
+std::string OUTPUT_DATASET = "../res/predictions";
+std::string OUTPUT_CLIP = "/game1_clip1";
+
 void my_HSV_callback2(int event, int x, int y, int flags, void* userdata){
     if(event == cv::EVENT_LBUTTONDOWN){
         cv::Mat image = *(cv::Mat*) userdata;
@@ -438,18 +441,20 @@ int main(int argc, char* argv[])
     }
     std::string datasetPath = argv[1];
 
-    cv::Mat image = cv::imread( datasetPath + "/game4_clip1/frames/frame_first.png");
+    std::string clip_path = "/game1_clip1";
+
+    cv::Mat image = cv::imread( datasetPath + clip_path + "/frames/frame_first.png");
     cv::Mat image2;
-    cv::Mat image3 = cv::imread( datasetPath + "/game4_clip2/frames/frame_first.png");
+    cv::Mat image3 = cv::imread( datasetPath + clip_path + "/frames/frame_first.png");
     cv::Mat image4;
     cv::cvtColor(image,image2,cv::COLOR_BGR2HSV);
     cv::cvtColor(image3,image4,cv::COLOR_BGR2HSV);
     cv::namedWindow("hsv window");
     cv::imshow("hsv window",image);
     cv::setMouseCallback("hsv window", my_HSV_callback2, &image2);
-    cv::namedWindow("hsv window2");
-    cv::imshow("hsv window2",image3);
-    cv::setMouseCallback("hsv window2", my_HSV_callback2, &image4);
+    //cv::namedWindow("hsv window2");
+    //cv::imshow("hsv window2",image3);
+    //cv::setMouseCallback("hsv window2", my_HSV_callback2, &image4);
     cv::waitKey(0);
 
     return 0;
