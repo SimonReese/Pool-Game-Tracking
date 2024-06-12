@@ -3,40 +3,6 @@
 #include <iostream>
 #include "EvaluationMetrics.h"
 
-std::vector<std::vector<int>> EvaluationMetrics::readBoundingBoxFile(std::string filePath) const{
-
-    // Open file
-    std::ifstream boundingBoxFile(filePath);
-
-    // Check file is open
-    if (!boundingBoxFile.is_open()){
-        std::cerr << "Error. Could not open file " << filePath << std::endl;
-    }
-
-    // Vector of vectors representing the bounding boxes
-    std::vector<std::vector<int>> boundingBoxes;
-    // Properties of each bounding box (x, y) , width, height, class
-    int x, y, w, h, cls;
-    while(boundingBoxFile.peek() != EOF){
-        std::vector<int> boundingBox;
-        // Unpack line
-        boundingBoxFile >> x >> y >> w >> h >> cls;
-        // Append elements in vector
-        boundingBox.insert(boundingBox.end(), {x, y, w, h, cls});
-
-        // Append box to vector of boxes
-        boundingBoxes.push_back(boundingBox);
-    }
-
-    return boundingBoxes;
-}
-
-EvaluationMetrics::EvaluationMetrics(std::string groundTruthPath, std::string predictionPath)
-{
-    this->groundTruthPath = groundTruthPath;
-    this->groundTruthPath = predictionPath;
-}
-
 double EvaluationMetrics::computeIntersectionOverUnion(const std::vector<int>& firstBox, const std::vector<int>& secondBox) const{
     // Extract properties from vectors
     int x1, y1, w1 ,h1, class1;
@@ -83,6 +49,34 @@ double EvaluationMetrics::computeIntersectionOverUnion(const std::vector<int>& f
     return intersection / un_ion;
 }
 
+std::vector<std::vector<int>> EvaluationMetrics::readBoundingBoxFile(std::string filePath) const{
+
+    // Open file
+    std::ifstream boundingBoxFile(filePath);
+
+    // Check file is open
+    if (!boundingBoxFile.is_open()){
+        std::cerr << "Error. Could not open file " << filePath << std::endl;
+    }
+
+    // Vector of vectors representing the bounding boxes
+    std::vector<std::vector<int>> boundingBoxes;
+    // Properties of each bounding box (x, y) , width, height, class
+    int x, y, w, h, cls;
+    while(boundingBoxFile.peek() != EOF){
+        std::vector<int> boundingBox;
+        // Unpack line
+        boundingBoxFile >> x >> y >> w >> h >> cls;
+        // Append elements in vector
+        boundingBox.insert(boundingBox.end(), {x, y, w, h, cls});
+
+        // Append box to vector of boxes
+        boundingBoxes.push_back(boundingBox);
+    }
+
+    return boundingBoxes;
+}
+
 double EvaluationMetrics::evaluateBoundingBoxes(std::string trueFile, std::string predictedFile) const {
 
     // Create vectors to store files
@@ -106,3 +100,18 @@ double EvaluationMetrics::evaluateBoundingBoxes(std::string trueFile, std::strin
     meanScore /= boxes;
 
 }
+
+EvaluationMetrics::EvaluationMetrics(std::string groundTruthPath, std::string predictionPath)
+{
+    this->groundTruthPath = groundTruthPath;
+    this->groundTruthPath = predictionPath;
+}
+
+double EvaluationMetrics::meanIoUtwoFiles(std::string firstFile, std::string secondFile){
+
+    
+}
+
+
+
+
