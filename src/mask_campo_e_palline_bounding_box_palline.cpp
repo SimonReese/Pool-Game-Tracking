@@ -1,5 +1,6 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/core/utils/filesystem.hpp>
 #include <iostream>
 #include <fstream>
 
@@ -12,7 +13,7 @@ using namespace std;
 std::string OUTPUT_DATASET = "../res/predictions";
 std::string OUTPUT_CLIP = "/game1_clip1";
 
-void my_HSV_callback2(int event, int x, int y, int flags, void* userdata){
+void my_HSV_callback2(int event, int x, int y, int flags, void* userdata, std::string bboxFileName, std::string maskFileName){
     if(event == cv::EVENT_LBUTTONDOWN){
         cv::Mat image = *(cv::Mat*) userdata;
 
@@ -400,7 +401,7 @@ void my_HSV_callback2(int event, int x, int y, int flags, void* userdata){
             boundRect.push_back(rectHolder);
         }
 
-        std::ofstream outfile("bounding_box_output.txt");
+        std::ofstream outfile(bboxFileName);
 
         for( size_t i = 0; i < boundRect.size(); i++ ){
             //saves to file all the bounding boxes --> top left x coord top left y coord width height class=1 because classification is not implemented yet
@@ -427,20 +428,72 @@ void my_HSV_callback2(int event, int x, int y, int flags, void* userdata){
 
         cv::imshow("boh",exit1);
 
-        cv::imwrite("maschera.jpeg",field_contour); //salva mask del campo e palline --> background = 0 campo = 255 palline = 127
+        cv::imwrite(maskFileName,field_contour); //salva mask del campo e palline --> background = 0 campo = 255 palline = 127
 
 
     }
 }
 
+void my_HSV_callback2(int event, int x, int y, int flags, void* userdata){
+    my_HSV_callback2(event, x, y, flags, userdata, "bounding_box_output.txt", "maschera.jpeg");
+}
+
+std::vector<cv::String> listGameDirectories(std::string datasetPath){
+    std::vector<cv::String> files;
+    std::vector<cv::String> gameFolders;
+    cv::utils::fs::glob_relative(datasetPath, "", files, false, true);
+    for (cv::String file : files){
+        // Check if it is a directory
+        if (cv::utils::fs::isDirectory(datasetPath + "/" + file)){
+            gameFolders.push_back(file);
+        }
+    }
+
+    return gameFolders;
+}
+
+std::vector<cv::String> listFrames(std::string datasetPath, std::string gamePath, std::string frameFolderName){
+    std::vector<cv::String> frameFullNames;
+    std::string fullPath = datasetPath + "/" + gamePath + "/" + frameFolderName;
+    cv::utils::fs::glob_relative(fullPath, "", frameFullNames);
+    return frameFullNames;
+}
+
+const std::string FRAMES_DIR = "frames";
+const std::string BOX_DIR = "bounding_boxes";
+const std::string MASK_DIR = "masks";
 
 int main(int argc, char* argv[])
 {
-    if (argc < 2){
-        std::cout << "Please enter dataset path (usually in (root)/res/Dataset/)" << std::endl;
+    if (argc < 3){
+        std::cout << "Please enter dataset path (usually in (root)/res/Dataset/) and predictions path (usually in (root)/res/predictions/)" << std::endl;
     }
     std::string datasetPath = argv[1];
-
+    std::string predictionsPath = argv[2];
+    std::vector<cv::String> gameFolders = listGameDirectories(datasetPath);
+    for(cv::String game : gameFolders){
+        // Create folders for predictions
+        cv::utils::fs::createDirectories(predictionsPath + "/" + game + "/" + BOX_DIR);
+        cv::utils::fs::createDirectories(predictionsPath + "/" + game + "/" + MASK_DIR);
+        // Get all frames in game folder
+        std::vector<cv::String> frames = listFrames(datasetPath, game, FRAMES_DIR);
+        // For each frame
+        for (cv::String frame : frames){
+            // Open frame
+            std::string fullFramePath = datasetPath + "/" + game + "/" + "/" + FRAMES_DIR + "/" + frame;
+            cv::Mat image = cv::imread(fullFramePath);
+            cv::Mat imageHSV;
+            cv::cvtColor(image, imageHSV, cv::COLOR_BGR2HSV);
+            // Compute boundig box and mask file name
+            std::string bboxFileName = frame;
+            int index = bboxFileName.rfind(".");
+            bboxFileName = bboxFileName.erase(index, std::string::npos);
+            std::string maskFileName = bboxFileName;
+            bboxFileName = predictionsPath + "/" + game + "/" + BOX_DIR + "/" + bboxFileName + ".txt";
+            maskFileName = predictionsPath + "/" + game + "/" + MASK_DIR + "/" + maskFileName + ".png";
+            my_HSV_callback2(cv::EVENT_LBUTTONDOWN, 0, 0, 0, &imageHSV, bboxFileName, maskFileName);
+        }
+    }
     std::string clip_path = "/game1_clip1";
 
     cv::Mat image = cv::imread( datasetPath + clip_path + "/frames/frame_first.png");
