@@ -16,7 +16,7 @@ private:
     // Path to predicted mask containing predicted mask and bounding boxes
     std::string predictionsPath;
 
-    double computeIntersectionOverUnion(std::string groundTruth, std::string prediction);
+    double computeIntersectionOverUnion(const std::vector<int>& groundTruth, const std::vector<int>& prediction);
 
 public: 
     
