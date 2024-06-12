@@ -19,7 +19,7 @@ private:
     double computeIntersectionOverUnion(const std::vector<int>& groundTruth, const std::vector<int>& prediction) const;
 
     // Read a file of bounding boxes and return a vector of vectors eache representing a bounding box
-    std::vector<std::vector<int>> readBoundingBoxFile(std::string filePath) const;
+    std::vector<std::vector<int> > readBoundingBoxFile(std::string filePath) const;
 
     // Compute mean IoU between two files
     double evaluateBoundingBoxes(std::string trueFile, std::string predictedFile) const;

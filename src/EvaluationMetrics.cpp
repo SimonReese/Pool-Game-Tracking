@@ -49,7 +49,7 @@ double EvaluationMetrics::computeIntersectionOverUnion(const std::vector<int>& f
     return intersection / un_ion;
 }
 
-std::vector<std::vector<int>> EvaluationMetrics::readBoundingBoxFile(std::string filePath) const{
+std::vector<std::vector<int> > EvaluationMetrics::readBoundingBoxFile(std::string filePath) const{
 
     // Open file
     std::ifstream boundingBoxFile(filePath);
@@ -60,7 +60,7 @@ std::vector<std::vector<int>> EvaluationMetrics::readBoundingBoxFile(std::string
     }
 
     // Vector of vectors representing the bounding boxes
-    std::vector<std::vector<int>> boundingBoxes;
+    std::vector<std::vector<int> > boundingBoxes;
     // Properties of each bounding box (x, y) , width, height, class
     int x, y, w, h, cls;
     while(boundingBoxFile.peek() != EOF){
@@ -68,7 +68,7 @@ std::vector<std::vector<int>> EvaluationMetrics::readBoundingBoxFile(std::string
         // Unpack line
         boundingBoxFile >> x >> y >> w >> h >> cls;
         // Append elements in vector
-        boundingBox.insert(boundingBox.end(), {x, y, w, h, cls});
+        boundingBox.insert(boundingBox.end(), { x, y, w, h, cls });
 
         // Append box to vector of boxes
         boundingBoxes.push_back(boundingBox);
@@ -99,6 +99,7 @@ double EvaluationMetrics::evaluateBoundingBoxes(std::string trueFile, std::strin
     // Compute mean score
     meanScore /= boxes;
 
+    return meanScore;
 }
 
 EvaluationMetrics::EvaluationMetrics(std::string groundTruthPath, std::string predictionPath)
