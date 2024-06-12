@@ -1,6 +1,7 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <iostream>
+#include <fstream>
 
 #define X_VALUE 11
 #define Y_VALUE 11
@@ -13,6 +14,8 @@ void my_HSV_callback2(int event, int x, int y, int flags, void* userdata){
         cv::Mat image = *(cv::Mat*) userdata;
 
         cv::Mat less_blur_image = image.clone();
+
+        cv::Mat no_blur_image = image.clone();
 
         cv::GaussianBlur(less_blur_image,less_blur_image,cv::Size(3,3),0,0); // used to find balls later on
 
@@ -52,9 +55,9 @@ void my_HSV_callback2(int event, int x, int y, int flags, void* userdata){
         }
         cv::Vec3b mean_color(h/k,s/k,v/k);
         
-        uchar h_threshold = 9;
-        uchar s_threshold = 130;  //parameters were obtained by various manual tries
-        uchar v_threshold = 135;
+        uchar h_threshold = 14;
+        uchar s_threshold = 80;  //parameters were obtained by various manual tries
+        uchar v_threshold = 137;
         cv::Mat mask(image.size().height,image.size().width,CV_8U);
         uchar h_low,s_low,v_low,h_high,s_high,v_high;
 
@@ -84,52 +87,6 @@ void my_HSV_callback2(int event, int x, int y, int flags, void* userdata){
             }
             
         }
-
-        // region grow algorithm to find a mask to help find balls later, NOT USED ANYMORE!!!
-
-        // vector<pair<int, int>> seed_set; // Stores the seeds
-        // seed_set.push_back(pair<int, int>(x, y)); //center of image
-        // vector<cv::Mat> channels;
-        // cv::split(image,channels);
-
-        // cv::Mat visited_matrix_v = cv::Mat::zeros(image.size().height,image.size().width,CV_8UC1);
-
-        // while ( ! seed_set.empty() ){
-        //     // Get a point from the list
-        //     pair<int, int> this_point = seed_set.back();
-        //     seed_set.pop_back();
-            
-        //     int x = this_point.first;
-        //     int y = this_point.second;
-        //     unsigned char pixel_value = channels[2].at<unsigned char>(cv::Point(x,y));
-                                                                                                                                
-        //     // Visit the point
-        //     visited_matrix_v.at<unsigned char>(cv::Point(x, y)) = 255;
-
-        //     // for each neighbour of this_point
-        //     for (int j = y - 1; j <= y + 1; ++j)
-        //     {
-        //         // vertical index is valid
-        //         if (0 <= j && j < channels[2].rows)
-        //         {
-        //             for (int i = x - 1; i <= x + 1; ++i)
-        //             {
-        //                 // hozirontal index is valid
-        //                 if (0 <= i && i < channels[2].cols)
-        //                 {
-        //                     unsigned char neighbour_value = channels[2].at<unsigned char>(cv::Point(i, j));
-        //                     unsigned char neighbour_visited = visited_matrix_v.at<unsigned char>(cv::Point(i, j));
-                            
-        //                     if (!neighbour_visited &&
-        //                         fabs(neighbour_value - pixel_value) <= (1.5 / 100.0 * 255.0)) // neighbour is similar to this_point
-        //                     {
-        //                         seed_set.push_back(pair<int, int>(i, j));
-        //                     }
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
 
         // evaluates the contour of the field
         cv::Mat field_contour(image.size().height,image.size().width,CV_8U);
@@ -165,7 +122,7 @@ void my_HSV_callback2(int event, int x, int y, int flags, void* userdata){
 
         // finds the lines from the edges
         std::vector<cv::Vec2f> lines; // will hold the results of the detection
-        cv::HoughLines(edges, lines, 1, CV_PI/180, 100, 0, 0); // runs the actual detection
+        cv::HoughLines(edges, lines, 1.15, CV_PI/180, 125, 0, 0); // runs the actual detection
         std::vector<cv::Point2f> pts; //will contain only 2 lines points
         cv::Mat only_lines(image.size().height,image.size().width,CV_8U);
 
@@ -173,7 +130,7 @@ void my_HSV_callback2(int event, int x, int y, int flags, void* userdata){
         for(int i = 0; i < lines.size(); i++ ){
         float rho = lines[i][0], theta = lines[i][1];  
             for (int j = i+1; j < lines.size(); j++){
-                if((lines[j][0] <= rho+30.0) && (lines[j][0] >= rho-30.0)){
+                if((lines[j][0] <= rho+40.0) && (lines[j][0] >= rho-40.0)){
                     lines.erase(lines.begin()+j);
                     j--;
                 }
@@ -186,16 +143,102 @@ void my_HSV_callback2(int event, int x, int y, int flags, void* userdata){
             cv::Point2i pt1, pt2;
             double a = cos(theta), b = sin(theta);
             double x0 = a*rho, y0 = b*rho;
-            pt1.x = cvRound(x0 + 10000*(-b));
-            pt1.y = cvRound(y0 + 10000*(a));
-            pt2.x = cvRound(x0 - 10000*(-b));
-            pt2.y = cvRound(y0 - 10000*(a));
-            cv::line(only_lines, pt1, pt2, 128, 2, cv::LINE_AA);
+            pt1.x = cvRound(x0 + 15000*(-b));
+            pt1.y = cvRound(y0 + 15000*(a));
+            pt2.x = cvRound(x0 - 15000*(-b));
+            pt2.y = cvRound(y0 - 15000*(a));
+            cv::line(only_lines, pt1, pt2, 255, 1, cv::LINE_AA);
 	    }
 
         /* NEED TO WRITE CODE TO FIND CORNER POINTS FROM INTERSECTION OF 4 LINES --> USE HARRIS CORNER DETECTOR OR SOMETHING SIMILAR*/
+        /*Shi-Tomasi corner to find 4 points --> sort them as top_left, top_right, bottom_right, bottom_left*/
 
-        cv::Mat only_table_image = less_blur_image.clone();
+        vector<cv::Point2i> corners;
+        vector<cv::Point2i> sorted_corners;
+
+        cv::goodFeaturesToTrack(only_lines,corners, 4, 0.01, 10, cv::noArray(), 5);
+
+        int y_min1 = INT16_MAX, y_min2 = INT16_MAX;
+        int index1 = 0, index2 = 0, index3 = 0, index4 = 0;
+        int y_max1 = 0, y_max2= 0;
+
+        for (int i = 0; i < corners.size(); i++){
+            if(corners[i].y < y_min1 && corners[i].y < y_min2){
+                y_min2 = y_min1;
+                y_min1 = corners[i].y;
+                index2 = index1;
+                index1 = i;
+            }else if(corners[i].y >= y_min1 && corners[i].y <= y_min2){
+                y_min2 = corners[i].y;
+                index2 = i;
+            }
+
+            if(corners[i].y > y_max1 && corners[i].y > y_max2){
+                y_max2 = y_max1;
+                y_max1 = corners[i].y;
+                index3 = index4;
+                index4 = i;
+            }else if(corners[i].y <= y_max1 && corners[i].y >= y_max2){
+                y_max2 = corners[i].y;
+                index3 = i;
+            }
+        }
+        
+        if(corners[index1].x <= corners[index2].x){
+            sorted_corners.push_back(corners[index1]);
+            sorted_corners.push_back(corners[index2]);
+        }else{
+            sorted_corners.push_back(corners[index2]);
+            sorted_corners.push_back(corners[index1]);
+        }
+
+        if(corners[index4].x >= corners[index3].x){
+            sorted_corners.push_back(corners[index4]);
+            sorted_corners.push_back(corners[index3]);
+        }else{
+            sorted_corners.push_back(corners[index3]);
+            sorted_corners.push_back(corners[index4]);
+        }
+
+        cv::Mat boundaries(image.size(),CV_8U);
+
+        for (int i = 0; i < sorted_corners.size(); i++){
+            cv::line(boundaries,sorted_corners[i%sorted_corners.size()],sorted_corners[(i+1)%sorted_corners.size()],255,1);
+        }
+        
+        //////////
+
+        vector<vector<cv::Point>> boundaries_contours;
+        findContours( boundaries, boundaries_contours, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE );
+
+        double contour_max_area = 0;
+        for (int i = 0; i < boundaries_contours.size(); i++){
+            if(cv::contourArea(boundaries_contours[i]) > contour_max_area){  
+                contour_max_area = cv::contourArea(boundaries_contours[i]);
+            }
+        }
+
+        for (int i = 0; i < boundaries_contours.size(); i++){
+            if(cv::contourArea(boundaries_contours[i]) != contour_max_area){  
+                boundaries_contours.erase(boundaries_contours.begin()+i);
+                i--;
+            }
+        }
+        
+        
+        
+        vector<cv::Point> boundaries_contours_poly( boundaries_contours.size() );
+        
+        for( size_t i = 0; i < boundaries_contours.size(); i++ )
+        {
+            approxPolyDP( boundaries_contours[i], boundaries_contours_poly, 1, true );
+        }
+
+        //////////
+        
+        // fine corner find and sort
+
+        cv::Mat only_table_image = no_blur_image.clone();
 
         //removes everything from the initial image apart from the pixels defined by the mask that segments the field
         for (int i = 0; i < mask.size().height; i++){
@@ -206,6 +249,7 @@ void my_HSV_callback2(int event, int x, int y, int flags, void* userdata){
             }
         }
 
+        
         /* DRAWING CIRCLES AROUND BALLS, BALLS ARE NOT PERFECTLY CIRCLED BUT GIVES A REALLY GOOD APPROXIMATION */
         /* OUT OF ALL THE BALLS IN THE INITIAL FRAMES, ONLY 1 BALL IS NOT DETECTED AT ALL */
         /* IT DETECTED ALSO SOME OUTLIERS THAT NEEDS TO BE REMOVED IN SOME WAY */
@@ -217,40 +261,102 @@ void my_HSV_callback2(int event, int x, int y, int flags, void* userdata){
         cv::Mat exit1(image.size().height,image.size().width,CV_8UC3); // Mat that contains circles that will be used to find bounding boxes
         ///
         vector<cv::Vec3f> circles;
-        HoughCircles(channels_masked_table[1], circles, cv::HOUGH_GRADIENT, 1.253, channels_masked_table[1].rows/28, 150, 13.5, 6, 15);
+        HoughCircles(channels_masked_table[1], circles, cv::HOUGH_GRADIENT, 1.2, channels_masked_table[1].rows/27, 160, 14.5, 6, 13);
 
+        //////////
+
+        // takes all pixels colors in a kernel of size 11x11 centered on the center of the image
+        vector<cv::Vec3b> vec2;
+        for (int i = y-Y_VALUE/2; i <= y+Y_VALUE/2 && i < no_blur_image.size().height; i++)
+        {
+            for (int j = x-X_VALUE/2; j <= x+X_VALUE/2 && j < no_blur_image.size().width; j++)
+            {
+                if(i < 0 || j < 0){
+                    continue;
+                }else{
+                    vec2.push_back(no_blur_image.at<cv::Vec3b>(i,j));
+                }
+            }
+            
+        }
+        
+        /*MASK1 FIELD CONTOUR*/ 
+        //evaluates average value for h,s,v and range of value to consider to form the mask
+        uint32_t h2 = 0;
+        uint32_t s2 = 0;
+        uint32_t v2 = 0;
+        uchar k2 = 0;
+        for (k2; k2 < vec2.size(); k2++)
+        {
+            h2 = h2 + (uint32_t)(vec[k2].val[0]);
+            s2 = s2 + (uint32_t)(vec[k2].val[1]);
+            v2 = v2 + (uint32_t)(vec[k2].val[2]); 
+        }
+        cv::Vec3b mean_color2(h2/k2,s2/k2,v2/k2);
+
+
+        /////////
 
         //////
-        uchar h_thr = 5;
-        uchar s_thr = 2;  //parameters were obtained by various manual tries
-        uchar v_thr = 2;
+        uchar h_thr = 4;
+        uchar s_thr = 80;  //parameters were obtained by various manual tries 
+        uchar v_thr = 60;
         uchar h_l,s_l,v_l,h_h,s_h,v_h;
 
-        h_l = (mean_color[0]-h_thr < 0) ? 0 : mean_color[0]-h_thr;
-        h_h = (mean_color[0]+h_thr > 179) ? 179 : mean_color[0]+h_thr;
+        h_l = (mean_color2[0]-h_thr < 0) ? 0 : mean_color2[0]-h_thr;
+        h_h = (mean_color2[0]+h_thr > 179) ? 179 : mean_color2[0]+h_thr;
 
-        s_l = (mean_color[1]-s_thr < 0) ? 0 : mean_color[1]-s_thr;
-        s_h = (mean_color[1]+s_thr > 255) ? 255 : mean_color[1]+s_thr;
+        s_l = (mean_color2[1]-s_thr < 0) ? 0 : mean_color2[1]-s_thr;
+        s_h = (mean_color2[1]+s_thr > 255) ? 255 : mean_color2[1]+s_thr;
 
-        v_l = (mean_color[2]-v_thr < 0) ? 0 : mean_color[2]-v_thr;
-        v_h = (mean_color[2]+v_thr > 255) ? 255 : mean_color[2]+v_thr;
+        v_l = (mean_color2[2]-v_thr < 0) ? 0 : mean_color2[2]-v_thr;
+        v_h = (mean_color2[2]+v_thr > 255) ? 255 : mean_color2[2]+v_thr;
         //////
-
 
         //draws the circles around the balls
         for( size_t i = 0; i < circles.size(); i++ ){
             cv::Vec3i c = circles[i];
             cv::Point center = cv::Point(c[0], c[1]);
             int radius = c[2];
-            // if(image.at<cv::Vec3b>(c[0], c[1])[0] < h_l || image.at<cv::Vec3b>(c[0], c[1])[0] > h_h){
-            //     }else if(image.at<cv::Vec3b>(c[0], c[1])[1] < s_l || image.at<cv::Vec3b>(c[0], c[1])[1] > s_h){
-            //     }else if(image.at<cv::Vec3b>(c[0], c[1])[2] < v_l || image.at<cv::Vec3b>(c[0], c[1])[2] > v_h){
-            //     }else{
-                    cv::circle( exit1, center, radius, cv::Scalar(122, 255, 20), 1, cv::LINE_AA);
-                    cv::circle( only_table_image, center, radius, cv::Scalar(122, 255, 20), 1, cv::LINE_AA);
-                // }
-            
+
+            if(field_contour.at<uchar>(c[1],c[0]) == 255){
+                if(channels_masked_table[0].at<uchar>(c[1],c[0]) < h_h && channels_masked_table[0].at<uchar>(c[1],c[0]) > h_l){
+                    if(channels_masked_table[1].at<uchar>(c[1],c[0]) < s_h && channels_masked_table[1].at<uchar>(c[1],c[0]) > s_l){
+                        if(channels_masked_table[2].at<uchar>(c[1],c[0]) < v_h && channels_masked_table[2].at<uchar>(c[1],c[0]) > v_l){
+                            circles.erase(circles.begin()+i);
+                            i--;
+                            continue;
+                        }   
+                    }
+                }
+                
+                if (cv::pointPolygonTest(boundaries_contours_poly,center,true) < 14){
+                    circles.erase(circles.begin()+i);
+                    i--;
+                    continue;
+                }
+
+                bool remove = false;
+                for (int j = 0; j < sorted_corners.size(); j++){
+                   if (sqrt(pow(sorted_corners[j].x-center.x,2)+pow(sorted_corners[j].y-center.y,2)) < 32.0){
+                        remove = true;
+                    } 
+                }
+                
+                if(remove){
+                    circles.erase(circles.begin()+i);
+                    i--;
+                    continue;
+                }
+                
+
+                cv::circle( exit1, center, radius, cv::Scalar(122, 255, 20), 1, cv::LINE_AA);
+                cv::circle( only_table_image, center, radius, cv::Scalar(45, 255, 255), 1, cv::LINE_AA);
+
+                cv::circle(field_contour, center, radius, 127, cv::FILLED, cv::LINE_AA);
+            }   
         }
+
 
         // NEED TO WRITE CODE TO ERASE ALL THE OUTLIERS CIRCLES BEFORE DRAWING THEM --> COULD BE USEFUL TO LOOK AT COLORS INFORMATIONS
 
@@ -258,41 +364,67 @@ void my_HSV_callback2(int event, int x, int y, int flags, void* userdata){
         // find bounding boxes of all circles and draws them
         // NEED TO WRITE THE BOUNDING BOX VALUES IN A FILE FOR EVALUATIONS OF PERFORMANCES
         // DATA THAT NEEDS TO BE WRITTEN IS INSIDE boundRect VECTOR
-        cv::Mat canny_output;
-        cv::Canny( exit1, canny_output, 100, 100 );
         
+        cv::Mat bbox_edges(field_contour.size(),CV_8U);
+        cv::Canny(field_contour,bbox_edges,100,400);
         vector<vector<cv::Point> > contours56;
-        findContours( canny_output, contours56, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE );
+        findContours( bbox_edges, contours56, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE );
+
+        vector<cv::Rect> boundRect;
+        cv::Rect rectHolder;
         
-        vector<vector<cv::Point> > contours_poly( contours56.size() );
-        vector<cv::Rect> boundRect( contours56.size() );
-        vector<cv::Point2f>centers( contours56.size() );
-        vector<float>radius( contours56.size() );
-        
-        for( size_t i = 0; i < contours56.size(); i++ )
-        {
-            approxPolyDP( contours56[i], contours_poly[i], 3, true );
-            boundRect[i] = boundingRect( contours_poly[i] );
-            minEnclosingCircle( contours_poly[i], centers[i], radius[i] );
+        for( size_t i = 0; i < contours56.size(); i++ ){
+
+            if(rectHolder == cv::boundingRect(contours56[i])){ //check to remove multiple bounding boxes exaclty stacked one over the other
+                contours56.erase(contours56.begin()+i);
+                i--;
+                continue;
+            }
+            rectHolder = boundingRect( contours56[i] );
+
+            if(field_contour.at<uchar>(rectHolder.y+rectHolder.height/2,rectHolder.x+rectHolder.width/2) != 127){ //removes unwanted bounding box that do not frame any ball
+                contours56.erase(contours56.begin()+i);
+                i--;
+                continue;
+            }
+
+            if(rectHolder.height*rectHolder.width > 1000 || rectHolder.height*rectHolder.width < 100){ //removes to small bounding boxes and too large bounding boxes 
+                contours56.erase(contours56.begin()+i);
+                i--;
+                continue;
+            }
+
+            boundRect.push_back(rectHolder);
         }
 
+        std::ofstream outfile("bounding_box_output.txt");
 
-        for( size_t i = 0; i< contours56.size(); i++ )
-        {
+        for( size_t i = 0; i < boundRect.size(); i++ ){
+            //saves to file all the bounding boxes --> top left x coord top left y coord width height class=1 because classification is not implemented yet
+            outfile << to_string(boundRect[i].tl().x) << " " << to_string(boundRect[i].tl().y) << " " << to_string(boundRect[i].width) << " " << to_string(boundRect[i].height) << " " << 1 << std::endl;
             rectangle( exit1, boundRect[i].tl(), boundRect[i].br(), cv::Scalar(0,255,0), 1 );
         }
 
-        cv::namedWindow("mask display");
-        cv::imshow("mask display", mask);
+        outfile.close();
+
+        // cv::namedWindow("mask display");
+        // cv::imshow("mask display", mask);
         // cv::namedWindow("edges display");
         // cv::imshow("edges display", edges);
-        cv::namedWindow("field display");
-        cv::imshow("field display", field_contour);
+        // cv::namedWindow("field display");
+        // cv::imshow("field display", field_contour);
         // cv::namedWindow("cropped field display");
         // cv::imshow("cropped field display", exit1);
-        cv::namedWindow("cropped field display");
+        // cv::namedWindow("cropped field display");
         cv::cvtColor(only_table_image,only_table_image,cv::COLOR_HSV2BGR);
         cv::imshow("cropped field display", only_table_image);
+
+        cv::cvtColor(image,image,cv::COLOR_HSV2BGR);
+        cv::imshow("angoli",image);
+
+        cv::imshow("boh",exit1);
+
+        cv::imwrite("maschera.jpeg",field_contour); //salva mask del campo e palline --> background = 0 campo = 255 palline = 127
 
 
     }
