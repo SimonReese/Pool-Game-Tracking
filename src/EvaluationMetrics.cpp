@@ -43,7 +43,7 @@ double EvaluationMetrics::computeIntersectionOverUnion(const std::vector<int>& f
     double intersection = width * height;
 
     // Compute union area
-    double un_ion = (w1*h1) + (w2*h2);
+    double un_ion = (w1*h1) + (w2*h2) - (intersection);
     
     // Return IoU
     return intersection / un_ion;
