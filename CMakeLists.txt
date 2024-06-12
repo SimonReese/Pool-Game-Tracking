@@ -21,6 +21,11 @@ target_link_libraries(main
                     ${OpenCV_LIBS}
                     utils)
 
+# Evaluation metrics
+add_executable(evaluation_runner src/evaluation-runner.cpp)
+
+target_link_libraries(evaluation_runner ${OpenCV_LIBS} EvaluationMetrics)
+
 # DEBUG
 add_executable(mask_campo src/mask_campo_e_palline_bounding_box_palline.cpp)
 target_link_libraries(mask_campo 
