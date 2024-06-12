@@ -17,3 +17,8 @@ target_link_libraries(main
                     ${OpenCV_LIBS}
                     utils)
 
+# DEBUG
+add_executable(mask_campo src/mask\ campo\ e\ palline\ _\ bounding\ box\ palline.cpp)
+target_link_libraries(mask_campo 
+                    ${OpenCV_LIBS})
+
