@@ -16,7 +16,12 @@ private:
     // Path to predicted mask containing predicted mask and bounding boxes
     std::string predictionsPath;
 
-    double computeIntersectionOverUnion(const std::vector<int>& groundTruth, const std::vector<int>& prediction);
+    double computeIntersectionOverUnion(const std::vector<int>& groundTruth, const std::vector<int>& prediction) const;
+
+    double evaluateBoundingBoxes(std::string trueFile, std::string predictedFile) const;
+
+    // Read a file of bounding boxes and return a vector of vectors eache representing a bounding box
+    std::vector<std::vector<int>> readBoundingBoxFile(std::string filePath) const;
 
 public: 
     
@@ -28,6 +33,8 @@ public:
      * 
      */
     EvaluationMetrics(std::string groundTruthPath, std::string predictionPath);
+
+
 };
 
 #endif
