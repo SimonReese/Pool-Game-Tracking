@@ -109,7 +109,7 @@ EvaluationMetrics::EvaluationMetrics(std::string groundTruthPath, std::string pr
 
 double EvaluationMetrics::meanIoUtwoFiles(std::string firstFile, std::string secondFile){
 
-    
+    return evaluateBoundingBoxes(firstFile, secondFile);
 }
 
 
