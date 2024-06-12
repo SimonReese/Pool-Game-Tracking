@@ -299,11 +299,16 @@ void my_HSV_callback2(int event, int x, int y, int flags, void* userdata){
 }
 
 
-int main(int argc, char** argv)
+int main(int argc, char** argv[])
 {
-    cv::Mat image = cv::imread("C:/Users/Alebo/Desktop/Dataset-20240529T161618Z-001/game4_clip1/frames/frame_first.png");
+    if (argc < 2){
+        std::cout << "Please enter dataset path (usually in (root)/res/Dataset/)" << std::endl;
+    }
+    std::string datasetPath = argv[1];
+
+    cv::Mat image = cv::imread( datsetPath + "/game4_clip1/frames/frame_first.png");
     cv::Mat image2;
-    cv::Mat image3 = cv::imread("C:/Users/Alebo/Desktop/Dataset-20240529T161618Z-001/game4_clip2/frames/frame_first.png");
+    cv::Mat image3 = cv::imread( datasetPath + "/game4_clip2/frames/frame_first.png");
     cv::Mat image4;
     cv::cvtColor(image,image2,cv::COLOR_BGR2HSV);
     cv::cvtColor(image3,image4,cv::COLOR_BGR2HSV);
