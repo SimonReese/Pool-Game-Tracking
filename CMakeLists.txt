@@ -11,6 +11,10 @@ add_library(utils
             include/utils.h
             src/utils.cpp)
 
+add_library(EvaluationMetrics
+            include/EvaluationMetrics.h
+            src/EvaluationMetrics.cpp)
+
 add_executable(main src/main.cpp)
 
 target_link_libraries(main 
