@@ -299,14 +299,14 @@ void my_HSV_callback2(int event, int x, int y, int flags, void* userdata){
 }
 
 
-int main(int argc, char** argv[])
+int main(int argc, char* argv[])
 {
     if (argc < 2){
         std::cout << "Please enter dataset path (usually in (root)/res/Dataset/)" << std::endl;
     }
     std::string datasetPath = argv[1];
 
-    cv::Mat image = cv::imread( datsetPath + "/game4_clip1/frames/frame_first.png");
+    cv::Mat image = cv::imread( datasetPath + "/game4_clip1/frames/frame_first.png");
     cv::Mat image2;
     cv::Mat image3 = cv::imread( datasetPath + "/game4_clip2/frames/frame_first.png");
     cv::Mat image4;
