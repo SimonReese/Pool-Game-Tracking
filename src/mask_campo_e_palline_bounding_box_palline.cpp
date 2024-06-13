@@ -302,9 +302,9 @@ void my_HSV_callback2(int event, int x, int y, int flags, void* userdata, std::s
         /////////
 
         //////
-        uchar h_thr = 4;
-        uchar s_thr = 80;  //parameters were obtained by various manual tries 
-        uchar v_thr = 60;
+        uchar h_thr = 10;
+        uchar s_thr = 255;  //parameters were obtained by various manual tries 
+        uchar v_thr = 125;
         uchar h_l,s_l,v_l,h_h,s_h,v_h;
 
         h_l = (mean_color2[0]-h_thr < 0) ? 0 : mean_color2[0]-h_thr;
@@ -334,7 +334,7 @@ void my_HSV_callback2(int event, int x, int y, int flags, void* userdata, std::s
                     }
                 }
                 
-                if (cv::pointPolygonTest(boundaries_contours_poly,center,true) < 14){
+                if (cv::pointPolygonTest(boundaries_contours_poly,center,true) < 8.2){
                     circles.erase(circles.begin()+i);
                     i--;
                     continue;
@@ -342,7 +342,7 @@ void my_HSV_callback2(int event, int x, int y, int flags, void* userdata, std::s
 
                 bool remove = false;
                 for (int j = 0; j < sorted_corners.size(); j++){
-                   if (sqrt(pow(sorted_corners[j].x-center.x,2)+pow(sorted_corners[j].y-center.y,2)) < 32.0){
+                   if (sqrt(pow(sorted_corners[j].x-center.x,2)+pow(sorted_corners[j].y-center.y,2)) < 31.0){
                         remove = true;
                     } 
                 }
@@ -362,12 +362,7 @@ void my_HSV_callback2(int event, int x, int y, int flags, void* userdata, std::s
         }
 
 
-        // NEED TO WRITE CODE TO ERASE ALL THE OUTLIERS CIRCLES BEFORE DRAWING THEM --> COULD BE USEFUL TO LOOK AT COLORS INFORMATIONS
-
-
         // find bounding boxes of all circles and draws them
-        // NEED TO WRITE THE BOUNDING BOX VALUES IN A FILE FOR EVALUATIONS OF PERFORMANCES
-        // DATA THAT NEEDS TO BE WRITTEN IS INSIDE boundRect VECTOR
         
         cv::Mat bbox_edges(field_contour.size(),CV_8U);
         cv::Canny(field_contour,bbox_edges,100,400);
@@ -512,8 +507,3 @@ int main(int argc, char* argv[])
 
     return 0;
 }
-
-
-// ONLY 1 MISSING BALL!!!
-// game 4 frame 2 green ball is not detected
-// circles are more or less centered on the balls
