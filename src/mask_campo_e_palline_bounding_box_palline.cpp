@@ -13,28 +13,16 @@ using namespace std;
 std::string OUTPUT_DATASET = "../res/predictions";
 std::string OUTPUT_CLIP = "/game1_clip1";
 
-void my_HSV_callback2(int event, int x, int y, int flags, void* userdata, std::string bboxFileName, std::string maskFileName){
-    if(event == cv::EVENT_LBUTTONDOWN){
-        cv::Mat image = *(cv::Mat*) userdata;
 
-        cv::Mat less_blur_image = image.clone();
+cv::Vec3b fieldMeanColor(const cv::Mat image, int kernel_size){
 
-        cv::Mat no_blur_image = image.clone();
+    int x = image.size().width/2;
+    int y = image.size().height/2;
 
-        cv::GaussianBlur(less_blur_image,less_blur_image,cv::Size(3,3),0,0); // used to find balls later on
-
-        cv::GaussianBlur(image,image,cv::Size(7,7),0,0); // used to find field mask
-
-        // takes central pixel of the image
-        x = image.size().width/2;
-        y = image.size().height/2;
-        cout << "pixel position: " << "(" << x << "," << y << ") "<< "HSV values: " << cv::Vec3b(image.at<cv::Vec3b>(x,y)[0],image.at<cv::Vec3b>(x,y)[1],image.at<cv::Vec3b>(x,y)[2]) << "\n";
-
-        // takes all pixels colors in a kernel of size 11x11 centered on the center of the image
-        vector<cv::Vec3b> vec;
-        for (int i = y-Y_VALUE/2; i <= y+Y_VALUE/2 && i < image.size().height; i++)
+     vector<cv::Vec3b> vec;
+        for (int i = y-kernel_size/2; i <= y+kernel_size/2 && i < image.size().height; i++)
         {
-            for (int j = x-X_VALUE/2; j <= x+X_VALUE/2 && j < image.size().width; j++)
+            for (int j = x-kernel_size/2; j <= x+kernel_size/2 && j < image.size().width; j++)
             {
                 if(i < 0 || j < 0){
                     continue;
@@ -57,8 +45,14 @@ void my_HSV_callback2(int event, int x, int y, int flags, void* userdata, std::s
             s = s + (uint32_t)(vec[k].val[1]);
             v = v + (uint32_t)(vec[k].val[2]); 
         }
-        cv::Vec3b mean_color(h/k,s/k,v/k);
-        
+    cv::Vec3b mean_color(h/k,s/k,v/k);
+    return mean_color;
+
+}
+
+
+cv::Mat compute_field_mask(const cv::Mat image, cv::Vec3b mean_color){
+
         uchar h_threshold = 14;
         uchar s_threshold = 80;  //parameters were obtained by various manual tries
         uchar v_threshold = 137;
@@ -119,8 +113,14 @@ void my_HSV_callback2(int event, int x, int y, int flags, void* userdata, std::s
         //draws the contour with the max area and fills it <--- THIS ONE IS THE BEST MASK OF THE FIELD ALONE WITHOUT CONSIDERING THE BALLS
         cv::drawContours(field_contour,contours,-1,255,cv::FILLED,cv::LINE_8,hierarchy,0);
 
-        //computes edges of the contour to help find the 4 lines that delimit the field
-        cv::Mat edges(image.size().height,image.size().width,CV_8U);
+    return field_contour;
+
+}
+
+cv::Mat find_field_lines(const cv::Mat field_contour){
+
+//computes edges of the contour to help find the 4 lines that delimit the field
+        cv::Mat edges(field_contour.size().height,field_contour.size().width,CV_8U);
 
         cv::Canny(field_contour,edges,127,127);
 
@@ -128,7 +128,7 @@ void my_HSV_callback2(int event, int x, int y, int flags, void* userdata, std::s
         std::vector<cv::Vec2f> lines; // will hold the results of the detection
         cv::HoughLines(edges, lines, 1.15, CV_PI/180, 125, 0, 0); // runs the actual detection
         std::vector<cv::Point2f> pts; //will contain only 2 lines points
-        cv::Mat only_lines(image.size().height,image.size().width,CV_8U);
+        cv::Mat only_lines(field_contour.size().height,field_contour.size().width,CV_8U);
 
         //removes all lines with a similar rho value --> erases close lines
         for(int i = 0; i < lines.size(); i++ ){
@@ -153,14 +153,19 @@ void my_HSV_callback2(int event, int x, int y, int flags, void* userdata, std::s
             pt2.y = cvRound(y0 - 15000*(a));
             cv::line(only_lines, pt1, pt2, 255, 1, cv::LINE_AA);
 	    }
+    return only_lines;
+}
 
-        /* NEED TO WRITE CODE TO FIND CORNER POINTS FROM INTERSECTION OF 4 LINES --> USE HARRIS CORNER DETECTOR OR SOMETHING SIMILAR*/
+
+vector<cv::Point2i> find_field_corners(const cv::Mat approximate_field_lines){
+
+ /* NEED TO WRITE CODE TO FIND CORNER POINTS FROM INTERSECTION OF 4 LINES --> USE HARRIS CORNER DETECTOR OR SOMETHING SIMILAR*/
         /*Shi-Tomasi corner to find 4 points --> sort them as top_left, top_right, bottom_right, bottom_left*/
 
         vector<cv::Point2i> corners;
         vector<cv::Point2i> sorted_corners;
 
-        cv::goodFeaturesToTrack(only_lines,corners, 4, 0.01, 10, cv::noArray(), 5);
+        cv::goodFeaturesToTrack(approximate_field_lines,corners, 4, 0.01, 10, cv::noArray(), 5);
 
         int y_min1 = INT16_MAX, y_min2 = INT16_MAX;
         int index1 = 0, index2 = 0, index3 = 0, index4 = 0;
@@ -204,7 +209,13 @@ void my_HSV_callback2(int event, int x, int y, int flags, void* userdata, std::s
             sorted_corners.push_back(corners[index4]);
         }
 
-        cv::Mat boundaries(image.size(),CV_8U);
+    return sorted_corners;
+
+}
+
+vector<cv::Point> define_bounding_polygon(vector<cv::Point2i> sorted_corners, const cv::Mat approximate_field_lines){
+
+        cv::Mat boundaries(approximate_field_lines.size(),CV_8U);
 
         for (int i = 0; i < sorted_corners.size(); i++){
             cv::line(boundaries,sorted_corners[i%sorted_corners.size()],sorted_corners[(i+1)%sorted_corners.size()],255,1);
@@ -238,66 +249,24 @@ void my_HSV_callback2(int event, int x, int y, int flags, void* userdata, std::s
             approxPolyDP( boundaries_contours[i], boundaries_contours_poly, 1, true );
         }
 
-        //////////
-        
-        // fine corner find and sort
+    return boundaries_contours_poly;
+}
 
-        cv::Mat only_table_image = no_blur_image.clone();
 
-        //removes everything from the initial image apart from the pixels defined by the mask that segments the field
-        for (int i = 0; i < mask.size().height; i++){
-            for (int j = 0; j < mask.size().width; j++){
-                if( field_contour.at<uchar>(i,j) == 0){
-                    only_table_image.at<cv::Vec3b>(i,j) = cv::Vec3b(0,0,0);
-                }
-            }
-        }
-
-        
-        /* DRAWING CIRCLES AROUND BALLS, BALLS ARE NOT PERFECTLY CIRCLED BUT GIVES A REALLY GOOD APPROXIMATION */
-        /* OUT OF ALL THE BALLS IN THE INITIAL FRAMES, ONLY 1 BALL IS NOT DETECTED AT ALL */
-        /* IT DETECTED ALSO SOME OUTLIERS THAT NEEDS TO BE REMOVED IN SOME WAY */
+vector<cv::Vec3f> find_balls(const cv::Mat only_table_image, const cv::Mat field_contour, vector<cv::Point> boundaries_contours_poly, vector<cv::Point2i> sorted_corners){
 
         //find the circles around the balls --> parameters of hough_circles found after some manual testing to find a trade-off between all initial frames of the 10 clips
         vector<cv::Mat> channels_masked_table;
         cv::split(only_table_image,channels_masked_table);
         ///
-        cv::Mat exit1(image.size().height,image.size().width,CV_8UC3); // Mat that contains circles that will be used to find bounding boxes
+        cv::Mat exit1(only_table_image.size().height,only_table_image.size().width,CV_8UC3); // Mat that contains circles that will be used to find bounding boxes
         ///
         vector<cv::Vec3f> circles;
         HoughCircles(channels_masked_table[1], circles, cv::HOUGH_GRADIENT, 1.2, channels_masked_table[1].rows/27, 160, 14.5, 6, 13);
 
         //////////
 
-        // takes all pixels colors in a kernel of size 11x11 centered on the center of the image
-        vector<cv::Vec3b> vec2;
-        for (int i = y-Y_VALUE/2; i <= y+Y_VALUE/2 && i < no_blur_image.size().height; i++)
-        {
-            for (int j = x-X_VALUE/2; j <= x+X_VALUE/2 && j < no_blur_image.size().width; j++)
-            {
-                if(i < 0 || j < 0){
-                    continue;
-                }else{
-                    vec2.push_back(no_blur_image.at<cv::Vec3b>(i,j));
-                }
-            }
-            
-        }
-        
-        /*MASK1 FIELD CONTOUR*/ 
-        //evaluates average value for h,s,v and range of value to consider to form the mask
-        uint32_t h2 = 0;
-        uint32_t s2 = 0;
-        uint32_t v2 = 0;
-        uchar k2 = 0;
-        for (k2; k2 < vec2.size(); k2++)
-        {
-            h2 = h2 + (uint32_t)(vec[k2].val[0]);
-            s2 = s2 + (uint32_t)(vec[k2].val[1]);
-            v2 = v2 + (uint32_t)(vec[k2].val[2]); 
-        }
-        cv::Vec3b mean_color2(h2/k2,s2/k2,v2/k2);
-
+        cv::Vec3b mean_color2 = fieldMeanColor(only_table_image,11);
 
         /////////
 
@@ -340,7 +309,7 @@ void my_HSV_callback2(int event, int x, int y, int flags, void* userdata, std::s
                     continue;
                 }
 
-                bool remove = false;
+                bool remove = false; //to try to remove outliers circles found at field corners holes
                 for (int j = 0; j < sorted_corners.size(); j++){
                    if (sqrt(pow(sorted_corners[j].x-center.x,2)+pow(sorted_corners[j].y-center.y,2)) < 31.0){
                         remove = true;
@@ -354,41 +323,61 @@ void my_HSV_callback2(int event, int x, int y, int flags, void* userdata, std::s
                 }
                 
 
-                cv::circle( exit1, center, radius, cv::Scalar(122, 255, 20), 1, cv::LINE_AA);
-                cv::circle( only_table_image, center, radius, cv::Scalar(45, 255, 255), 1, cv::LINE_AA);
-
-                cv::circle(field_contour, center, radius, 127, cv::FILLED, cv::LINE_AA);
-            }   
+                
+            }else{
+                circles.erase(circles.begin()+i);
+                i--;
+                continue;
+            }
         }
 
+    return circles;
+}
 
-        // find bounding boxes of all circles and draws them
-        
-        cv::Mat bbox_edges(field_contour.size(),CV_8U);
-        cv::Canny(field_contour,bbox_edges,100,400);
-        vector<vector<cv::Point> > contours56;
-        findContours( bbox_edges, contours56, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE );
+void draw_balls_HSV_channels(vector<cv::Vec3f> balls, cv::Mat &image){
+        for (int i = 0; i < balls.size(); i++){
+            cv::circle(image, cv::Point2i(static_cast<int>(balls[i][0]), static_cast<int>(balls[i][1])), static_cast<int>(balls[i][2]), cv::Scalar(45, 255, 255), 1, cv::LINE_AA);
+        }
+}
+
+//currently all balls are of the same class!!!
+cv::Mat draw_balls_on_field_mask(const cv::Mat field_mask, vector<cv::Vec3f> balls){
+
+        cv::Mat field_mask_and_balls = field_mask.clone();
+        for (int i = 0; i < balls.size(); i++){
+            cv::circle(field_mask_and_balls, cv::Point2i(static_cast<int>(balls[i][0]), static_cast<int>(balls[i][1])), static_cast<int>(balls[i][2]), 127, cv::FILLED, cv::LINE_AA);
+        }
+    return field_mask_and_balls;
+}
+
+
+vector<cv::Rect> find_bounding_rectangles(const cv::Mat field_mask_and_balls){
+
+        cv::Mat bbox_edges(field_mask_and_balls.size(),CV_8U);
+        cv::Canny(field_mask_and_balls,bbox_edges,100,400);
+        vector<vector<cv::Point> > contours;
+        findContours( bbox_edges, contours, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE );
 
         vector<cv::Rect> boundRect;
         cv::Rect rectHolder;
         
-        for( size_t i = 0; i < contours56.size(); i++ ){
+        for( size_t i = 0; i < contours.size(); i++ ){
 
-            if(rectHolder == cv::boundingRect(contours56[i])){ //check to remove multiple bounding boxes exaclty stacked one over the other
-                contours56.erase(contours56.begin()+i);
+            if(rectHolder == cv::boundingRect(contours[i])){ //check to remove multiple bounding boxes exaclty stacked one over the other
+                contours.erase(contours.begin()+i);
                 i--;
                 continue;
             }
-            rectHolder = boundingRect( contours56[i] );
+            rectHolder = boundingRect( contours[i] );
 
-            if(field_contour.at<uchar>(rectHolder.y+rectHolder.height/2,rectHolder.x+rectHolder.width/2) != 127){ //removes unwanted bounding box that do not frame any ball
-                contours56.erase(contours56.begin()+i);
+            if(field_mask_and_balls.at<uchar>(rectHolder.y+rectHolder.height/2,rectHolder.x+rectHolder.width/2) != 127){ //removes unwanted bounding box that do not frame any ball
+                contours.erase(contours.begin()+i);
                 i--;
                 continue;
             }
 
             if(rectHolder.height*rectHolder.width > 1000 || rectHolder.height*rectHolder.width < 100){ //removes to small bounding boxes and too large bounding boxes 
-                contours56.erase(contours56.begin()+i);
+                contours.erase(contours.begin()+i);
                 i--;
                 continue;
             }
@@ -396,15 +385,77 @@ void my_HSV_callback2(int event, int x, int y, int flags, void* userdata, std::s
             boundRect.push_back(rectHolder);
         }
 
+    return boundRect;
+}
+
+
+void draw_bounding_boxes_HSV_channels(vector<cv::Rect> boundRect, cv::Mat &image){
+
+        for (int i = 0; i < boundRect.size(); i++){
+            cv::rectangle( image, boundRect[i].tl(), boundRect[i].br(), cv::Scalar(45, 255, 255), 1 );
+        }
+
+}
+
+void write_bbox_to_file(std::string bboxFileName,vector<cv::Rect> boundRect){
+
         std::ofstream outfile(bboxFileName);
 
         for( size_t i = 0; i < boundRect.size(); i++ ){
             //saves to file all the bounding boxes --> top left x coord top left y coord width height class=1 because classification is not implemented yet
             outfile << to_string(boundRect[i].tl().x) << " " << to_string(boundRect[i].tl().y) << " " << to_string(boundRect[i].width) << " " << to_string(boundRect[i].height) << " " << 1 << std::endl;
-            rectangle( exit1, boundRect[i].tl(), boundRect[i].br(), cv::Scalar(0,255,0), 1 );
         }
 
         outfile.close();
+
+}
+
+void my_HSV_callback2(int event, int x, int y, int flags, void* userdata, std::string bboxFileName, std::string maskFileName){
+    if(event == cv::EVENT_LBUTTONDOWN){
+        cv::Mat image = *(cv::Mat*) userdata;
+
+        cv::Mat less_blur_image = image.clone();
+
+        cv::Mat no_blur_image = image.clone();
+
+        cv::GaussianBlur(less_blur_image,less_blur_image,cv::Size(3,3),0,0); // used to find balls later on
+
+        cv::GaussianBlur(image,image,cv::Size(7,7),0,0); // used to find field mask
+        
+        cv::Vec3b mean_color = fieldMeanColor(image,11);
+
+        cv::Mat filled_field_contour = compute_field_mask(image,mean_color);
+
+        cv::Mat approximate_field_lines = find_field_lines(filled_field_contour);
+
+        vector<cv::Point2i> sorted_corners = find_field_corners(approximate_field_lines);
+
+        vector<cv::Point> boundaries_contours_poly = define_bounding_polygon(sorted_corners,approximate_field_lines);
+
+        cv::Mat only_table_image = no_blur_image.clone();
+
+        //removes everything from the initial image apart from the pixels defined by the mask that segments the field
+        for (int i = 0; i < image.size().height; i++){
+            for (int j = 0; j < image.size().width; j++){
+                if( filled_field_contour.at<uchar>(i,j) == 0){
+                    only_table_image.at<cv::Vec3b>(i,j) = cv::Vec3b(0,0,0);
+                }
+            }
+        }
+
+        vector<cv::Vec3f> balls = find_balls(only_table_image, filled_field_contour, boundaries_contours_poly, sorted_corners);
+
+        draw_balls_HSV_channels(balls, image);
+
+        cv::Mat field_and_balls_mask = draw_balls_on_field_mask(filled_field_contour,balls);
+
+        vector<cv::Rect> boundRect = find_bounding_rectangles(field_and_balls_mask);
+
+        // find bounding boxes of all circles and draws them
+        
+        draw_bounding_boxes_HSV_channels(boundRect, image);
+
+        write_bbox_to_file(bboxFileName, boundRect);
 
         // cv::namedWindow("mask display");
         // cv::imshow("mask display", mask);
@@ -421,9 +472,9 @@ void my_HSV_callback2(int event, int x, int y, int flags, void* userdata, std::s
         cv::cvtColor(image,image,cv::COLOR_HSV2BGR);
         cv::imshow("angoli",image);
 
-        cv::imshow("boh",exit1);
+        // cv::imshow("boh",exit1);
 
-        cv::imwrite(maskFileName,field_contour); //salva mask del campo e palline --> background = 0 campo = 255 palline = 127
+        cv::imwrite(maskFileName,field_and_balls_mask); //salva mask del campo e palline --> background = 0 campo = 255 palline = 127
 
 
     }
