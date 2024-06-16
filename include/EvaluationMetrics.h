@@ -14,6 +14,7 @@ private:
      * Dataset path.
      *
      * Path to the root of the dataset folder, containing source video frames and ground truth files.
+     * Video frames names will be used as key names to find all other files.
      */
     std::string datasetPath;
 
@@ -23,6 +24,29 @@ private:
      * Path to the root of the predictions folder, containing predictions files.
      */
     std::string predictionsPath;
+
+    /**
+     * Game folders
+     * 
+     * List of different games directories. In Dataset and Predictions paths it is expected 
+     * to have one or more game folders, where each game folder will contain other folders and files needed to evaluate metrics.
+     */
+    std::vector<std::string> gameFolders;
+
+    /**
+     * Name for all folders containing bounding boxes (both for dataset and predictions)
+     */
+    std::string boundingBoxesFolder = "bounding_boxes";
+
+    /**
+     * Name for all folders containing masks images (both for dataset and predictions)
+     */
+    std::string masksFolder = "maks";
+
+    /**
+     * Name for all folders containing frames (only in dataset folder)
+     */
+    std::string framesFolder = "frames";
 
     double computeIntersectionOverUnion(const std::vector<int>& groundTruth, const std::vector<int>& prediction) const;
 
