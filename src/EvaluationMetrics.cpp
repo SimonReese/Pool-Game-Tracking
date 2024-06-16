@@ -82,7 +82,7 @@ std::vector<std::vector<int> > EvaluationMetrics::readBoundingBoxFile(std::strin
         // Append box to vector of boxes
         boundingBoxes.push_back(boundingBox);
     }
-
+    boundingBoxFile.close();
     return boundingBoxes;
 }
 
@@ -131,9 +131,11 @@ double EvaluationMetrics::maskedIoU(const cv::Mat &maskedGroundTruth, const cv::
     double meanIoU = 0;
     for (int i = 0; i < classes; i++){
         // Construct a matrix with all pixels of the same value of class value (remapped value)
+        // To-Do: use a simple scalar  
         cv::Mat filter(maskedGroundTruth.rows, maskedGroundTruth.cols, CV_8UC1, cv::Scalar(table[i]));
         // Filter ground truth and prediction to have only one class
         cv::Mat classTruth, classPredictions;
+        // Use A SCALAR HERE!!!!!!!!!!!!!!
         cv::bitwise_and(remappedGroundTruth, filter, classTruth);
         cv::bitwise_and(remappedPrediction, filter, classPredictions);
         // Compute intersection between ground truth and predictions
@@ -146,8 +148,11 @@ double EvaluationMetrics::maskedIoU(const cv::Mat &maskedGroundTruth, const cv::
         double u_nionArea = cv::countNonZero(u_nion);
 
         // Compute IoU
-        meanIoU += (intersectionArea / u_nionArea );
+        double IoU = intersectionArea / u_nionArea;
+        std::cout << "class " << i << ": " << IoU << "; ";
+        meanIoU += IoU;
     }
+    std::cout << std::endl;
     meanIoU = meanIoU / classes;
 
     return meanIoU;
@@ -172,15 +177,8 @@ void EvaluationMetrics::checkDatasetFolder(){
         }
 
         // For each frame in frames folder, it should be a corresponding file in masks and bounding boxes folder
-        std::vector<std::string> frameNames;
-        cv::utils::fs::glob_relative(gameFolderPath + this->framesFolder, "", frameNames);
-        // Remove extension
-        for (std::vector<std::string>::iterator it = frameNames.begin(); it != frameNames.end(); it++){
-            // Find last .extension occurrence
-            int index = it->rfind(".");
-            // Remove .extension from filename
-            *it = it->erase(index, std::string::npos);
-        }
+        std::vector<std::string> frameNames = getFrameNames(gameFolder);
+
         // Check in masks and bounding_boxes folders
         for(std::string frameName : frameNames){
             std::string maskName = gameFolderPath + this->masksFolder + "/" + frameName + ".png";
@@ -208,15 +206,7 @@ void EvaluationMetrics::checkPredictionsFolder(){
         }
 
         // Get frame name in frames folder FROM DATASET FOLDER
-        std::vector<std::string> frameNames;
-        cv::utils::fs::glob_relative(this->datasetPath + "/" + gameFolder + "/" + this->framesFolder, "", frameNames);
-        // Remove extension
-        for (std::vector<std::string>::iterator it = frameNames.begin(); it != frameNames.end(); it++){
-            // Find last .extension occurrence
-            int index = it->rfind(".");
-            // Remove .extension from filename
-            *it = it->erase(index, std::string::npos);
-        }
+        std::vector<std::string> frameNames = getFrameNames(gameFolder); 
 
         // For each frame, mask file and bounding box files must exists
         for(std::string frameName: frameNames){
@@ -232,6 +222,20 @@ void EvaluationMetrics::checkPredictionsFolder(){
         // At this point, predictions folder should be consistent with dataset folder
     } // END FOR
 
+}
+
+std::vector<std::string> EvaluationMetrics::getFrameNames(std::string gameFolder) const{
+    // Get frame name in frames folder FROM DATASET FOLDER
+    std::vector<std::string> frameNames;
+    cv::utils::fs::glob_relative(this->datasetPath + "/" + gameFolder + "/" + this->framesFolder, "", frameNames);
+    // Remove extension
+    for (std::vector<std::string>::iterator it = frameNames.begin(); it != frameNames.end(); it++){
+        // Find last .extension occurrence
+        int index = it->rfind(".");
+        // Remove .extension from filename
+        *it = it->erase(index, std::string::npos);
+    }
+    return frameNames;
 }
 
 EvaluationMetrics::EvaluationMetrics(std::string datasetPath, std::string predictionsPath, std::string framesFolder, std::string masksFolder, std::string boundingBoxesFolder)
@@ -277,6 +281,73 @@ double EvaluationMetrics::meanIoUMasked(std::string firstFile, std::string secon
 
 double EvaluationMetrics::meanIoUMasked(const cv::Mat &firstImage, const cv::Mat &secondImage, int classes) const{
     return maskedIoU(firstImage, secondImage, classes);
+}
+
+double EvaluationMetrics::meanIoUSegmentationREMAPPED(int classes) const{
+    double globalIoU = 0;
+    // For each game clip
+    for(std::string gameFolder : this->gameFolders){
+        // Get all frames
+        std::vector<std::string> frameNames = getFrameNames(gameFolder);
+        // For each frame
+        std::cout << "Evaluating game " << gameFolder << ":" << std::endl;
+        for(std::string frameName : frameNames){
+            // Masks
+            std::string groundTruthMask = this->datasetPath + "/" + gameFolder + "/" + this->masksFolder + "/" + frameName + ".png";
+            std::string predictedMask = this->predictionsPath + "/" + gameFolder + "/" + this->masksFolder + "/" + frameName + ".png";
+            // Images
+            cv::Mat truth = cv::imread(groundTruthMask, cv::IMREAD_GRAYSCALE);
+            cv::Mat predicted = cv::imread(predictedMask, cv::IMREAD_GRAYSCALE);
+
+            // Remapping
+            std::vector<uchar> table(256);
+            // For predictions
+            table[0] = 0;
+            table[255] = 1;
+            table[127] = 2;
+            // For truth
+            table[1] = 2;
+            table[2] = 2;
+            table[3] = 2;
+            table[4] = 2;
+            table[5] = 1;
+            cv::LUT(truth, table, truth);
+            cv::LUT(predicted, table, predicted);
+
+            // Compute IoU
+            std::cout << "\t";
+            double mIoU = meanIoUMasked(truth, predicted, 3);
+            std::cout << "->frame " << frameName << " mIoU: " << mIoU << "\n" << std::endl;
+            globalIoU += mIoU;
+        }
+    }
+    globalIoU /= this->gameFolders.size();
+    std::cout << "Global mean IoU: " << globalIoU << std::endl;
+    return globalIoU;
+}
+
+double EvaluationMetrics::meanIoUSegmentation(int classes) const{
+    double globalIoU = 0;
+    // For each game clip
+    for(std::string gameFolder : this->gameFolders){
+        // Get all frames
+        std::vector<std::string> frameNames = getFrameNames(gameFolder);
+        // For each frame
+        std::cout << "Evaluating game " << gameFolder << ":" << std::endl;
+        for(std::string frameName : frameNames){
+            // Masks
+            std::string groundTruthMask = this->datasetPath + "/" + gameFolder + "/" + this->masksFolder + "/" + frameName + ".png";
+            std::string predictedMask = this->predictionsPath + "/" + gameFolder + "/" + this->masksFolder + "/" + frameName + ".png";
+            // Compute IoU
+            std::cout << "\t";
+            double mIoU = meanIoUMasked(groundTruthMask, predictedMask, classes);
+            std::cout << "->frame " << frameName << " IoU: " << mIoU << "\n" <<std::endl;
+            globalIoU += mIoU;
+        }
+    }
+    globalIoU /= this->gameFolders.size();
+    std::cout << "Global mean IoU: " << globalIoU << std::endl;
+    return globalIoU;
 }
 
 double EvaluationMetrics::meanIoUtwoFiles(std::string firstFile, std::string secondFile)const {

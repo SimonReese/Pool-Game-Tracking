@@ -63,6 +63,9 @@ private:
     void checkDatasetFolder();
 
     void checkPredictionsFolder();
+
+    // Get frame names in specific game folder
+    std::vector<std::string> getFrameNames(std::string gameFolder) const;
 public: 
 
     /**
@@ -81,13 +84,23 @@ public:
     EvaluationMetrics(std::string datasetPath, std::string predictionsPath, std::string framesFolder = "frames", std::string masksFolder = "masks", std::string boundingBoxesFolder = "bounding_boxes");
 
     // TEMPORARY FUNCTION TO COMPUTE MEAN IoU BETWEEN TWO FILES
-    double meanIoUtwoFiles(std::string firstFile, std::string secondFile)const ;
+    double meanIoUtwoFiles(std::string firstFile, std::string secondFile) const ;
 
     // TEMPORARY FUNCTION TO COMPUTE MASKED IMAGES IOU
-    double meanIoUMasked(std::string firstFile, std::string secondFile, int classes)const;
+    double meanIoUMasked(std::string firstFile, std::string secondFile, int classes) const;
 
     // TEMPORARY FUNCTION TO COMPUTE MASKED IMAGES IOU
-    double meanIoUMasked(const cv::Mat& firstImage, const cv::Mat& secondImage, int classes)const;
+    double meanIoUMasked(const cv::Mat& firstImage, const cv::Mat& secondImage, int classes) const;
+
+    // TEMPORARY FUNCTION TO RUN ALL DATASET with remapped values
+    double meanIoUSegmentationREMAPPED(int classes) const;
+
+    /**
+     * Computes segmentation IoU for each frame, in each game folder, for each class.
+     * 
+     * @param classes the number of classes to consider
+     */
+    double meanIoUSegmentation(int classes) const;
 
 };
 
