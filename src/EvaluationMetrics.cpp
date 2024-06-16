@@ -184,7 +184,7 @@ void EvaluationMetrics::checkDatasetFolder(){
         // Check in masks and bounding_boxes folders
         for(std::string frameName : frameNames){
             std::string maskName = gameFolderPath + this->masksFolder + "/" + frameName + ".png";
-            std::string bboxName = gameFolderPath + this->boundingBoxesFolder + "/" + frameName + ".txt";
+            std::string bboxName = gameFolderPath + this->boundingBoxesFolder + "/" + frameName + "_bbox" + ".txt";
             if(!cv::utils::fs::exists(maskName)){
                 throw std::logic_error("Error. File " + maskName + " doesn't exists.");
             }
@@ -220,8 +220,8 @@ void EvaluationMetrics::checkPredictionsFolder(){
 
         // For each frame, mask file and bounding box files must exists
         for(std::string frameName: frameNames){
-            std::string maskName = gameFolderPath + this->masksFolder + "/" + frameName + ".png";
-            std::string bboxName = gameFolderPath + this->boundingBoxesFolder + "/" + frameName + ".txt";
+            std::string maskName = gameFolderPath + "/" + this->masksFolder + "/" + frameName + ".png";
+            std::string bboxName = gameFolderPath + "/" + this->boundingBoxesFolder + "/" + frameName + "_bbox" + ".txt";
             if(!cv::utils::fs::exists(maskName)){
                 throw std::logic_error("Error. File " + maskName + " doesn't exists.");
             }

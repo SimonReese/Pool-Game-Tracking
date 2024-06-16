@@ -41,7 +41,7 @@ private:
     /**
      * Name for all folders containing masks images (both for dataset and predictions)
      */
-    std::string masksFolder = "maks";
+    std::string masksFolder = "masks";
 
     /**
      * Name for all folders containing frames (only in dataset folder)
