@@ -535,7 +535,7 @@ int main(int argc, char* argv[])
             int index = bboxFileName.rfind(".");
             bboxFileName = bboxFileName.erase(index, std::string::npos);
             std::string maskFileName = bboxFileName;
-            bboxFileName = predictionsPath + "/" + game + "/" + BOX_DIR + "/" + bboxFileName + ".txt";
+            bboxFileName = predictionsPath + "/" + game + "/" + BOX_DIR + "/" + bboxFileName + "_bbox" +".txt";
             maskFileName = predictionsPath + "/" + game + "/" + MASK_DIR + "/" + maskFileName + ".png";
             my_HSV_callback2(cv::EVENT_LBUTTONDOWN, 0, 0, 0, &imageHSV, bboxFileName, maskFileName);
         }
