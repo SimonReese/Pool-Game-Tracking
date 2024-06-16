@@ -234,8 +234,8 @@ void EvaluationMetrics::checkPredictionsFolder(){
 
 }
 
-EvaluationMetrics::EvaluationMetrics(std::string datasetPath, std::string predictionsPath)
-    : datasetPath{datasetPath}, predictionsPath{predictionsPath} {
+EvaluationMetrics::EvaluationMetrics(std::string datasetPath, std::string predictionsPath, std::string framesFolder, std::string masksFolder, std::string boundingBoxesFolder)
+    : datasetPath{datasetPath}, predictionsPath{predictionsPath}, framesFolder{framesFolder}, masksFolder{masksFolder}, boundingBoxesFolder{boundingBoxesFolder} {
     // Check whether folders are reachable
     if(!cv::utils::fs::isDirectory(this->datasetPath)){
         throw std::invalid_argument("Error. Dataset folder " + this->datasetPath + " not found.");

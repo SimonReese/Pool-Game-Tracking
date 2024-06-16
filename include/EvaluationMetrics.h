@@ -36,17 +36,17 @@ private:
     /**
      * Name for all folders containing bounding boxes (both for dataset and predictions)
      */
-    std::string boundingBoxesFolder = "bounding_boxes";
+    const std::string boundingBoxesFolder;
 
     /**
      * Name for all folders containing masks images (both for dataset and predictions)
      */
-    std::string masksFolder = "masks";
+    const std::string masksFolder;
 
     /**
      * Name for all folders containing frames (only in dataset folder)
      */
-    std::string framesFolder = "frames";
+    const std::string framesFolder;
 
     double computeIntersectionOverUnion(const std::vector<int>& groundTruth, const std::vector<int>& prediction) const;
 
@@ -64,15 +64,18 @@ private:
 
     void checkPredictionsFolder();
 public: 
-    
+
     /**
      * Constructor to initialize Evaluation class.
      * 
+     * This constructor will take paths to dataset and predictions folders as parameters, along with names for masks, frames and bounding boxes folders.
      * @param groundTruthPath path to the ground truth dataset folder
      * @param predictionPath path to the predictions folder. Ground truth and predictions foders must have same structre. More specifically, they must respect the folder structure provided as-is in the Dataset folder.
-     * 
+     * @param framesFolder name of folder containing frames images. Default value is `frames`.
+     * @param maksFolder name of folder containing masks images. Default value is `masks`.
+     * @param boundingBoxesFolder name of folder containing bounding boxes .txt files. Default value is `bounding_boxes`.
      */
-    EvaluationMetrics(std::string datasetPath, std::string predictionsPath);
+    EvaluationMetrics(std::string datasetPath, std::string predictionsPath, std::string framesFolder = "frames", std::string masksFolder = "masks", std::string boundingBoxesFolder = "bounding_boxes");
 
     // TEMPORARY FUNCTION TO COMPUTE MEAN IoU BETWEEN TWO FILES
     double meanIoUtwoFiles(std::string firstFile, std::string secondFile)const ;
