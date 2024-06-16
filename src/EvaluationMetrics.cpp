@@ -1,8 +1,10 @@
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
+#include <opencv2/core/utils/filesystem.hpp>
 #include <vector>
 #include <fstream>
 #include <iostream>
+#include <stdexcept>
 #include "EvaluationMetrics.h"
 
 double EvaluationMetrics::computeIntersectionOverUnion(const std::vector<int>& firstBox, const std::vector<int>& secondBox) const{
@@ -151,10 +153,118 @@ double EvaluationMetrics::maskedIoU(const cv::Mat &maskedGroundTruth, const cv::
     return meanIoU;
 }
 
-EvaluationMetrics::EvaluationMetrics(std::string datasetPath, std::string predictionsPath){
-    // Set paths to ground truth and predictions folders  
-    this->datasetPath = datasetPath;
-    this->predictionsPath = predictionsPath;
+void EvaluationMetrics::checkDatasetFolder(){
+
+    // Each game folder should have a frames folder, a masks folder and a bounding boxes folder
+    for (std::string gameFolder : this->gameFolders){
+        std::string gameFolderPath = this->datasetPath + "/" + gameFolder + "/";
+        // Frames
+        if (!cv::utils::fs::isDirectory(gameFolderPath + this->framesFolder)){
+            throw std::logic_error("Error. Dataset folder " + this->datasetPath + " is missing the frames folder " + gameFolderPath + this->framesFolder + ". Please provide this dataset frame folder.");
+        }
+        // Masks
+        if (!cv::utils::fs::isDirectory(gameFolderPath + this->masksFolder)){
+            throw std::logic_error("Error. Dataset folder " + this->datasetPath + " is missing the masks folder " + gameFolderPath + this->masksFolder + ". Please provide this dataset masks folder.");
+        }
+        // Bounding boxes
+        if (!cv::utils::fs::isDirectory(gameFolderPath + this->boundingBoxesFolder)){
+            throw std::logic_error("Error. Dataset folder " + this->datasetPath + " is missing the bounding boxes folder " + gameFolderPath + this->boundingBoxesFolder + ". Please provide this dataset masks folder.");
+        }
+
+        // For each frame in frames folder, it should be a corresponding file in masks and bounding boxes folder
+        std::vector<std::string> frameNames;
+        cv::utils::fs::glob_relative(gameFolderPath + this->framesFolder, "", frameNames);
+        // Remove extension
+        for (std::vector<std::string>::iterator it = frameNames.begin(); it != frameNames.end(); it++){
+            // Find last .extension occurrence
+            int index = it->rfind(".");
+            // Remove .extension from filename
+            *it = it->erase(index, std::string::npos);
+        }
+        // Check in masks and bounding_boxes folders
+        for(std::string frameName : frameNames){
+            std::string maskName = gameFolderPath + this->masksFolder + "/" + frameName + ".png";
+            std::string bboxName = gameFolderPath + this->boundingBoxesFolder + "/" + frameName + ".txt";
+            if(!cv::utils::fs::exists(maskName)){
+                throw std::logic_error("Error. File " + maskName + " doesn't exists.");
+            }
+            if(!cv::utils::fs::exists(bboxName)){
+                throw std::logic_error("Error. File " + bboxName + " doesn't exists.");
+            }
+        }
+        // At this point, the game folder will have all required subfolders and files
+    } // END FOR
+}
+
+void EvaluationMetrics::checkPredictionsFolder(){
+
+    // Check integrity of predictions folder
+    for (std::string gameFolder: this->gameFolders){
+        std::string gameFolderPath = this->predictionsPath + "/" + gameFolder;
+
+        // Game folder must exists
+        if (!cv::utils::fs::isDirectory(gameFolderPath)){
+            throw std::logic_error("Error. Predictions folder " + this->datasetPath + " is missing the game folder " + gameFolderPath + ".");
+        }
+
+        // Get frame name in frames folder FROM DATASET FOLDER
+        std::vector<std::string> frameNames;
+        cv::utils::fs::glob_relative(this->datasetPath + "/" + gameFolder + "/" + this->framesFolder, "", frameNames);
+        // Remove extension
+        for (std::vector<std::string>::iterator it = frameNames.begin(); it != frameNames.end(); it++){
+            // Find last .extension occurrence
+            int index = it->rfind(".");
+            // Remove .extension from filename
+            *it = it->erase(index, std::string::npos);
+        }
+
+        // For each frame, mask file and bounding box files must exists
+        for(std::string frameName: frameNames){
+            std::string maskName = gameFolderPath + this->masksFolder + "/" + frameName + ".png";
+            std::string bboxName = gameFolderPath + this->boundingBoxesFolder + "/" + frameName + ".txt";
+            if(!cv::utils::fs::exists(maskName)){
+                throw std::logic_error("Error. File " + maskName + " doesn't exists.");
+            }
+            if(!cv::utils::fs::exists(bboxName)){
+                throw std::logic_error("Error. File " + bboxName + " doesn't exists.");
+            }
+        }
+        // At this point, predictions folder should be consistent with dataset folder
+    } // END FOR
+
+}
+
+EvaluationMetrics::EvaluationMetrics(std::string datasetPath, std::string predictionsPath)
+    : datasetPath{datasetPath}, predictionsPath{predictionsPath} {
+    // Check whether folders are reachable
+    if(!cv::utils::fs::isDirectory(this->datasetPath)){
+        throw std::invalid_argument("Error. Dataset folder " + this->datasetPath + " not found.");
+    }
+
+    if(!cv::utils::fs::isDirectory(this->predictionsPath)){
+        throw std::invalid_argument("Error. Predictions folder " + this->predictionsPath + " not found.");
+    }
+
+    // List game folders
+    cv::utils::fs::glob_relative(this->datasetPath, "", this->gameFolders, false, true);
+    // Remove elements which are not directories
+    for(std::vector<std::string>::iterator it = this->gameFolders.begin(); it != gameFolders.end(); ){
+        if (!cv::utils::fs::isDirectory(this->datasetPath + "/" + *it))
+            it = this->gameFolders.erase(it);
+        else
+            it++;
+    }
+    
+    // Check at least one game folder is present
+    if(this->gameFolders.size() < 1){
+        throw std::logic_error("Error. Dataset folder " + this->datasetPath + " has not games subfolders. At least one game folder is required");
+    }
+
+    // Check contents of dataset folder
+    checkDatasetFolder();
+
+    // Check consistency of predictions folder
+    checkPredictionsFolder();
 }
 
 double EvaluationMetrics::meanIoUMasked(std::string firstFile, std::string secondFile, int classes) const{

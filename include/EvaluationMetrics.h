@@ -60,7 +60,9 @@ private:
     // Each image pixel has a single value corresponding to a class. Up to 8 classes are supported.
     double maskedIoU(const cv::Mat& maskedGroundTruth, const cv::Mat& maskedPrediction, int classes) const;
 
+    void checkDatasetFolder();
 
+    void checkPredictionsFolder();
 public: 
     
     /**
