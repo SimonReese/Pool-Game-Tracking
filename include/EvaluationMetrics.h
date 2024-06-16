@@ -74,6 +74,9 @@ public:
      * @param framesFolder name of folder containing frames images. Default value is `frames`.
      * @param maksFolder name of folder containing masks images. Default value is `masks`.
      * @param boundingBoxesFolder name of folder containing bounding boxes .txt files. Default value is `bounding_boxes`.
+     * 
+     * @throw `std::invalid_argument` if dataset folder or predictions folder are not accessible
+     * @throw `std::logic_error` if dataset folder or predictions folder are not consistent with folders structure
      */
     EvaluationMetrics(std::string datasetPath, std::string predictionsPath, std::string framesFolder = "frames", std::string masksFolder = "masks", std::string boundingBoxesFolder = "bounding_boxes");
 
