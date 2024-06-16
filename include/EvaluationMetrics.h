@@ -10,10 +10,18 @@ class EvaluationMetrics{
 
 private:
 
-    // Path to training dataset containing ground truth mask and bounding boxes
-    std::string groundTruthPath;
+    /**
+     * Dataset path.
+     *
+     * Path to the root of the dataset folder, containing source video frames and ground truth files.
+     */
+    std::string datasetPath;
 
-    // Path to predicted mask containing predicted mask and bounding boxes
+    /**
+     * Predictions path.
+     *
+     * Path to the root of the predictions folder, containing predictions files.
+     */
     std::string predictionsPath;
 
     double computeIntersectionOverUnion(const std::vector<int>& groundTruth, const std::vector<int>& prediction) const;
@@ -38,7 +46,7 @@ public:
      * @param predictionPath path to the predictions folder. Ground truth and predictions foders must have same structre. More specifically, they must respect the folder structure provided as-is in the Dataset folder.
      * 
      */
-    EvaluationMetrics(std::string groundTruthPath, std::string predictionPath);
+    EvaluationMetrics(std::string datasetPath, std::string predictionsPath);
 
     // TEMPORARY FUNCTION TO COMPUTE MEAN IoU BETWEEN TWO FILES
     double meanIoUtwoFiles(std::string firstFile, std::string secondFile)const ;

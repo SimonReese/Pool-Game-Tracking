@@ -151,10 +151,10 @@ double EvaluationMetrics::maskedIoU(const cv::Mat &maskedGroundTruth, const cv::
     return meanIoU;
 }
 
-EvaluationMetrics::EvaluationMetrics(std::string groundTruthPath, std::string predictionPath)
-{
-    this->groundTruthPath = groundTruthPath;
-    this->groundTruthPath = predictionPath;
+EvaluationMetrics::EvaluationMetrics(std::string datasetPath, std::string predictionsPath){
+    // Set paths to ground truth and predictions folders  
+    this->datasetPath = datasetPath;
+    this->predictionsPath = predictionsPath;
 }
 
 double EvaluationMetrics::meanIoUMasked(std::string firstFile, std::string secondFile, int classes) const{
