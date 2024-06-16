@@ -1,4 +1,5 @@
 #include <opencv2/core.hpp>
+#include <opencv2/highgui.hpp>
 #include <vector>
 #include <fstream>
 #include <iostream>
@@ -158,7 +159,15 @@ EvaluationMetrics::EvaluationMetrics(std::string groundTruthPath, std::string pr
     this->groundTruthPath = predictionPath;
 }
 
-double EvaluationMetrics::meanIoUtwoFiles(std::string firstFile, std::string secondFile){
+double EvaluationMetrics::meanIoUMasked(std::string firstFile, std::string secondFile) const{
+
+    cv::Mat groundTruth = cv::imread(firstFile);
+    cv::Mat prediction = cv::imread(secondFile);
+
+    return maskedIoU(groundTruth, prediction, 5);
+}
+
+double EvaluationMetrics::meanIoUtwoFiles(std::string firstFile, std::string secondFile)const {
 
     return evaluateBoundingBoxes(firstFile, secondFile);
 }

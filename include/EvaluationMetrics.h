@@ -41,7 +41,10 @@ public:
     EvaluationMetrics(std::string groundTruthPath, std::string predictionPath);
 
     // TEMPORARY FUNCTION TO COMPUTE MEAN IoU BETWEEN TWO FILES
-    double meanIoUtwoFiles(std::string firstFile, std::string secondFile);
+    double meanIoUtwoFiles(std::string firstFile, std::string secondFile)const ;
+
+    // TEMPORARY FUNCTION TO COMPUTE MASKED IMAGES IOU
+    double meanIoUMasked(std::string firstFile, std::string secondFile)const;
 
 };
 
