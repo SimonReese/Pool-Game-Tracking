@@ -46,6 +46,9 @@ public:
     // TEMPORARY FUNCTION TO COMPUTE MASKED IMAGES IOU
     double meanIoUMasked(std::string firstFile, std::string secondFile)const;
 
+    // TEMPORARY FUNCTION TO COMPUTE MASKED IMAGES IOU
+    double meanIoUMasked(const cv::Mat& firstImage, const cv::Mat& secondImage)const;
+
 };
 
 #endif

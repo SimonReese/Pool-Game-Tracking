@@ -165,6 +165,10 @@ double EvaluationMetrics::meanIoUMasked(std::string firstFile, std::string secon
     return maskedIoU(groundTruth, prediction, 6);
 }
 
+double EvaluationMetrics::meanIoUMasked(const cv::Mat &firstImage, const cv::Mat &secondImage) const{
+    return maskedIoU(firstImage, secondImage, 6);
+}
+
 double EvaluationMetrics::meanIoUtwoFiles(std::string firstFile, std::string secondFile)const {
 
     return evaluateBoundingBoxes(firstFile, secondFile);
