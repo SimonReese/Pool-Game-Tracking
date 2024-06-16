@@ -8,18 +8,17 @@
 int main(int argc, char* argv[]){
     if (argc != 1){
     if (argc < 3){
-        std::cerr << "Error. Please provide paths to bounding box files. Missing " << 3 - argc << std::endl;
+        std::cerr << "Error. Please provide paths to dataset and predictions folders. " << std::endl;
         return -1;
     }
 
-    std::string firstPath = argv[1];
-    std::string secondPath = argv[2];
+    std::string datasetPath = argv[1];
+    std::string predictionsPath = argv[2];
 
-    EvaluationMetrics metrics("", "");
-    double meanIoU = metrics.meanIoUtwoFiles(firstPath, secondPath);
-    std::cout << "Mean IoU between two:" << meanIoU << std::endl;
+    EvaluationMetrics metrics(datasetPath, predictionsPath);
+    return 0;
     }
-
+    return -1;
     EvaluationMetrics metrics("", "");
     cv::Mat ground = cv::imread("../res/Dataset/game1_clip2/masks/frame_first.png", cv::IMREAD_GRAYSCALE);
     cv::Mat pred = cv::imread("../res/predictions/game1_clip2/masks/frame_first.png", cv::IMREAD_GRAYSCALE);
