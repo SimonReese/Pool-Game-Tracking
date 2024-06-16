@@ -116,7 +116,6 @@ double EvaluationMetrics::maskedIoU(const cv::Mat &maskedGroundTruth, const cv::
 
     // Construct vector to remap values
     std::vector<uchar> table(256);
-    table[0] = 0;
     for (int i = 0; i < classes; i++){
         table[i] = pow(2, i);
     }
@@ -128,14 +127,13 @@ double EvaluationMetrics::maskedIoU(const cv::Mat &maskedGroundTruth, const cv::
 
     // Compute IoU for each class
     double meanIoU = 0;
-    for (int i = 1; i <= classes; i++){
+    for (int i = 0; i < classes; i++){
         // Construct a matrix with all pixels of the same value of class value (remapped value)
         cv::Mat filter(maskedGroundTruth.rows, maskedGroundTruth.cols, CV_8UC1, cv::Scalar(table[i]));
         // Filter ground truth and prediction to have only one class
         cv::Mat classTruth, classPredictions;
         cv::bitwise_and(remappedGroundTruth, filter, classTruth);
         cv::bitwise_and(remappedPrediction, filter, classPredictions);
-
         // Compute intersection between ground truth and predictions
         cv::Mat intersection;
         cv::bitwise_and(classTruth, classPredictions, intersection);
@@ -161,17 +159,13 @@ EvaluationMetrics::EvaluationMetrics(std::string groundTruthPath, std::string pr
 
 double EvaluationMetrics::meanIoUMasked(std::string firstFile, std::string secondFile) const{
 
-    cv::Mat groundTruth = cv::imread(firstFile);
-    cv::Mat prediction = cv::imread(secondFile);
+    cv::Mat groundTruth = cv::imread(firstFile, cv::IMREAD_GRAYSCALE);
+    cv::Mat prediction = cv::imread(secondFile, cv::IMREAD_GRAYSCALE);
 
-    return maskedIoU(groundTruth, prediction, 5);
+    return maskedIoU(groundTruth, prediction, 6);
 }
 
 double EvaluationMetrics::meanIoUtwoFiles(std::string firstFile, std::string secondFile)const {
 
     return evaluateBoundingBoxes(firstFile, secondFile);
 }
-
-
-
-
