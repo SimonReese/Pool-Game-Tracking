@@ -25,6 +25,7 @@ target_link_libraries(main
 add_executable(evaluation_runner src/evaluation-runner.cpp)
 
 target_link_libraries(evaluation_runner ${OpenCV_LIBS} EvaluationMetrics)
+target_link_libraries(EvaluationMetrics ${OpenCV_LIBS})
 
 # DEBUG
 add_executable(mask_campo src/mask_campo_e_palline_bounding_box_palline.cpp)
