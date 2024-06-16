@@ -44,10 +44,10 @@ public:
     double meanIoUtwoFiles(std::string firstFile, std::string secondFile)const ;
 
     // TEMPORARY FUNCTION TO COMPUTE MASKED IMAGES IOU
-    double meanIoUMasked(std::string firstFile, std::string secondFile)const;
+    double meanIoUMasked(std::string firstFile, std::string secondFile, int classes)const;
 
     // TEMPORARY FUNCTION TO COMPUTE MASKED IMAGES IOU
-    double meanIoUMasked(const cv::Mat& firstImage, const cv::Mat& secondImage)const;
+    double meanIoUMasked(const cv::Mat& firstImage, const cv::Mat& secondImage, int classes)const;
 
 };
 

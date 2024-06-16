@@ -157,16 +157,16 @@ EvaluationMetrics::EvaluationMetrics(std::string groundTruthPath, std::string pr
     this->groundTruthPath = predictionPath;
 }
 
-double EvaluationMetrics::meanIoUMasked(std::string firstFile, std::string secondFile) const{
+double EvaluationMetrics::meanIoUMasked(std::string firstFile, std::string secondFile, int classes) const{
 
     cv::Mat groundTruth = cv::imread(firstFile, cv::IMREAD_GRAYSCALE);
     cv::Mat prediction = cv::imread(secondFile, cv::IMREAD_GRAYSCALE);
 
-    return maskedIoU(groundTruth, prediction, 6);
+    return maskedIoU(groundTruth, prediction, classes);
 }
 
-double EvaluationMetrics::meanIoUMasked(const cv::Mat &firstImage, const cv::Mat &secondImage) const{
-    return maskedIoU(firstImage, secondImage, 6);
+double EvaluationMetrics::meanIoUMasked(const cv::Mat &firstImage, const cv::Mat &secondImage, int classes) const{
+    return maskedIoU(firstImage, secondImage, classes);
 }
 
 double EvaluationMetrics::meanIoUtwoFiles(std::string firstFile, std::string secondFile)const {
