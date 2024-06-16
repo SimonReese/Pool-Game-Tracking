@@ -1,3 +1,4 @@
+#include <opencv2/core.hpp>
 #include <vector>
 #include <fstream>
 #include <iostream>
@@ -108,6 +109,47 @@ double EvaluationMetrics::evaluateBoundingBoxes(std::string trueFile, std::strin
     meanScore /= boxes;
 
     return meanScore;
+}
+
+double EvaluationMetrics::maskedIoU(const cv::Mat &maskedGroundTruth, const cv::Mat &maskedPrediction, int classes) const{
+
+    // Construct vector to remap values
+    std::vector<uchar> table(256);
+    table[0] = 0;
+    for (int i = 0; i < classes; i++){
+        table[i] = pow(2, i);
+    }
+
+    // Remap values for ground truth and for predictions
+    cv::Mat remappedGroundTruth, remappedPrediction;
+    cv::LUT(maskedGroundTruth, table, remappedGroundTruth);
+    cv::LUT(maskedPrediction, table, remappedPrediction);
+
+    // Compute IoU for each class
+    double meanIoU = 0;
+    for (int i = 1; i <= classes; i++){
+        // Construct a matrix with all pixels of the same value of class value (remapped value)
+        cv::Mat filter(maskedGroundTruth.rows, maskedGroundTruth.cols, CV_8UC1, cv::Scalar(table[i]));
+        // Filter ground truth and prediction to have only one class
+        cv::Mat classTruth, classPredictions;
+        cv::bitwise_and(remappedGroundTruth, filter, classTruth);
+        cv::bitwise_and(remappedPrediction, filter, classPredictions);
+
+        // Compute intersection between ground truth and predictions
+        cv::Mat intersection;
+        cv::bitwise_and(classTruth, classPredictions, intersection);
+        double intersectionArea = cv::countNonZero(intersection);
+        // Compute union between classes
+        cv::Mat u_nion;
+        cv::bitwise_or(classTruth, classPredictions, u_nion);
+        double u_nionArea = cv::countNonZero(u_nion);
+
+        // Compute IoU
+        meanIoU += (intersectionArea / u_nionArea );
+    }
+    meanIoU = meanIoU / classes;
+
+    return meanIoU;
 }
 
 EvaluationMetrics::EvaluationMetrics(std::string groundTruthPath, std::string predictionPath)

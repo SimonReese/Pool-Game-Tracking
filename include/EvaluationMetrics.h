@@ -3,7 +3,7 @@
  */
 #ifndef EVALUATIONMETRICS
 #define EVALUATIONMETRICS
-
+#include <opencv2/core/mat.hpp>
 #include <string>
 
 class EvaluationMetrics{
@@ -23,6 +23,11 @@ private:
 
     // Compute mean IoU between two files
     double evaluateBoundingBoxes(std::string trueFile, std::string predictedFile) const;
+
+    // Compute intersection over union between two masked images. Images must be single channel, uchar datatype.
+    // Each image pixel has a single value corresponding to a class. Up to 8 classes are supported.
+    double maskedIoU(const cv::Mat& maskedGroundTruth, const cv::Mat& maskedPrediction, int classes) const;
+
 
 public: 
     
