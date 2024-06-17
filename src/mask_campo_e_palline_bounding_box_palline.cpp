@@ -87,7 +87,7 @@ cv::Mat compute_field_mask(const cv::Mat image, cv::Vec3b mean_color){
         }
 
         // evaluates the contour of the field
-        cv::Mat field_contour(image.size().height,image.size().width,CV_8U);
+        cv::Mat field_contour = cv::Mat::zeros(image.size().height,image.size().width,CV_8U);
         vector<vector<cv::Point> > contours;
         vector<cv::Vec4i> hierarchy;
 
