@@ -130,18 +130,17 @@ double EvaluationMetrics::maskedIoU(const cv::Mat &maskedGroundTruth, const cv::
     // Compute IoU for each class
     double meanIoU = 0;
     for (int i = 0; i < classes; i++){
-        // Construct a matrix with all pixels of the same value of class value (remapped value)
-        // To-Do: use a simple scalar  
+        // Filter each mask with only class related values
         cv::Scalar filter(table[i]);
-        // Filter ground truth and prediction to have only one class
         cv::Mat classTruth, classPredictions;
-        // Use A SCALAR HERE!!!!!!!!!!!!!!
         cv::bitwise_and(remappedGroundTruth, filter, classTruth);
         cv::bitwise_and(remappedPrediction, filter, classPredictions);
+
         // Compute intersection between ground truth and predictions
         cv::Mat intersection;
         cv::bitwise_and(classTruth, classPredictions, intersection);
         double intersectionArea = cv::countNonZero(intersection);
+
         // Compute union between classes
         cv::Mat u_nion;
         cv::bitwise_or(classTruth, classPredictions, u_nion);
@@ -149,6 +148,7 @@ double EvaluationMetrics::maskedIoU(const cv::Mat &maskedGroundTruth, const cv::
 
         // Compute IoU
         double IoU = intersectionArea / u_nionArea;
+        // DEBUG
         std::cout << "class " << i << ": " << IoU << "; ";
         meanIoU += IoU;
     }
