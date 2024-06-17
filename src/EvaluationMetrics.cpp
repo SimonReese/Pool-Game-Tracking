@@ -132,7 +132,7 @@ double EvaluationMetrics::maskedIoU(const cv::Mat &maskedGroundTruth, const cv::
     for (int i = 0; i < classes; i++){
         // Construct a matrix with all pixels of the same value of class value (remapped value)
         // To-Do: use a simple scalar  
-        cv::Mat filter(maskedGroundTruth.rows, maskedGroundTruth.cols, CV_8UC1, cv::Scalar(table[i]));
+        cv::Scalar filter(table[i]);
         // Filter ground truth and prediction to have only one class
         cv::Mat classTruth, classPredictions;
         // Use A SCALAR HERE!!!!!!!!!!!!!!
