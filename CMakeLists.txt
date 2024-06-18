@@ -11,10 +11,6 @@ add_library(utils
             include/utils.h
             src/utils.cpp)
 
-add_library(EvaluationMetrics
-            include/EvaluationMetrics.h
-            src/EvaluationMetrics.cpp)
-
 add_executable(main src/main.cpp)
 
 target_link_libraries(main 
@@ -22,10 +18,25 @@ target_link_libraries(main
                     utils)
 
 # Evaluation metrics
+add_library(EvaluationMetrics
+            include/EvaluationMetrics.h
+            src/EvaluationMetrics.cpp)
+
 add_executable(evaluation_runner src/evaluation-runner.cpp)
 
 target_link_libraries(evaluation_runner ${OpenCV_LIBS} EvaluationMetrics)
 target_link_libraries(EvaluationMetrics ${OpenCV_LIBS})
+
+
+# Drawing class
+add_library(DrawingClass
+            include/Draw.h
+            src/Draw.cpp)
+
+add_executable(draw_class src/draw-class.cpp)
+
+target_link_libraries(DrawingClass ${OpenCV_LIBS})
+target_link_libraries(draw_class ${OpenCV_LIBS} DrawingClass)
 
 # DEBUG
 add_executable(mask_campo src/mask_campo_e_palline_bounding_box_palline.cpp)
