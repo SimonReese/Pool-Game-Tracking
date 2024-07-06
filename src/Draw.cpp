@@ -1,10 +1,16 @@
 #include <iostream>
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
+#include <opencv2/highgui.hpp>
 #include "Draw.h"
 
+// TODO: FIX UNUSED HEADERS
+#include <algorithm>
 
-cv::Mat Draw::detectTableCorners() const{
+/**
+ * TODO: TO BE REMOVED WHEN THINGS WILL WORK
+ */
+std::vector<cv::Point> Draw::detectTableCorners() const{
     // 0. Smoothing
     cv::Mat smoothed;
     cv::medianBlur(this->currentFrame, smoothed, 5);
@@ -23,7 +29,7 @@ cv::Mat Draw::detectTableCorners() const{
     for(int row = y_center - distance; row < y_center + distance; row++){
         for (int col = x_center - distance; col < x_center + distance; col++){
             values = HSVframe.at<cv::Vec3b>(cv::Point(col, row));
-            std::cout << "Reading values " << values << std::endl;
+            // std::cout << "Reading values " << values << std::endl;
             H += static_cast<double>(values[0]) / area;
             S += static_cast<double>(values[1]) / area;
             V += static_cast<double>(values[2]) / area;
@@ -81,7 +87,7 @@ cv::Mat Draw::detectTableCorners() const{
     cv::cvtColor(edges, sides, cv::COLOR_GRAY2BGR);
     std::vector<cv::Vec2f> lines;
     cv::HoughLines(edges, lines, 1, CV_PI / 180, 100);
-    std::cout << lines.size() << std::endl;
+    // std::cout << lines.size() << std::endl;
 
     // We need to filter lines
     if (true){
@@ -91,7 +97,7 @@ cv::Mat Draw::detectTableCorners() const{
     for (cv::Vec2f line : lines){
         float rho = line[0]; // Will be used to compute mean of rhos'
         float theta = line[1];
-        std::cout << "Line theta " << theta << std::endl;
+        // std::cout << "Line theta " << theta << std::endl;
         if (theta > CV_PI - (CV_PI/4 + CV_PI/6) || theta < (CV_PI / 4) + (CV_PI / 6)){
             vLines.push_back(line);
             vMean += rho;
@@ -101,7 +107,7 @@ cv::Mat Draw::detectTableCorners() const{
             hMean += rho;
         }
     }
-    std::cout << "Sizes " << vLines.size() << " " << hLines.size() << std::endl;
+    // std::cout << "Sizes " << vLines.size() << " " << hLines.size() << std::endl;
     vMean = vMean / vLines.size();
     hMean = hMean / hLines.size();
 
@@ -146,28 +152,74 @@ cv::Mat Draw::detectTableCorners() const{
     }
     // At this point we should have only 4 lines
 
-    // Draw lines
+    // Draw lines and save points
+    std::vector<std::vector<cv::Point> > linePoints;
     for (int i = 0; i < lines.size(); i++){
         float rho = lines[i][0], theta = lines[i][1];
-        std::cout << "Filetred theta" << theta << std::endl;
+        // std::cout << "Filetred theta" << theta << std::endl;
         cv::Point start, end;
         start.x = std::round(rho * std::cos(theta) - 1000*std::sin(theta));
         start.y = std::round(rho * std::sin(theta) + 1000*std::cos(theta));
 
         end.x = std::round(rho * std::cos(theta) + 1000*std::sin(theta));
         end.y = std::round(rho * std::sin(theta) - 1000*std::cos(theta));
-
+        std::cout << "Drawing " << theta << std::endl;
         cv::line(sides, start, end, cv::Scalar(0, 0, 255), 2);
+        linePoints.push_back(std::vector<cv::Point>{start, end});
     }
 
-    return sides;
     
-    // 3. Find corners
-    cv::Mat corners;
-    cv::cvtColor(sides, sides, cv::COLOR_BGR2GRAY);
-    cv::cornerHarris(sides, corners, 10, 5, 0.5);
-    return tableMask;
+    
+    // 3. Find corners at intersections of line points
+
+    // Lambda function to compute intersections VERY UGLY TODO
+    // Finds the intersection of two lines, or returns false.
+    // The lines are defined by (o1, p1) and (o2, p2).
+    auto intersection = [](cv::Point2f o1, cv::Point2f p1, cv::Point2f o2, cv::Point2f p2){
+        cv::Point2f x = o2 - o1;
+        cv::Point2f d1 = p1 - o1;
+        cv::Point2f d2 = p2 - o2;
+
+        float cross = d1.x*d2.y - d1.y*d2.x;
+        if (abs(cross) < /*EPS*/1e-8)
+            return cv::Point2f(-1, -1);
+
+        double t1 = (x.x * d2.y - x.y * d2.x)/cross;
+        return o1 + d1 * t1;
+    };
+
+    // Corners 
+    std::vector<cv::Point> corners;
+    // Now, for the first two lines, compute intersections with the prependicular two other lines
+    for(int i = 0; i < 2; i++){
+        cv::Point intersect1 = intersection(linePoints[i][0], linePoints[i][1], linePoints[2][0], linePoints[2][1]);
+        cv::Point intersect2 = intersection(linePoints[i][0], linePoints[i][1], linePoints[3][0], linePoints[3][1]);
+        corners.push_back(intersect1);
+        corners.push_back(intersect2);
+        std::cout << "Corners: " << intersect1 << " | " << intersect2 << std::endl;
+    }
+
+    // Sort corners
+    auto pointSort = [](cv::Point a, cv::Point b){
+        // Top goes first if not aligned
+        if (a.y != b.y)
+            return a.y < b.y;
+        return a.x < b.x; // Else left goes first
+    };
+    std::sort(corners.begin(), corners.end(), pointSort);
+    // Swap last two elements
+    std::iter_swap(corners.begin()+2, corners.begin()+3);
+    // TODO: debug order
+    for(cv::Point point : corners){
+        std::cout << point << " ";
+    }
+    std::cout << std::endl;
+    
+    cv::imshow("Output", tableMask);
+    return corners;
 }
+
+
 
 Draw::Draw(std::string fieldPath)
     : fieldPath{fieldPath}{
@@ -179,5 +231,5 @@ void Draw::setCurrentFrame(const cv::Mat &currentFrame){
 
 void Draw::getGameDraw(cv::Mat &outputDrawing) const{
     // Currently just return the current frame
-    outputDrawing = detectTableCorners();
+    detectTableCorners();
 }

@@ -21,7 +21,7 @@ private:
     std::string fieldPath;
 
     // Detect corners of table in the frame
-    cv::Mat detectTableCorners() const;
+    std::vector<cv::Point> detectTableCorners() const;
 
 public:
 

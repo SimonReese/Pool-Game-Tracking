@@ -24,8 +24,7 @@ int main(int argc, char* argv[]){
     // Get drawing
     cv::Mat result;
     drawing.getGameDraw(result);
-    // Show
-    cv::imshow("From drawing class", result);
+
     cv::waitKey(0);
     return 0;
 }
