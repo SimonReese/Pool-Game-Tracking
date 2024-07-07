@@ -233,3 +233,8 @@ void Draw::getGameDraw(cv::Mat &outputDrawing) const{
     // Currently just return the current frame
     detectTableCorners();
 }
+
+cv::Mat Draw::correctPrespective(const std::vector<cv::Point>& corners){
+    
+    return cv::Mat();
+}

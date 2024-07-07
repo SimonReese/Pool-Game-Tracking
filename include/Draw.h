@@ -45,5 +45,11 @@ public:
      */
     void getGameDraw(cv::Mat& outputDrawing) const;
 
+    /**
+     * Return perspective corrected table image
+     * @param corners a vector of point corners from top left in clockwise order.
+     */
+    cv::Mat correctPrespective(const std::vector<cv::Point>& corners);
+
 };
 #endif
