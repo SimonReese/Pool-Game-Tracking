@@ -49,7 +49,7 @@ public:
      * Return perspective corrected table image
      * @param corners a vector of point corners from top left in clockwise order.
      */
-    cv::Mat correctPrespective(const std::vector<cv::Point>& corners);
+    cv::Mat correctPrespective(const std::vector<cv::Point>& corners) const;
 
 };
 #endif

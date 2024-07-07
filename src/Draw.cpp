@@ -6,6 +6,7 @@
 
 // TODO: FIX UNUSED HEADERS
 #include <algorithm>
+#include <opencv2/core/mat.hpp>
 
 /**
  * TODO: TO BE REMOVED WHEN THINGS WILL WORK
@@ -231,10 +232,33 @@ void Draw::setCurrentFrame(const cv::Mat &currentFrame){
 
 void Draw::getGameDraw(cv::Mat &outputDrawing) const{
     // Currently just return the current frame
-    detectTableCorners();
+    std::vector<cv::Point> corners = detectTableCorners();
+    outputDrawing = correctPrespective(corners);
 }
 
-cv::Mat Draw::correctPrespective(const std::vector<cv::Point>& corners){
-    
-    return cv::Mat();
+/**
+ * TOOD: define size of image to choose coordinates of perspective transfomration
+ */
+cv::Mat Draw::correctPrespective(const std::vector<cv::Point>& corners) const{
+    // Compute transformation matrix
+    std::vector<cv::Point2f> destCoord{
+        cv::Point(0, 0),
+        cv::Point(100, 0),
+        cv::Point(100, 199),
+        cv::Point(0, 199)
+    };
+    std::vector<cv::Point2f> srcCoord;
+    /**
+     * TODO: optimize casting ? keep order
+     */
+    for(cv::Point p : corners){
+        srcCoord.push_back((cv::Point2f) p);
+    }
+    cv::Mat transformation = cv::getPerspectiveTransform(srcCoord, destCoord);
+
+    // Correct perspective
+    cv::Mat result(cv::Size(100, 200), CV_8UC3);
+    cv::warpPerspective(this->currentFrame, result, transformation, cv::Size(100, 200));
+
+    return result;
 }
