@@ -251,14 +251,14 @@ cv::Mat Draw::correctPrespective(const std::vector<cv::Point>& corners) const{
     }
 
     // We want to check if table is oriented horizontaly or vertically
-    int horiz = cv::norm(corners[0] - corners[1]);
-    int vert = cv::norm(corners[1] - corners[2]);
+    float horiz = cv::norm(corners[0] - corners[1]);
+    float vert = cv::norm(corners[1] - corners[2]);
 
     // We build destination points accordingly
     std::vector<cv::Point2f> destCoord;
     cv::Mat result;
     cv::Size dsize;
-    if (vert > horiz){
+    if (horiz / vert < 1.7){
         // We will build a vertical pool table 
         destCoord = {
             cv::Point(49, 49),
