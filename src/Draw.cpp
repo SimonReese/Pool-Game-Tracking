@@ -242,25 +242,50 @@ void Draw::getGameDraw(cv::Mat &outputDrawing) const{
  * TOOD: define size of image to choose coordinates of perspective transfomration
  */
 cv::Mat Draw::correctPrespective(const std::vector<cv::Point>& corners) const{
-    // Compute transformation matrix
-    std::vector<cv::Point2f> destCoord{
-        cv::Point(49, 49),
-        cv::Point(149, 49),
-        cv::Point(149, 249),
-        cv::Point(49, 249)
-    };
-    std::vector<cv::Point2f> srcCoord;
     /**
      * TODO: optimize casting ? keep order
      */
+    std::vector<cv::Point2f> srcCoord;
     for(cv::Point p : corners){
         srcCoord.push_back((cv::Point2f) p);
     }
+
+    // We want to check if table is oriented horizontaly or vertically
+    int horiz = cv::norm(corners[0] - corners[1]);
+    int vert = cv::norm(corners[1] - corners[2]);
+
+    // We build destination points accordingly
+    std::vector<cv::Point2f> destCoord;
+    cv::Mat result;
+    cv::Size dsize;
+    if (vert > horiz){
+        // We will build a vertical pool table 
+        destCoord = {
+            cv::Point(49, 49),
+            cv::Point(149, 49),
+            cv::Point(149, 249),
+            cv::Point(49, 249)
+        };
+        result = cv::Mat(cv::Size(100, 200), CV_8UC3);
+        dsize = cv::Size(200, 400);
+    }
+    else {
+        // We build a horizontal pool table
+        destCoord = {
+            cv::Point(49, 49),
+            cv::Point(249, 49),
+            cv::Point(249, 149),
+            cv::Point(49, 149)
+        };
+        result = cv::Mat(cv::Size(200, 100), CV_8UC3);
+        dsize = cv::Size(400, 200);
+    }
+    
+    // Compute transformation matrix
     cv::Mat transformation = cv::getPerspectiveTransform(srcCoord, destCoord);
 
     // Correct perspective
-    cv::Mat result(cv::Size(100, 200), CV_8UC3);
-    cv::warpPerspective(this->currentFrame, result, transformation, cv::Size(200, 400));
+    cv::warpPerspective(this->currentFrame, result, transformation, dsize);
 
     return result;
 }
