@@ -242,10 +242,10 @@ void Draw::getGameDraw(cv::Mat &outputDrawing) const{
 cv::Mat Draw::correctPrespective(const std::vector<cv::Point>& corners) const{
     // Compute transformation matrix
     std::vector<cv::Point2f> destCoord{
-        cv::Point(0, 0),
-        cv::Point(100, 0),
-        cv::Point(100, 199),
-        cv::Point(0, 199)
+        cv::Point(49, 49),
+        cv::Point(149, 49),
+        cv::Point(149, 249),
+        cv::Point(49, 249)
     };
     std::vector<cv::Point2f> srcCoord;
     /**
@@ -258,7 +258,7 @@ cv::Mat Draw::correctPrespective(const std::vector<cv::Point>& corners) const{
 
     // Correct perspective
     cv::Mat result(cv::Size(100, 200), CV_8UC3);
-    cv::warpPerspective(this->currentFrame, result, transformation, cv::Size(100, 200));
+    cv::warpPerspective(this->currentFrame, result, transformation, cv::Size(200, 400));
 
     return result;
 }
