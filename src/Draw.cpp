@@ -208,8 +208,10 @@ std::vector<cv::Point> Draw::detectTableCorners() const{
         return a.x < b.x; // Else left goes first
     };
     std::sort(corners.begin(), corners.end(), pointSort);
-    // Swap last two elements
-    std::iter_swap(corners.begin()+2, corners.begin()+3);
+    // Swap last two elements, but only if 3rd is to the left than 4th
+    if (corners[2].x <= corners[3].x)
+        std::iter_swap(corners.begin()+2, corners.begin()+3);
+
     // TODO: debug order
     for(cv::Point point : corners){
         std::cout << point << " ";
