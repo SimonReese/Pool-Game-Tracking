@@ -51,5 +51,13 @@ public:
      */
     cv::Mat correctPrespective(const std::vector<cv::Point>& corners) const;
 
+    /**
+     * Returns a new image composed by background image and the overlapping image
+     * @param background background image
+     * @param overlapping the image that will be put over the background
+     * @param position coordinates where the overlapping image will be placed with respect to the background image
+     */
+    cv::Mat drawOver(const cv::Mat& background, const cv::Mat& overlapping, const cv::Point2i position) const;
+
 };
 #endif

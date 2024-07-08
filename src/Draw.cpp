@@ -289,3 +289,35 @@ cv::Mat Draw::correctPrespective(const std::vector<cv::Point>& corners) const{
 
     return result;
 }
+
+cv::Mat Draw::drawOver(const cv::Mat &background, const cv::Mat &overlapping, const cv::Point position) const{
+    // Copy input image 
+    cv::Mat result = background.clone();
+    // Compute top left corner position of the overlapping object
+    cv::Point corner(
+        position.x - overlapping.cols / 2,
+        position.y - overlapping.rows / 2
+    );
+    // Create region of interest
+    cv::Rect rect(corner, cv::Size(overlapping.cols, overlapping.rows));
+    cv::Mat region = result(rect); // reference to a section of resulting image
+
+    // Convert overlapping image to grayscale and create inverted mask
+    cv::Mat grayscale;
+    cv::cvtColor(overlapping, grayscale, cv::COLOR_RGB2GRAY);
+    cv::Mat mask, invMask;
+    cv::threshold(grayscale, mask, 1, 255, cv::THRESH_BINARY);
+    cv::bitwise_not(mask, invMask);
+
+    // Use inverted mask to cut region, setting pixels to 0
+    cv::Mat cutted;
+    cv::bitwise_and(region, region, cutted, invMask);
+
+    // Sum overlapping image to blacked areas in the cutted region
+    cv::Mat sum;
+    cv::add(overlapping, cutted, sum);
+
+    // Copy summed image to region
+    sum.copyTo(region);
+    return result;
+}
