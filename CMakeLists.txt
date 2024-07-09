@@ -4,7 +4,7 @@ project(PoolGameTracking)
 
 find_package(OpenCV REQUIRED)
 
-include_directories(${OPENCV_INCLUDE_DIRs}
+include_directories(${OPENCV_INCLUDE_DIRS}
                     include)
 
 add_library(utils
@@ -39,7 +39,17 @@ target_link_libraries(DrawingClass ${OpenCV_LIBS})
 target_link_libraries(draw_class ${OpenCV_LIBS} DrawingClass)
 
 # DEBUG
+add_library(MaskAndBalls
+            include/BallsDetection.h
+            include/FieldGeometryAndMask.h
+            include/Ball.h
+            src/BallsDetection.cpp
+            src/FieldGeometryAndMask.cpp
+            src/Ball.cpp)
+
 add_executable(mask_campo src/mask_campo_e_palline_bounding_box_palline.cpp)
 target_link_libraries(mask_campo 
-                    ${OpenCV_LIBS})
+                    ${OpenCV_LIBS}
+                    MaskAndBalls)
+                    target_link_libraries(MaskAndBalls ${OpenCV_LIBS})
 
