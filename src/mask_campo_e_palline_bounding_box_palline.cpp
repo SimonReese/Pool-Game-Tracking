@@ -60,12 +60,17 @@ void my_HSV_callback2(int event, int x, int y, int flags, void* userdata, std::s
 
         vector<cv::Rect> boundRect = findBoundingRectangles(field_and_balls_mask);
 
-        for (int h = 0; h < boundRect.size(); h++)
-        {
-            balls[h].setBoundingBox(boundRect[h]);
+        /*updates the bounding box value of each ball by assigning the bounding box that has center closest to the center of the circle that defines the ball*/
+        int offset_thres = 1;
+        for (int h = 0; h < boundRect.size(); h++){
+            for (int b = 0; b < balls.size(); b++){
+                if((boundRect[h].x+boundRect[h].width/2) >= balls[b].getBallPosition()[0]-offset_thres && (boundRect[h].x+boundRect[h].width/2) <= balls[b].getBallPosition()[0]+offset_thres){
+                    if((boundRect[h].y+boundRect[h].height/2) >= balls[b].getBallPosition()[1]-offset_thres && (boundRect[h].y+boundRect[h].height/2) <= balls[b].getBallPosition()[1]+offset_thres){
+                        balls[b].setBoundingBox(boundRect[h]);
+                    }
+                }
+            }   
         }
-        
-
         // find bounding boxes of all circles and draws them
         
         drawBoundingBoxesHSVChannels(balls, image);
