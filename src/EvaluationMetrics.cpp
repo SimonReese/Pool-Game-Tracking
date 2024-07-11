@@ -321,7 +321,7 @@ double EvaluationMetrics::meanIoUSegmentationREMAPPED(int classes) const{
             globalIoU += mIoU;
         }
     }
-    globalIoU /= this->gameFolders.size();
+    globalIoU /= this->gameFolders.size() * 2; // *2 since each game will have 2 frames evaluated
     std::cout << "Global mean IoU: " << globalIoU << std::endl;
     return globalIoU;
 }
@@ -345,7 +345,7 @@ double EvaluationMetrics::meanIoUSegmentation(int classes) const{
             globalIoU += mIoU;
         }
     }
-    globalIoU /= this->gameFolders.size();
+    globalIoU /= this->gameFolders.size() * 2; // *2 since each game will have 2 frames evaluated
     std::cout << "Global mean IoU: " << globalIoU << std::endl;
     return globalIoU;
 }
