@@ -3,8 +3,12 @@
  */
 #ifndef EVALUATIONMETRICS
 #define EVALUATIONMETRICS
-#include <opencv2/core/mat.hpp>
+
 #include <string>
+#include <tuple>
+
+#include <opencv2/core/mat.hpp>
+
 
 class EvaluationMetrics{
 
@@ -51,6 +55,13 @@ private:
     double computeIntersectionOverUnion(const std::vector<int>& groundTruth, const std::vector<int>& prediction) const;
 
     // Read a file of bounding boxes and return a vector of vectors eache representing a bounding box
+    /**
+     * Read a file containing a list of bounding boxes.
+     * 
+     * @param filePath path to file containing bounding boxes
+     * 
+     * @return returns a vector of vector elements composed by four integers: (x, y, width, height, class)
+     */
     std::vector<std::vector<int> > readBoundingBoxFile(std::string filePath) const;
 
     // Compute mean IoU between two files
@@ -66,6 +77,8 @@ private:
 
     // Get frame names in specific game folder
     std::vector<std::string> getFrameNames(std::string gameFolder) const;
+
+    bool sortTuple(std::tuple<double, int, bool>& first, std::tuple<double, int, bool>& second) const;
 public: 
 
     /**
@@ -101,6 +114,17 @@ public:
      * @param classes the number of classes to consider
      */
     double meanIoUSegmentation(int classes) const;
+
+    /**
+     * Computes mean Average Precision (mAP) across ball classes
+     * 
+     * @param predictedFilePath path of predicted bounding boxes file
+     * @param groundTruthPath path of ground truth bounding boxes file
+     * @param classes total number of classes in predicted and ground truth files
+     * 
+     * @return the class wise mean average precision
+     */
+    double computeMeanAveragePrecision(std::string predictedFilePath, std::string groundTruthPath, int classes = 4) const;
 
 };
 
