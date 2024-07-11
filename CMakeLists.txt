@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 set(CMAKE_CXX_STANDARD 11)
 project(PoolGameTracking)
 
+set(CMAKE_PREFIX_PATH "/home/fed/cv_lab/cv_libs/local")
 find_package(OpenCV REQUIRED)
 
 include_directories(${OPENCV_INCLUDE_DIRS}
@@ -52,4 +53,15 @@ target_link_libraries(mask_campo
                     ${OpenCV_LIBS}
                     MaskAndBalls)
                     target_link_libraries(MaskAndBalls ${OpenCV_LIBS})
+
+
+# Testing classification
+# add_library(DrawingClass
+#             include/Draw.h
+#             src/Draw.cpp)
+
+add_executable(testClassification src/testClassification.cpp)
+
+# target_link_libraries(DrawingClass ${OpenCV_LIBS})
+target_link_libraries(testClassification ${OpenCV_LIBS} DrawingClass)
 

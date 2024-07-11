@@ -26,14 +26,14 @@
      * @param balls vector of balls from which circles position and radius are retrieved from
      * @param image input image where the circles will be drawn
      */
-    void drawBallsHSVChannels(std::vector<Ball> balls, cv::Mat &image);
+    void drawBallsHSVChannels(std::vector<Ball> balls, const cv::Mat &image);
 
     /**
      * Modify the image by drawing the boudning box around found balls
      * @param balls vector of balls from which bounding box parameters are retrieved from
      * @param image input image where the bounding boxes will be drawn
      */
-    void drawBoundingBoxesHSVChannels(std::vector<Ball> balls, cv::Mat &image);
+    void drawBoundingBoxesHSVChannels(std::vector<Ball> balls, const cv::Mat &image);
 
     /**
      * Write bounding box and class of every ball found for future calculation of evaluation metrics

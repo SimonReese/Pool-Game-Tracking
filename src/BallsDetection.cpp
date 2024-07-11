@@ -97,11 +97,14 @@ std::vector<Ball> findBalls(const cv::Mat only_table_image, const cv::Mat field_
     return balls;
 }
 
-void drawBallsHSVChannels(std::vector<Ball> balls, cv::Mat &image){
-        /*draws each single cirlce that defines the balls on the image*/
+void drawBallsHSVChannels(std::vector<Ball> balls, const cv::Mat &image){
+        cv::Mat circlesImage = image.clone();
+        /*draws each single circle that defines the balls on the image*/
         for (int i = 0; i < balls.size(); i++){
-            cv::circle(image, cv::Point2i(static_cast<int>(balls[i].getBallPosition()[0]), static_cast<int>(balls[i].getBallPosition()[1])), static_cast<int>(balls[i].getBallPosition()[2]), cv::Scalar(45, 255, 255), 1, cv::LINE_AA);
+            cv::circle(circlesImage, cv::Point2i(static_cast<int>(balls[i].getBallPosition()[0]), static_cast<int>(balls[i].getBallPosition()[1])), static_cast<int>(balls[i].getBallPosition()[2]), cv::Scalar(45, 255, 255), 1, cv::LINE_AA);
         }
+
+        cv::imshow("circles", circlesImage);
 }
 
 std::vector<cv::Rect> findBoundingRectangles(const cv::Mat field_mask_and_balls){
@@ -148,13 +151,14 @@ std::vector<cv::Rect> findBoundingRectangles(const cv::Mat field_mask_and_balls)
     return boundRect;
 }
 
-void drawBoundingBoxesHSVChannels(std::vector<Ball> balls, cv::Mat &image){
-
+void drawBoundingBoxesHSVChannels(std::vector<Ball> balls, const cv::Mat &image){
+        cv::Mat bboxesImage = image.clone();
         /*draws each single bounding box on the image*/
         for (int i = 0; i < balls.size(); i++){
-            cv::rectangle( image, balls[i].getBoundingBox().tl(), balls[i].getBoundingBox().br(), cv::Scalar(45, 255, 255), 1 );
+            cv::rectangle( bboxesImage, balls[i].getBoundingBox().tl(), balls[i].getBoundingBox().br(), cv::Scalar(45, 255, 255), 1 );
         }
 
+        cv::imshow("bboxes", bboxesImage);
 }
 
 
