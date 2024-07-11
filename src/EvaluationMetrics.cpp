@@ -1,11 +1,21 @@
-#include <opencv2/core.hpp>
-#include <opencv2/highgui.hpp>
-#include <opencv2/core/utils/filesystem.hpp>
+/**
+ * @author Simone Peraro
+ */
+#include "EvaluationMetrics.h"
+
 #include <vector>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
-#include "EvaluationMetrics.h"
+#include <tuple> // Requires C++11
+#include <algorithm>
+#include <map>
+
+#include <opencv2/core.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/core/utils/filesystem.hpp>
+
+
 
 double EvaluationMetrics::computeIntersectionOverUnion(const std::vector<int>& firstBox, const std::vector<int>& secondBox) const{
     // Extract properties from vectors
@@ -238,6 +248,11 @@ std::vector<std::string> EvaluationMetrics::getFrameNames(std::string gameFolder
     return frameNames;
 }
 
+bool EvaluationMetrics::sortTuple(std::tuple<double, int, bool> &first, std::tuple<double, int, bool> &second) const{
+    // We want to sort tuples in decreasing order
+    return std::get<0>(first) > std::get<0>(second);
+}
+
 EvaluationMetrics::EvaluationMetrics(std::string datasetPath, std::string predictionsPath, std::string framesFolder, std::string masksFolder, std::string boundingBoxesFolder)
     : datasetPath{datasetPath}, predictionsPath{predictionsPath}, framesFolder{framesFolder}, masksFolder{masksFolder}, boundingBoxesFolder{boundingBoxesFolder} {
     // Check whether folders are reachable
@@ -353,4 +368,139 @@ double EvaluationMetrics::meanIoUSegmentation(int classes) const{
 double EvaluationMetrics::meanIoUtwoFiles(std::string firstFile, std::string secondFile)const {
 
     return evaluateBoundingBoxes(firstFile, secondFile);
+}
+
+/**
+ * Computes mean Average Precision (mAP) across ball classes
+ * 
+ * @param predictedFilePath path of predicted bounding boxes file
+ * @param groundTruthPath path of ground truth bounding boxes file
+ * @param classes total number of classes in predicted and ground truth files
+ * 
+ * @return the class wise mean average precision
+ */
+double EvaluationMetrics::computeMeanAveragePrecision(std::string predictedFilePath, std::string groundTruthPath, int classes) const{
+
+    // 1. Open files and get vectors of bounding boxes
+    // Create vectors to store files
+    std::vector<std::vector<int>> trueBoudingBoxes = readBoundingBoxFile(predictedFilePath);
+    std::vector<std::vector<int>> predictedBoudingBoxes = readBoundingBoxFile(groundTruthPath);
+
+    // We want to store IoU for every bbox and store if prediction is correct
+    // Each element of the vector will be a tuple of (IoU-score, predicted-class, is-correct-prediction)
+    std::vector<std::tuple<double, int, bool> > scoresIoU;
+
+
+    // 2. Compute best IoU for every predicted bb
+    // We also need to count the number of ground truth for each class
+    int countGT[classes+1]; // Skip index 0
+    // Match each prediction against all groud truth and keep the best score
+    for(std::vector<int> boundingBox : predictedBoudingBoxes){
+        // Create new tuple to store values
+        std::tuple<double, int, bool> current = std::make_tuple(0.0, boundingBox[4], false);
+
+        for(std::vector<int> groundBox : trueBoudingBoxes){
+            double IoU = computeIntersectionOverUnion(groundBox, boundingBox);
+            if (IoU > std::get<0>(current)) { 
+                std::get<0>(current) = IoU; // save IoU score
+                std::get<2>(current) = groundBox[4] == boundingBox[4]; // save correct prediction
+            }
+            // Count ground truth
+            countGT[groundBox[4]]++;
+        }
+        // Append tuple to vector of scores
+        scoresIoU.push_back(current);
+    }
+
+    // 3. Order tuples by IoU score
+    std::sort(scoresIoU.begin(), scoresIoU.end(), EvaluationMetrics::sortTuple);
+
+    /**
+     * Thershold for IoU
+     * TODO: set parameter globally
+     * TODO: split huge codeblock
+     */
+    double IoUThreshold = 0.5;
+
+    double meanAveragePrecision = 0;
+    // 4. Now, for each ball class, compute average precision
+    for(int i = 1; i <= classes; i++){ // Ball class id goes in range 1-4
+        
+        double averagePrecision = 0; // Average precision
+
+        double cumulativeTP = 0; // True positive
+        double cumulativeFP = 0; // False positive
+        double cumulativePrecision; // False positive
+        double cumulativeRecall; // False positive
+        std::map<double, double> curve; // values for Precision recall curve
+        // Take all IoU scores
+        for(std::tuple<double, int, bool> score : scoresIoU){
+            // Discard other classes
+            if (std::get<1>(score) != i){
+                continue;
+            }
+
+            // Update TP and FP
+            if (!std::get<2>(score) || std::get<0>(score) < IoUThreshold ){ // If class is incorrect or class is correct but the score is too low, we have a false positive 
+                cumulativeFP++;
+            } else { // otherwise, if class is good and score is good we have a true positive
+                cumulativeTP++;
+            }
+            
+            // Compute precision and recall
+            cumulativePrecision = cumulativeTP / cumulativeTP + cumulativeFP;
+            cumulativeRecall = cumulativeTP / countGT[i];
+            
+            // Save precision and recall in a map
+            // Chek if a point was already present
+            std::map<double, double>::iterator previousPrecision = curve.find(cumulativeRecall);
+            if (previousPrecision == curve.end()){ // If no previous element found
+                curve[cumulativeRecall] = cumulativePrecision; // Insert new element
+            } else if (previousPrecision->second < cumulativePrecision) { // Otherwise if previous element found and prevoius value is lower
+                previousPrecision->second = cumulativePrecision; // Update value in map
+            }
+            
+        }
+
+        // Pascal Voc 11 point interpolation
+        std::map<double, double> interpolated; // map of interpolated values
+        double bestSoFar = 0;
+        double point = 1.0;
+        std::map<double, double>::reverse_iterator rit = curve.rbegin();
+        // Check map is not empty
+        if (rit == curve.rend()){
+            // Skip to next class
+            continue;
+        }
+        double recall = rit->first;
+        double precision = rit->second;
+        while(point >= 0.0){
+            // Did we pass a recall value?
+            if (point <= recall){
+                //Update best so far if needed
+                if (bestSoFar < precision){
+                    bestSoFar = precision;
+                }
+                // Move on to the next recall value
+                rit++;
+                // Update values
+                recall = rit->first;
+                precision = rit->second;
+            }
+            // Set current value
+            interpolated[point] = bestSoFar;
+            // Move to next point
+            point -= 0.1;
+        }
+
+        // Now we have our 11 points to compute AP
+        for(std::map<double, double>::iterator it = interpolated.begin(); it != interpolated.end(); it++){
+            averagePrecision += it->second;
+        }
+        averagePrecision /= 11;
+        meanAveragePrecision += averagePrecision;
+    }
+    meanAveragePrecision /= classes;
+
+    return meanAveragePrecision;
 }
