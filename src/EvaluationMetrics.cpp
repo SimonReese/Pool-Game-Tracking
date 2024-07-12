@@ -15,6 +15,8 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/core/utils/filesystem.hpp>
 
+#include "utils.h"
+
 
 
 double EvaluationMetrics::computeIntersectionOverUnion(const std::vector<int>& firstBox, const std::vector<int>& secondBox) const{
@@ -248,11 +250,6 @@ std::vector<std::string> EvaluationMetrics::getFrameNames(std::string gameFolder
     return frameNames;
 }
 
-bool EvaluationMetrics::sortTuple(std::tuple<double, int, bool> &first, std::tuple<double, int, bool> &second) const{
-    // We want to sort tuples in decreasing order
-    return std::get<0>(first) > std::get<0>(second);
-}
-
 EvaluationMetrics::EvaluationMetrics(std::string datasetPath, std::string predictionsPath, std::string framesFolder, std::string masksFolder, std::string boundingBoxesFolder)
     : datasetPath{datasetPath}, predictionsPath{predictionsPath}, framesFolder{framesFolder}, masksFolder{masksFolder}, boundingBoxesFolder{boundingBoxesFolder} {
     // Check whether folders are reachable
@@ -413,7 +410,7 @@ double EvaluationMetrics::computeMeanAveragePrecision(std::string predictedFileP
     }
 
     // 3. Order tuples by IoU score
-    std::sort(scoresIoU.begin(), scoresIoU.end(), EvaluationMetrics::sortTuple);
+    std::sort(scoresIoU.begin(), scoresIoU.end(), sortTupleKeysDescending);
 
     /**
      * Thershold for IoU
