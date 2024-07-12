@@ -78,7 +78,6 @@ private:
     // Get frame names in specific game folder
     std::vector<std::string> getFrameNames(std::string gameFolder) const;
 
-    bool sortTuple(std::tuple<double, int, bool>& first, std::tuple<double, int, bool>& second) const;
 public: 
 
     /**
