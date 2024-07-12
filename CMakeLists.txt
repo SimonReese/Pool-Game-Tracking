@@ -51,7 +51,7 @@ target_link_libraries(evaluation_runner ${OpenCV_LIBS} EvaluationMetrics)
 target_link_libraries(draw_class ${OpenCV_LIBS} DrawingClass)
 target_link_libraries(mask_campo ${OpenCV_LIBS} MaskAndBalls)
 
-target_link_libraries(EvaluationMetrics ${OpenCV_LIBS})
+target_link_libraries(EvaluationMetrics ${OpenCV_LIBS} utils)
 target_link_libraries(DrawingClass ${OpenCV_LIBS})
 target_link_libraries(MaskAndBalls ${OpenCV_LIBS})
 
