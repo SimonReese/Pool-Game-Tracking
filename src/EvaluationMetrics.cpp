@@ -408,12 +408,12 @@ double EvaluationMetrics::computeMeanAveragePrecision(std::string predictedFileP
         // Append tuple to vector of scores
         scoresIoU.push_back(current);
     }
-
+    
     // 3. Order tuples by IoU score
     std::sort(scoresIoU.begin(), scoresIoU.end(), sortTupleKeysDescending);
-
+    
     /**
-     * Thershold for IoU
+     * Threshold for IoU
      * TODO: set parameter globally
      * TODO: split huge codeblock
      */
@@ -480,9 +480,11 @@ double EvaluationMetrics::computeMeanAveragePrecision(std::string predictedFileP
                 }
                 // Move on to the next recall value
                 rit++;
-                // Update values
-                recall = rit->first;
-                precision = rit->second;
+                // Update values if end not reached
+                if (rit != curve.rend()){
+                    recall = rit->first;
+                    precision = rit->second;
+                } 
             }
             // Set current value
             interpolated[point] = bestSoFar;
