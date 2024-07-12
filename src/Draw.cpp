@@ -258,27 +258,30 @@ cv::Mat Draw::correctPrespective(const std::vector<cv::Point>& corners) const{
     std::vector<cv::Point2f> destCoord;
     cv::Mat result;
     cv::Size dsize;
+    // Out table backgroud will have size of 340x650
     if (horiz / vert < 1.7){
         // We will build a vertical pool table 
         destCoord = {
-            cv::Point(49, 49),
-            cv::Point(149, 49),
-            cv::Point(149, 249),
-            cv::Point(49, 249)
+            cv::Point(0, 0),
+            cv::Point(349, 0),
+            cv::Point(349, 639),
+            cv::Point(0, 639)
         };
-        result = cv::Mat(cv::Size(100, 200), CV_8UC3);
-        dsize = cv::Size(200, 400);
+        dsize = cv::Size(350, 640);
+        result = cv::Mat(dsize, CV_8UC3);
+        
     }
     else {
         // We build a horizontal pool table
         destCoord = {
-            cv::Point(49, 49),
-            cv::Point(249, 49),
-            cv::Point(249, 149),
-            cv::Point(49, 149)
+            cv::Point(0, 0),
+            cv::Point(639, 0),
+            cv::Point(639, 349),
+            cv::Point(0, 349)
         };
-        result = cv::Mat(cv::Size(200, 100), CV_8UC3);
-        dsize = cv::Size(400, 200);
+        dsize = cv::Size(640, 350);
+        result = cv::Mat(dsize, CV_8UC3);
+        
     }
     
     // Compute transformation matrix
