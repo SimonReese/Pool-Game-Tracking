@@ -38,6 +38,11 @@ add_library(DrawingClass
             include/Draw.h
             src/Draw.cpp)
 
+# TableSegmenter class
+add_library(TableSegmenter
+            include/TableSegmenter.h
+            src/TableSegmenter.cpp)
+
 
 # Add executables -----------------------------------
 add_executable(main src/main.cpp)
@@ -54,4 +59,5 @@ target_link_libraries(mask_campo ${OpenCV_LIBS} MaskAndBalls)
 target_link_libraries(EvaluationMetrics ${OpenCV_LIBS} utils)
 target_link_libraries(DrawingClass ${OpenCV_LIBS})
 target_link_libraries(MaskAndBalls ${OpenCV_LIBS})
+target_link_libraries(TableSegmenter ${OpenCV_LIBS})
 
