@@ -150,7 +150,7 @@ int main(int argc, char* argv[])
     // }
     // std::string clip_path = "/game1_clip1";
 
-    std::string video_clip_path = "C:/Users/Alebo/Desktop/Dataset-20240529T161618Z-001/game1_clip1/game1_clip1.mp4";
+    std::string video_clip_path = argv[1];
 
     cv::VideoCapture cap(video_clip_path);
  
@@ -172,6 +172,8 @@ int main(int argc, char* argv[])
     cv::Vec3b mean_color = fieldMeanColor(frame_copy,11);
 
     cv::Mat filled_field_contour = computeFieldMask(frame_copy,mean_color);
+    cv::imshow("Maskera", filled_field_contour);
+    cv::waitKey(0);
 
     cv::Mat approximate_field_lines = findFieldLines(filled_field_contour);
 
