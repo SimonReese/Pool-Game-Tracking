@@ -28,19 +28,37 @@ class TableSegmenter{
      */ 
     cv::Mat computeFieldMask(const cv::Mat image, cv::Vec3b mean_color) const;
 
+    /**
+     * Return a cv::Mat containing the draw of the 4 lines delimiting the playing field
+     * @param field_contour cv::Mat containing the mask of the playing field
+     */
+    cv::Mat findFieldLines(const cv::Mat field_contour) const;
+
+    /**
+     * Return a vector containing the 4 points identifying the 4 corners of the playing field sorted as: top_left, top_right, bottom_right, bottom_left
+     * @param approximate_field_lines cv::Mat containing the draw of the 4 lines delimiting the playing field from which the 4 corners will be computed
+     */
+    std::vector<cv::Point2i> findFieldCorners(const cv::Mat approximate_field_lines) const;
 
     public:
 
+    /**
+     * Returns the binary mask of the playing field
+     * 
+     * @param frame the current frame where mask is computed
+     * 
+     * @return the mask for the passed frame
+     */
     cv::Mat getTableMask(const cv::Mat& frame) const;
 
     /**
-     * Returns the playing field corners
+     * Returns the binary maskcorners of the playing field
      * 
-     * Returns a vector containing the 4 points identifying the 4 corners of the 
-     * playing field sorted as: top_left, top_right, bottom_right, bottom_left
+     * @param mask the mask of the playing field
      * 
+     * @return a vector of integer points correspoinding to corners
      */
-    std::vector<cv::Point2i> findFieldCorners();
+    std::vector<cv::Point2i> getFieldCorners(const cv::Mat& mask) const;
 
 };
 
