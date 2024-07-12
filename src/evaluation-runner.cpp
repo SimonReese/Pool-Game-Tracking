@@ -15,8 +15,12 @@ int main(int argc, char* argv[]){
     std::string datasetPath = argv[1];
     std::string predictionsPath = argv[2];
 
-    EvaluationMetrics metrics(datasetPath, predictionsPath);
-    metrics.meanIoUSegmentationREMAPPED(3);
+    //EvaluationMetrics metrics(datasetPath, predictionsPath);
+    EvaluationMetrics metrics("../res/Dataset/", "../res/predictions/");
+    //metrics.meanIoUSegmentationREMAPPED(3);
+    
+    double mAP = metrics.computeMeanAveragePrecision(predictionsPath, datasetPath);
+    std::cout << "mAP:" << mAP << std::endl;
     return 0;
     }
     return -1;
