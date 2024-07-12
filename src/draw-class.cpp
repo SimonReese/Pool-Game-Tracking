@@ -34,6 +34,11 @@ int main(int argc, char* argv[]){
         // 1. Get table mask
         cv::Mat mask = segmenter.getTableMask(frame);
         cv::imshow("Mask", mask);
+        // 2. Get table corners
+        std::vector<cv::Point2i> corners = segmenter.getFieldCorners(mask);
+        for (cv::Point2i point : corners){
+            std::cout << "Corner: " << point << std::endl;
+        }
 
         cv::waitKey(20);
     }
