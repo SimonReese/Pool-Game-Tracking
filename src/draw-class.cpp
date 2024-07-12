@@ -9,6 +9,7 @@
 #include <opencv2/imgproc.hpp>
 
 #include "Draw.h"
+#include "TableSegmenter.h"
 
 int main(int argc, char* argv[]){
     if (argc < 2){
@@ -26,11 +27,14 @@ int main(int argc, char* argv[]){
 
     // Sart reading video
     cv::Mat frame;
+    TableSegmenter segmenter;
     for( video >> frame; !frame.empty(); video >> frame){
         cv::imshow("Video", frame);
 
-        // 1. Get table corners
-        
+        // 1. Get table mask
+        cv::Mat mask = segmenter.getTableMask(frame);
+        cv::imshow("Mask", mask);
+
         cv::waitKey(20);
     }
     video.release(); 

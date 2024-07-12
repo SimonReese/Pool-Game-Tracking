@@ -34,7 +34,7 @@ void my_HSV_callback2(int event, int x, int y, int flags, void* userdata, std::s
         cv::Vec3b mean_color = fieldMeanColor(image,11);
 
         cv::Mat filled_field_contour = computeFieldMask(image,mean_color);
-
+        
         cv::Mat approximate_field_lines = findFieldLines(filled_field_contour);
 
         vector<cv::Point2i> sorted_corners = findFieldCorners(approximate_field_lines);

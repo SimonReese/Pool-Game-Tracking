@@ -53,7 +53,7 @@ add_executable(mask_campo src/mask_campo_e_palline_bounding_box_palline.cpp)
 # Link libraries to files
 target_link_libraries(main ${OpenCV_LIBS} utils)
 target_link_libraries(evaluation_runner ${OpenCV_LIBS} EvaluationMetrics)
-target_link_libraries(draw_class ${OpenCV_LIBS} DrawingClass)
+target_link_libraries(draw_class ${OpenCV_LIBS} DrawingClass TableSegmenter)
 target_link_libraries(mask_campo ${OpenCV_LIBS} MaskAndBalls)
 
 target_link_libraries(EvaluationMetrics ${OpenCV_LIBS} utils)
