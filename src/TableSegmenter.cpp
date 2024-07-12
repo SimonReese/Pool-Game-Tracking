@@ -109,11 +109,11 @@ cv::Mat TableSegmenter::computeFieldMask(const cv::Mat image, cv::Vec3b mean_col
     return field_contour;
 }
 
-cv::Mat TableSegmenter::getTableMask(const cv::Mat &frame) const
-{
-
+cv::Mat TableSegmenter::getTableMask(const cv::Mat &frame) const{
+    cv::Mat hsv;
+    cv::cvtColor(frame,hsv,cv::COLOR_BGR2HSV);
     cv::Mat blurred;
-    cv::GaussianBlur(frame,blurred,cv::Size(7,7),0,0); // used to find field mask
+    cv::GaussianBlur(hsv,blurred,cv::Size(7,7),0,0); // used to find field mask
     cv::Vec3b mean_color = fieldMeanColor(blurred,11);
     cv::Mat filled_field_contour = computeFieldMask(blurred,mean_color);
     
