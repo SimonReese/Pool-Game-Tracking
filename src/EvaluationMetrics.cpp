@@ -55,15 +55,15 @@ double EvaluationMetrics::computeIntersectionOverUnion(const std::vector<int>& f
     int width = Dx - Ax;
     int height = Dy - Ay;
 
-    std::cout << "Sizes: " << width << "x" << height << std::endl;
+    //std::cout << "Sizes: " << width << "x" << height << std::endl;
 
     // Compute intersection area
     double intersection = width * height;
-    std::cout << "Intersection: " << intersection << std::endl; 
+    //std::cout << "Intersection: " << intersection << std::endl; 
 
     // Compute union area
     double un_ion = (w1*h1) + (w2*h2) - (intersection);
-    std::cout << "Union: " << un_ion << std::endl;
+    //std::cout << "Union: " << un_ion << std::endl;
     // Return IoU
     return intersection / un_ion;
 }
@@ -387,10 +387,18 @@ double EvaluationMetrics::computeMeanAveragePrecision(std::string predictedFileP
     // Each element of the vector will be a tuple of (IoU-score, predicted-class, is-correct-prediction)
     std::vector<std::tuple<double, int, bool> > scoresIoU;
 
-
-    // 2. Compute best IoU for every predicted bb
     // We also need to count the number of ground truth for each class
     int countGT[classes+1]; // Skip index 0
+    for (int i = 0; i < classes+1; i++){
+        // Count ground truth
+        countGT[i] = 0;
+    }
+    for(std::vector<int> groundBox : trueBoudingBoxes){
+        // Count ground truth
+        countGT[groundBox[4]]++;
+    }
+
+    // 2. Compute best IoU for every predicted bb
     // Match each prediction against all groud truth and keep the best score
     for(std::vector<int> boundingBox : predictedBoudingBoxes){
         // Create new tuple to store values
@@ -402,13 +410,17 @@ double EvaluationMetrics::computeMeanAveragePrecision(std::string predictedFileP
                 std::get<0>(current) = IoU; // save IoU score
                 std::get<2>(current) = groundBox[4] == boundingBox[4]; // save correct prediction
             }
-            // Count ground truth
-            countGT[groundBox[4]]++;
         }
         // Append tuple to vector of scores
         scoresIoU.push_back(current);
     }
-    
+    // DEBUG
+    std::cout << "GT Elements:";
+    for (int i = 1; i <= classes; i++){
+        std::cout << " " << countGT[i];
+    }
+    std::cout << std::endl;
+
     // 3. Order tuples by IoU score
     std::sort(scoresIoU.begin(), scoresIoU.end(), sortTupleKeysDescending);
     
@@ -456,7 +468,7 @@ double EvaluationMetrics::computeMeanAveragePrecision(std::string predictedFileP
             } else if (previousPrecision->second < cumulativePrecision) { // Otherwise if previous element found and prevoius value is lower
                 previousPrecision->second = cumulativePrecision; // Update value in map
             }
-            
+            std::cout << "AP point is: " << previousPrecision->first << ", " << previousPrecision->second << std::endl;
         }
 
         // Pascal Voc 11 point interpolation
@@ -474,12 +486,13 @@ double EvaluationMetrics::computeMeanAveragePrecision(std::string predictedFileP
         while(point >= 0.0){
             // Did we pass a recall value?
             if (point <= recall){
+                
                 //Update best so far if needed
                 if (bestSoFar < precision){
                     bestSoFar = precision;
                 }
-                // Move on to the next recall value
-                rit++;
+
+                if (rit != curve.rend()){rit++;}
                 // Update values if end not reached
                 if (rit != curve.rend()){
                     recall = rit->first;
@@ -488,10 +501,11 @@ double EvaluationMetrics::computeMeanAveragePrecision(std::string predictedFileP
             }
             // Set current value
             interpolated[point] = bestSoFar;
+            std::cout << "Set interpolation " << point << " at " << bestSoFar << std::endl;
             // Move to next point
             point -= 0.1;
+            
         }
-
         // Now we have our 11 points to compute AP
         for(std::map<double, double>::iterator it = interpolated.begin(); it != interpolated.end(); it++){
             averagePrecision += it->second;
