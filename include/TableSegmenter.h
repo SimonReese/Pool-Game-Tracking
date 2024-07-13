@@ -15,6 +15,26 @@ class TableSegmenter{
     private:
 
     /**
+     * Check if mask was already computed
+     */
+    bool maskComputed = false;
+
+    /**
+     * Check if corners were already computed
+     */
+    bool cornersComputed = false; 
+
+    /**
+     * Used to store already computed table mask
+     */
+    cv::Mat tableMask;
+
+    /**
+     * Used to store already computed table corners
+     */
+    std::vector<cv::Point2i> tableCorners;
+
+    /**
      * Return a vector containing the mean color for each of the 3 channels (mainly used with HSV color space) with the kernel centered on the center of the image
      * @param image image where to compute the mean of the color
      * @param kernel_size size of the square kernel used. height = width = kernel_size
@@ -49,7 +69,7 @@ class TableSegmenter{
      * 
      * @return the mask for the passed frame
      */
-    cv::Mat getTableMask(const cv::Mat& frame) const;
+    cv::Mat getTableMask(const cv::Mat& frame);
 
     /**
      * Returns the binary maskcorners of the playing field
@@ -58,7 +78,7 @@ class TableSegmenter{
      * 
      * @return a vector of integer points correspoinding to corners
      */
-    std::vector<cv::Point2i> getFieldCorners(const cv::Mat& mask) const;
+    std::vector<cv::Point2i> getFieldCorners(const cv::Mat& mask);
 
     /**
      * Returns masked frame

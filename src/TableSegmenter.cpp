@@ -206,20 +206,32 @@ std::vector<cv::Point2i> TableSegmenter::findFieldCorners(const cv::Mat approxim
     return sorted_corners;
 }
 
-cv::Mat TableSegmenter::getTableMask(const cv::Mat &frame) const{
+cv::Mat TableSegmenter::getTableMask(const cv::Mat &frame){
+    // Check if mask already computed
+    if(this->maskComputed){
+        return tableMask;
+    }
     cv::Mat hsv;
     cv::cvtColor(frame,hsv,cv::COLOR_BGR2HSV);
     cv::Mat blurred;
     cv::GaussianBlur(hsv,blurred,cv::Size(7,7),0,0); // used to find field mask
     cv::Vec3b mean_color = fieldMeanColor(blurred,11);
     cv::Mat filled_field_contour = computeFieldMask(blurred,mean_color);
-    
+    // Store mask for future uses
+    this->tableMask = filled_field_contour;
+    this->maskComputed = true;
     return filled_field_contour;
 }
 
-std::vector<cv::Point2i> TableSegmenter::getFieldCorners(const cv::Mat &mask) const{
+std::vector<cv::Point2i> TableSegmenter::getFieldCorners(const cv::Mat &mask){
+    // Check if corners already computed
+    if(this->cornersComputed){
+        return this->tableCorners;
+    }
     cv::Mat approximate_field_lines = findFieldLines(mask);
     std::vector<cv::Point2i> sorted_corners = findFieldCorners(approximate_field_lines);
+    this->tableCorners = sorted_corners;
+    this->cornersComputed = true;
     return sorted_corners;
 }
 
