@@ -222,3 +222,9 @@ std::vector<cv::Point2i> TableSegmenter::getFieldCorners(const cv::Mat &mask) co
     std::vector<cv::Point2i> sorted_corners = findFieldCorners(approximate_field_lines);
     return sorted_corners;
 }
+
+cv::Mat TableSegmenter::getMaskedImage(const cv::Mat &frame, const cv::Mat &mask) const{
+    cv::Mat maskedFrame;
+    cv::bitwise_and(frame, frame, maskedFrame, mask);
+    return maskedFrame;
+}

@@ -60,6 +60,17 @@ class TableSegmenter{
      */
     std::vector<cv::Point2i> getFieldCorners(const cv::Mat& mask) const;
 
+    /**
+     * Returns masked frame
+     * 
+     * @param frame frame to be masked
+     * @param mask mask to use
+     * 
+     * @return a frame with only masked values
+     */
+    cv::Mat getMaskedImage(const cv::Mat& frame, const cv::Mat& mask) const;
+
+
 };
 
 #endif

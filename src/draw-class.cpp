@@ -33,14 +33,13 @@ int main(int argc, char* argv[]){
 
         // 1. Get table mask
         cv::Mat mask = segmenter.getTableMask(frame);
-        cv::imshow("Mask", mask);
+        // Show masked frame
+        cv::Mat maskedFrame = segmenter.getMaskedImage(frame, mask);
+        cv::imshow("Masked frame", maskedFrame);
         // 2. Get table corners
-        std::vector<cv::Point2i> corners = segmenter.getFieldCorners(mask);
-        for (cv::Point2i point : corners){
-            std::cout << "Corner: " << point << std::endl;
-        }
+        std::vector<cv::Point2i> corners = segmenter.getFieldCorners(mask);        
 
-        cv::waitKey(20);
+        cv::waitKey(25);
     }
     video.release(); 
     cv::waitKey(0);
