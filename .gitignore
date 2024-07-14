@@ -2,3 +2,5 @@ build/*
 res/Dataset/*
 res/predictions/*
 Diario.md
+balls_cutout*
+.vscode/
