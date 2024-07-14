@@ -14,9 +14,9 @@ include_directories(${OPENCV_INCLUDE_DIRS}
 
 # Add libraries ------------------------------------
 # Utility library - TODO: check if needed
-add_library(utils
-            include/utils.h
-            src/utils.cpp)
+add_library(FileSystemUtils
+            include/FileSystemUtils.h
+            src/FileSystemUtils.cpp)
 
 # DEBUG
 add_library(MaskAndBalls
@@ -43,6 +43,12 @@ add_library(TableSegmenter
             include/TableSegmenter.h
             src/TableSegmenter.cpp)
 
+# BallClassifier class
+add_library(BallClassifier
+            include/BallClassifier.h
+            src/BallClassifier.cpp)
+
+
 
 # Add executables -----------------------------------
 add_executable(main src/main.cpp)
@@ -51,13 +57,16 @@ add_executable(draw_class src/draw-class.cpp)
 add_executable(mask_campo src/mask_campo_e_palline_bounding_box_palline.cpp)
 
 # Link libraries to files
-target_link_libraries(main ${OpenCV_LIBS} utils)
+target_link_libraries(main ${OpenCV_LIBS})
 target_link_libraries(evaluation_runner ${OpenCV_LIBS} EvaluationMetrics)
 target_link_libraries(draw_class ${OpenCV_LIBS} DrawingClass TableSegmenter)
-target_link_libraries(mask_campo ${OpenCV_LIBS} MaskAndBalls)
+target_link_libraries(mask_campo ${OpenCV_LIBS} MaskAndBalls BallClassifier FileSystemUtils)
 
-target_link_libraries(EvaluationMetrics ${OpenCV_LIBS} utils)
+target_link_libraries(EvaluationMetrics ${OpenCV_LIBS} FileSystemUtils)
 target_link_libraries(DrawingClass ${OpenCV_LIBS})
 target_link_libraries(MaskAndBalls ${OpenCV_LIBS})
 target_link_libraries(TableSegmenter ${OpenCV_LIBS})
+target_link_libraries(BallClassifier ${OpenCV_LIBS})
+
+target_link_libraries(FileSystemUtils ${OpenCV_LIBS})
 

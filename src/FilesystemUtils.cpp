@@ -1,4 +1,4 @@
-#include <FilesystemUtils.h>
+#include "FileSystemUtils.h"
 
 std::vector<cv::String> listGameDirectories(std::string datasetPath){
     std::vector<cv::String> files;
@@ -19,6 +19,11 @@ std::vector<cv::String> listFrames(std::string datasetPath, std::string gamePath
     std::string fullPath = datasetPath + "/" + gamePath + "/" + frameFolderName;
     cv::utils::fs::glob_relative(fullPath, "", frameFullNames);
     return frameFullNames;
+}
+
+bool sortTupleKeysDescending(std::tuple<double, int, bool> &first, std::tuple<double, int, bool> &second){
+    // We want to sort tuples in decreasing order
+    return std::get<0>(first) > std::get<0>(second);
 }
 
 

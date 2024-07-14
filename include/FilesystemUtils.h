@@ -6,7 +6,6 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/core/utils/filesystem.hpp>
 #include <iostream>
-#include <fstream>
 #include <Ball.h>
 #include <filesystem>
 
@@ -20,6 +19,9 @@ std::vector<cv::String> listGameDirectories(std::string datasetPath);
 
 std::vector<cv::String> listFrames(std::string datasetPath, std::string gamePath, std::string frameFolderName);
 
-
+/**
+ * Sort tuple for key descending order
+ */
+bool sortTupleKeysDescending(std::tuple<double, int, bool>& first, std::tuple<double, int, bool>& second);
 
 #endif
