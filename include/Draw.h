@@ -5,7 +5,11 @@
 #define DRAW
 
 #include <string>
+#include <tuple>
+
 #include <opencv2/core.hpp>
+
+#include "Ball.h"
 
 
 /**
@@ -35,7 +39,32 @@ private:
     /**
      * Store current drawing (without balls)
      */
-    cv::Mat drawNoBalls;
+    cv::Mat drawingNoBalls;
+
+    /**
+     * Store white ball schematic image
+     */
+    cv::Mat whiteBallPNG;
+
+    /**
+     * Store black ball schematic image
+     */
+    cv::Mat blackBallPNG;
+
+    /**
+     * Store solid ball schematic image
+     */
+    cv::Mat solidBallPNG;
+
+    /**
+     * Store striped ball schematic image
+     */
+    cv::Mat stripedBallPNG;
+
+    /**
+     * Store unknown ball schematic image
+     */
+    cv::Mat unknownBallPNG;
 
     // Detect corners of table in the frame
     std::vector<cv::Point> detectTableCorners() const;
@@ -51,9 +80,11 @@ public:
 
     /**
      * Return an image representing current game situation.
-     * @param outputDrawing output matrix that will be populated with drawing.
+     * 
+     * @param balls a vector of balls objects with positions and class
+     * @param displacements a vector of end and start point where we want to draw the trajectory line. Order of points must be the same in all
      */
-    void getGameDraw(cv::Mat& outputDrawing);
+    cv::Mat updateDrawing(std::vector<Ball> balls, std::vector<std::tuple<cv::Point2f, cv::Point2f> > displacements);
 
     /**
      * Return perspective corrected table image

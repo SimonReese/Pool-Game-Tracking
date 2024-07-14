@@ -1,8 +1,14 @@
+#include "Draw.h"
+
 #include <iostream>
+#include <tuple>
+#include <stdexcept>
+
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
-#include "Draw.h"
+
+#include "Ball.h"
 
 // TODO: FIX UNUSED HEADERS
 #include <algorithm>
@@ -228,10 +234,62 @@ Draw::Draw(std::string fieldPath)
     : fieldPath{fieldPath}{
 }
 
-void Draw::getGameDraw(cv::Mat &outputDrawing){
-    // Currently just return the current frame
-    std::vector<cv::Point> corners = detectTableCorners();
-    outputDrawing = computePrespective(corners);
+cv::Mat Draw::updateDrawing(std::vector<Ball> balls, std::vector<std::tuple<cv::Point2f, cv::Point2f> > displacements){
+    
+    // Check that the perspective correction matrix was already computed
+    if(!this->computedPerspective){
+        throw std::runtime_error("Error. Requested a drawing update, but the perspective correction matrix was never computed.");
+    }
+
+    // We want to draw trajectory lines and balls
+    // 1. Draw and update trajectories
+    for(std::tuple<cv::Point2f, cv::Point2f> displacement : displacements){
+        cv::Vec2f startingPoint = std::get<0>(displacement);
+        cv::Vec2f endingPoint = std::get<1>(displacement);
+        
+        // We need to correct perspective of each point
+        std::vector<cv::Vec2f> points{startingPoint, endingPoint};
+        std::vector<cv::Vec2f> correctedPoints;
+        cv::perspectiveTransform(points, correctedPoints, this->perspectiveTrasformation);
+
+        // We draw a line
+        cv::Point2f start = points[0];
+        cv::Point2f end = points[1];
+        cv::line(this->drawingNoBalls, start, end, cv::Scalar(0, 255, 255));
+    }
+
+    // 2. Draw balls
+    cv::Mat drawing;
+    for (Ball ball : balls){
+
+        cv::Vec2i center = ball.getBallCenter();
+        cv::Vec2i correctedPosition;
+        cv::perspectiveTransform(std::vector<cv::Vec2i>{center}, correctedPosition, this->perspectiveTrasformation);
+        
+        cv::Point position = correctedPosition;
+        cv::Mat ballPNG;
+        switch (ball.getBallType())
+        {
+        case Ball::BallType::WHITE:
+            ballPNG = this->whiteBallPNG;
+            break;
+        case Ball::BallType::BLACK:
+            ballPNG = this->blackBallPNG;
+            break;
+        case Ball::BallType::FULL:
+            ballPNG = this->solidBallPNG;
+            break;
+        case Ball::BallType::HALF:
+            ballPNG = this->stripedBallPNG;
+            break;
+        default:
+            ballPNG = this->unknownBallPNG;
+            break;
+        }
+        drawing = drawOver(this->drawingNoBalls, ballPNG, position);
+    }
+
+    return drawing;
 }
 
 /**
