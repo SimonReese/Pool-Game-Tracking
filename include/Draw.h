@@ -22,11 +22,6 @@ private:
     cv::Mat currentFrame;
 
     /**
-     * Path to fiels schematic
-     */
-    std::string fieldPath;
-
-    /**
      * Perspective transformation matrix
      */
     cv::Mat perspectiveTrasformation;
@@ -66,17 +61,28 @@ private:
      */
     cv::Mat unknownBallPNG;
 
-    // Detect corners of table in the frame
+    /**
+     * Detect corners of table in the frame.
+     * TODO: remove!
+     * 
+     *  @deprecated We want to use the specific class
+     */ 
     std::vector<cv::Point> detectTableCorners() const;
+
+    /**
+     * Returns a new image composed by background image and the overlapping image
+     * @param background background image
+     * @param overlapping the image that will be put over the background
+     * @param position coordinates where the overlapping image will be placed with respect to the background image
+     */
+    cv::Mat drawOver(const cv::Mat& background, const cv::Mat& overlapping, const cv::Point2i position) const;
 
 public:
 
     /**
      * Default constructor for initializing class.
-     * 
-     * @param fieldPath path to field file image which will be overdrawn.
      */
-    Draw(std::string fieldPath);
+    Draw();
 
     /**
      * Return an image representing current game situation.
@@ -90,15 +96,9 @@ public:
      * Return perspective corrected table image
      * @param corners a vector of point corners from top left in clockwise order.
      */
-    cv::Mat computePrespective(const std::vector<cv::Point>& corners);
+    void computePrespective(const std::vector<cv::Point>& corners);
 
-    /**
-     * Returns a new image composed by background image and the overlapping image
-     * @param background background image
-     * @param overlapping the image that will be put over the background
-     * @param position coordinates where the overlapping image will be placed with respect to the background image
-     */
-    cv::Mat drawOver(const cv::Mat& background, const cv::Mat& overlapping, const cv::Point2i position) const;
+    
 
 };
 #endif
