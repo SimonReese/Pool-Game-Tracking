@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 set(CMAKE_CXX_STANDARD 11)
 project(PoolGameTracking)
 
-
+set(CMAKE_PREFIX_PATH "/home/fed/cv_lab/cv_libs/local")
 find_package(OpenCV REQUIRED)
 
 include_directories(${OPENCV_INCLUDE_DIRS}
