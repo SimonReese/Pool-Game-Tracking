@@ -1,5 +1,5 @@
 /**
- * @author Bozzon Alessandro.
+ * @author federico Adami.
  */
 #ifndef BALL
 #define BALL
@@ -12,19 +12,21 @@
  */
 class Ball{
 
-private:
-
-    // i would suggest for future improvement to split radius from center
-    // center and radius of the circle that identifies the ball
-    cv::Vec3f circle_radius_and_center;
-
-    // Class of the ball
-    int ball_class;
-
-    // measures of the bounding box that encloses the ball
-    cv::Rect bounding_box;
-
 public:
+
+    enum class BallType {
+        FULL,
+        HALF,
+        WHITE,
+        BLACK,
+        UNKNOWN
+    };
+
+    /**
+     * Default constructor for initializing class.
+     *  
+     */
+    Ball();
 
     /**
      * Default constructor for initializing class.
@@ -34,15 +36,20 @@ public:
     Ball(cv::Vec3f circle_radius_and_center);
 
     /**
-     * Set the class of the ball
-     * @param ball_class class to be setted.
+     * Default constructor for initializing class.
+     * 
+     * @param circle_radius_and_center center point and radius of the circle representing the ball
      */
-    void setBallClass(int ball_class);
+    Ball(cv::Vec3i circle_radius_and_center);
 
     /**
-     * Return the class of the ball
-     */
-    int getBallClass();
+     * 
+     * 
+     * 
+     * 
+    */
+
+    Ball(int radius, cv::Point center);
 
     /**
      * Set the bounding box enclosing the ball
@@ -62,9 +69,22 @@ public:
     void setBallPosition(cv::Vec3f circle_radius_and_center);
 
     /**
+     * Set the ball center and radius
+     * @param circle_radius_and_center parameters of the circle corresponding to the ball
+     */
+
+    void setBallPosition(cv::Vec3i circle_radius_and_center);
+
+    /**
+     * Set the ball center and radius
+     * @param circle_radius_and_center parameters of the circle corresponding to the ball
+     */
+    void setBallPosition(int radius, cv::Point center);
+
+    /**
      * Return the center and radius of the ball
      */
-    cv::Vec3f getBallPosition();
+    cv::Vec3i getBallPosition();
 
     /**
      * Return the center of the ball
@@ -79,7 +99,31 @@ public:
     /**
      * Return the radius of the ball
      */
-    float getBallRadius();
+    int getBallRadius();
+
+    /**
+     * Return type of ball
+     */
+    BallType getBallType() const;
+
+    /**
+     * Set type of ball
+     */
+    void setBallType(BallType type);
+
+    private:
+
+    // i would suggest for future improvement to split radius from center
+    // center and radius of the circle that identifies the ball
+    int radius; 
+
+    cv::Point center;
+
+    // Class of the ball
+    BallType type;
+
+    // measures of the bounding box that encloses the ball
+    cv::Rect bounding_box; 
 
 };
 #endif

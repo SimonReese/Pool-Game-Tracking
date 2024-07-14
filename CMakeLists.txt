@@ -2,21 +2,17 @@ cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 set(CMAKE_CXX_STANDARD 11)
 project(PoolGameTracking)
 
-set(CMAKE_PREFIX_PATH "/home/fed/cv_lab/cv_libs/local")
+
 find_package(OpenCV REQUIRED)
 
 include_directories(${OPENCV_INCLUDE_DIRS}
                     include)
 
-add_library(utils
-            include/utils.h
-            src/utils.cpp)
 
 add_executable(main src/main.cpp)
 
 target_link_libraries(main 
-                    ${OpenCV_LIBS}
-                    utils)
+                    ${OpenCV_LIBS})
 
 # Evaluation metrics
 add_library(EvaluationMetrics
@@ -39,6 +35,21 @@ add_executable(draw_class src/draw-class.cpp)
 target_link_libraries(DrawingClass ${OpenCV_LIBS})
 target_link_libraries(draw_class ${OpenCV_LIBS} DrawingClass)
 
+
+# CLassification class
+add_library(BallClassifier
+            include/BallClassifier.h
+            src/BallClassifier.cpp)
+target_link_libraries(BallClassifier ${OpenCV_LIBS})
+
+
+# Filesystem Utils
+add_library(FilesystemUtils
+            include/FilesystemUtils.h
+            src/FilesystemUtils.cpp)
+target_link_libraries(FilesystemUtils ${OpenCV_LIBS})
+
+
 # DEBUG
 add_library(MaskAndBalls
             include/BallsDetection.h
@@ -51,8 +62,11 @@ add_library(MaskAndBalls
 add_executable(mask_campo src/mask_campo_e_palline_bounding_box_palline.cpp)
 target_link_libraries(mask_campo 
                     ${OpenCV_LIBS}
-                    MaskAndBalls)
-                    target_link_libraries(MaskAndBalls ${OpenCV_LIBS})
+                    MaskAndBalls
+                    BallClassifier
+                    FilesystemUtils)
+
+target_link_libraries(MaskAndBalls ${OpenCV_LIBS})
 
 
 # Testing classification

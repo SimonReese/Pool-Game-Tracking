@@ -4,16 +4,28 @@
 #include <opencv2/highgui.hpp>
 #include "Ball.h"
 
+Ball::Ball(){
+    this->radius = 0;
+    this->center = cv::Point(0, 0);
+    this->type = Ball::BallType::UNKNOWN;
+}
+
 Ball::Ball(cv::Vec3f circle_radius_and_center){
-    this->circle_radius_and_center = circle_radius_and_center;
+    this->radius = static_cast<int>(circle_radius_and_center[2]);
+    this->center = cv::Point(static_cast<int>(circle_radius_and_center[0]), static_cast<int>(circle_radius_and_center[1]));
+    this->type = Ball::BallType::UNKNOWN;
 }
 
-void Ball::setBallClass(int ball_class){
-    this->ball_class = ball_class;
+Ball::Ball(cv::Vec3i circle_radius_and_center){
+    this->radius = circle_radius_and_center[2];
+    this->center = cv::Point(circle_radius_and_center[0], circle_radius_and_center[1]);
+    this->type = Ball::BallType::UNKNOWN;
 }
 
-int Ball::getBallClass(){
-    return ball_class;
+Ball::Ball(int radius, cv::Point center){
+    this->radius = radius;
+    this->center = center;
+    this->type = Ball::BallType::UNKNOWN;
 }
 
 void Ball::setBoundingBox(cv::Rect bounding_box){
@@ -25,26 +37,44 @@ cv::Rect Ball::getBoundingBox(){
 }
 
 void Ball::setBallPosition(cv::Vec3f circle_radius_and_center){
-    this->circle_radius_and_center = circle_radius_and_center;
+    this->radius = static_cast<int>(circle_radius_and_center[2]);
+    this->center = cv::Point(static_cast<int>(circle_radius_and_center[0]), static_cast<int>(circle_radius_and_center[1]));
 }
 
-cv::Vec3f Ball::getBallPosition(){
-    return circle_radius_and_center;
+void Ball::setBallPosition(cv::Vec3i circle_radius_and_center){
+    this->radius = circle_radius_and_center[2];
+    this->center = cv::Point(circle_radius_and_center[0], circle_radius_and_center[1]);
+}
+
+void Ball::setBallPosition(int radius, cv::Point center){
+    this->radius = radius;
+    this->center = center;
+}
+
+cv::Vec3i Ball::getBallPosition(){
+    return cv::Vec3i(this->radius, this->center.x, this->center.y);
 }
 
 cv::Point Ball::getBallCenter(){
-    return cv::Point(circle_radius_and_center[1], circle_radius_and_center[2]);
+    return cv::Point(this->center.x, this->center.y);
 }
 
 cv::Point Ball::getBallCenterInBoundingBox(){
 
-    int center_x = static_cast<int>( circle_radius_and_center[0] - bounding_box.x );
-    int center_y = static_cast<int>( circle_radius_and_center[1] - bounding_box.y );
+    int center_x = this->center.x - bounding_box.x;
+    int center_y = this->center.y - bounding_box.y;
     return cv::Point2i(center_x, center_y);
+
 }
 
-float Ball::getBallRadius(){
-    return circle_radius_and_center[0];
+int Ball::getBallRadius(){
+    return radius;
 }
 
+Ball::BallType Ball::getBallType() const{
+    return type;
+}
 
+void Ball::setBallType(Ball::BallType type){
+    this->type = type;
+}
