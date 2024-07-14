@@ -274,32 +274,38 @@ cv::Mat Draw::updateDrawing(std::vector<Ball> balls, std::vector<std::tuple<cv::
         throw std::runtime_error("Error. Requested a drawing update, but the perspective correction matrix was never computed.");
     }
 
-    // We want to draw trajectory lines and balls
-    // 1. Draw and update trajectories
+    // Correct perspective for trajectory points
+    std::vector<cv::Point2f> correctedPoints;
     for(std::tuple<cv::Point2f, cv::Point2f> displacement : displacements){
-        cv::Vec2f startingPoint = std::get<0>(displacement);
-        cv::Vec2f endingPoint = std::get<1>(displacement);
-        
-        // We need to correct perspective of each point
-        std::vector<cv::Vec2f> points{startingPoint, endingPoint};
-        std::vector<cv::Vec2f> correctedPoints;
-        cv::perspectiveTransform(points, correctedPoints, this->perspectiveTrasformation);
+        cv::Vec2f first = std::get<0>(displacement);
+        cv::Vec2f second = std::get<1>(displacement);
+        correctedPoints.push_back(first);
+        correctedPoints.push_back(second);
+    }
+    cv::perspectiveTransform(correctedPoints, correctedPoints, this->perspectiveTrasformation);
+    
+    // Correct perspective for balls points
+    std::vector<cv::Point2f> centers;
+    for(Ball ball : balls){
+        centers.push_back(ball.getBallCenter());
+    }
+    cv::perspectiveTransform(centers, correctedPoints, this->perspectiveTrasformation);
 
-        // We draw a line
-        cv::Point2f start = points[0];
-        cv::Point2f end = points[1];
+    // Draw and update trajectories
+    for(int i = 0; i < correctedPoints.size(); i = i + 2){
+        cv::Point2f start = correctedPoints[i];        
+        cv::Point2f end = correctedPoints[i+1];        
+        // We draw a line and update drawing
         cv::line(this->drawingNoBalls, start, end, cv::Scalar(0, 255, 255));
     }
 
-    // 2. Draw balls
-    cv::Mat drawing;
-    for (Ball ball : balls){
+    // Draw balls
+    cv::Mat drawing; // Drawing result to be returned
+    for (int i = 0; i < balls.size(); i++){
+        Ball ball = balls[i];
+        cv::Point center = centers[i];
 
-        cv::Vec2i center = ball.getBallCenter();
-        cv::Vec2i correctedPosition;
-        cv::perspectiveTransform(std::vector<cv::Vec2i>{center}, correctedPosition, this->perspectiveTrasformation);
-        
-        cv::Point position = correctedPosition;
+        // Select png according to ball type
         cv::Mat ballPNG;
         switch (ball.getBallType())
         {
@@ -319,7 +325,7 @@ cv::Mat Draw::updateDrawing(std::vector<Ball> balls, std::vector<std::tuple<cv::
             ballPNG = this->unknownBallPNG;
             break;
         }
-        drawing = drawOver(this->drawingNoBalls, ballPNG, position);
+        drawing = drawOver(this->drawingNoBalls, ballPNG, center);
     }
 
     return drawing;
