@@ -6,18 +6,26 @@
 #include <opencv2/core/utils/filesystem.hpp>
 #include <iostream>
 #include <fstream>
+
+
 #include "FieldGeometryAndMask.h"
 #include "Ball.h"
-#include "myTracking.h"
+#include "BallTracker.h"
 
 
 std::vector<cv::Ptr<cv::Tracker>> createTrackers(std::vector<Ball> balls, const cv::Mat first_frame){
-
+    
     std::vector<cv::Ptr<cv::Tracker>> trackers; /*vector that will contain all the single trakcers, one per ball*/
     
     for (int i = 0; i < balls.size(); i++){
+
+        
         cv::Ptr<cv::Tracker> tr = cv::TrackerCSRT::create(); /*creation of the tracker*/
-        tr->init(first_frame,balls[i].getBoundingBox()); /*initialization of the tracker using the bounding box of the ball*/
+        tr->init(first_frame, balls[i].getBoundingBox()); /*initialization of the tracker using the bounding box of the ball*/
+
+        
+        std::cout <<"halloz"<< std::endl;
+
         trackers.push_back(tr);
     }
 
@@ -29,11 +37,9 @@ void updateBallValues(std::vector<Ball> &balls, std::vector<cv::Rect> rois){
     for (int i = 0; i < rois.size(); i++){
         balls[i].setBoundingBox(rois[i]); //updates the coordinates of the bounding box
 
-        cv::Vec3i temp = balls[i].getBallPosition();
-        cv::Vec3i new_position = cv::Vec3i(static_cast<int>(rois[i].x+rois[i].width/2),static_cast<int>(rois[i].y+rois[i].height/2),temp[2]); /*computes the new coordinates of the center of the cirlce that defines the ball*/
+        cv::Vec3f temp = balls[i].getBallPosition();
+        cv::Vec3f new_position = cv::Vec3f(static_cast<float>(rois[i].x+rois[i].width/2),static_cast<float>(rois[i].y+rois[i].height/2),temp[2]); /*computes the new coordinates of the center of the cirlce that defines the ball*/
         balls[i].setBallPosition(new_position); //updates the coordinates of the center of the circle that represent the ball
-
-        
     }
     
 }
