@@ -228,20 +228,16 @@ Draw::Draw(std::string fieldPath)
     : fieldPath{fieldPath}{
 }
 
-void Draw::setCurrentFrame(const cv::Mat &currentFrame){
-    currentFrame.copyTo(this->currentFrame);
-}
-
-void Draw::getGameDraw(cv::Mat &outputDrawing) const{
+void Draw::getGameDraw(cv::Mat &outputDrawing){
     // Currently just return the current frame
     std::vector<cv::Point> corners = detectTableCorners();
-    outputDrawing = correctPrespective(corners);
+    outputDrawing = computePrespective(corners);
 }
 
 /**
  * TOOD: define size of image to choose coordinates of perspective transfomration
  */
-cv::Mat Draw::correctPrespective(const std::vector<cv::Point>& corners) const{
+cv::Mat Draw::computePrespective(const std::vector<cv::Point>& corners){
     /**
      * TODO: optimize casting ? keep order
      */
@@ -289,6 +285,9 @@ cv::Mat Draw::correctPrespective(const std::vector<cv::Point>& corners) const{
 
     // Correct perspective
     cv::warpPerspective(this->currentFrame, result, transformation, dsize);
+
+    // Update class variable
+    this->computedPerspective = true;
 
     return result;
 }
