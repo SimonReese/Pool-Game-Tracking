@@ -10,6 +10,8 @@
 
 #include "Draw.h"
 #include "TableSegmenter.h"
+#include "BallClassifier.h"
+#include "Ball.h"
 
 int main(int argc, char* argv[]){
     
@@ -39,6 +41,13 @@ int main(int argc, char* argv[]){
         cv::imshow("Masked frame", maskedFrame);
         // 2. Get table corners
         std::vector<cv::Point2i> corners = segmenter.getFieldCorners(mask);        
+
+        // 3. Detect balls
+        std::vector<Ball> balls;
+        
+
+        //4. Associate class to balls
+        BallClassifier::classify(balls, frame);
 
         cv::waitKey(25);
     }
