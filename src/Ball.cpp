@@ -31,3 +31,20 @@ void Ball::setBallPosition(cv::Vec3f circle_radius_and_center){
 cv::Vec3f Ball::getBallPosition(){
     return circle_radius_and_center;
 }
+
+cv::Point Ball::getBallCenter(){
+    return cv::Point(circle_radius_and_center[1], circle_radius_and_center[2]);
+}
+
+cv::Point Ball::getBallCenterInBoundingBox(){
+
+    int center_x = static_cast<int>( circle_radius_and_center[0] - bounding_box.x );
+    int center_y = static_cast<int>( circle_radius_and_center[1] - bounding_box.y );
+    return cv::Point2i(center_x, center_y);
+}
+
+float Ball::getBallRadius(){
+    return circle_radius_and_center[0];
+}
+
+

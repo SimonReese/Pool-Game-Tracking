@@ -12,6 +12,7 @@
 #include "TableSegmenter.h"
 
 int main(int argc, char* argv[]){
+    
     if (argc < 2){
         std::cerr << "Please provide a video path." << std::endl;
         return -1;

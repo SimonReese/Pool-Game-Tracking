@@ -18,8 +18,6 @@
   // create the tracker
   legacy::MultiTracker trackers;
 
-  
- 
   // container of the tracked objects
   vector<Rect2d> objects;
  

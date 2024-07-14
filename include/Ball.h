@@ -13,6 +13,8 @@
 class Ball{
 
 private:
+
+    // i would suggest for future improvement to split radius from center
     // center and radius of the circle that identifies the ball
     cv::Vec3f circle_radius_and_center;
 
@@ -63,6 +65,21 @@ public:
      * Return the center and radius of the ball
      */
     cv::Vec3f getBallPosition();
+
+    /**
+     * Return the center of the ball
+     */
+    cv::Point getBallCenter();
+
+    /**
+     * Return the center of the ball in the bounding box coordinates
+     */
+    cv::Point2i getBallCenterInBoundingBox();
+
+    /**
+     * Return the radius of the ball
+     */
+    float getBallRadius();
 
 };
 #endif
