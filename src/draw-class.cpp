@@ -61,28 +61,25 @@ int main(int argc, char* argv[]){
     // BallClassifier ballClassifier(balls, firstFrame);
 
     for( video >> frame; !frame.empty(); video >> frame){
-        cv::imshow("Video", frame);
         
         
         balls = tracker.update(frame);
 
         for(Ball ball : balls){
-            cv::Vec2i center(ball.getBallPosition()[0], ball.getBallPosition()[1]);
-            cv::circle(frame, center, ball.getBallRadius(), cv::Scalar(0, 255, 128));
+            cv::circle(frame, ball.getBallCenter(), ball.getBallRadius(), cv::Scalar(0, 255, 128));
         }
 
         cv::imshow("Masked frame", frame);
 
-        
         cv::Mat drawing = draw.updateDrawing(balls);
         cv::imshow("Draw", drawing);
         //4. Associate class to balls
         //BallClassifier::classify(balls, frame);
 
-        cv::waitKey(1);
+        cv::waitKey(10);
     }
 
-    video.release(); \
+    video.release();
     cv::waitKey(0);
     
 

@@ -212,8 +212,6 @@ int main(int argc, char* argv[])
 
     vector<cv::Rect> boundRect = findBoundingRectangles(field_and_balls_mask);
 
-    
-
     for (int h = 0; h < boundRect.size(); h++){
         for (int b = 0; b < balls.size(); b++){
             if((boundRect[h].x+boundRect[h].width/2) >= balls[b].getBallPosition()[0]-1 && (boundRect[h].x+boundRect[h].width/2) <= balls[b].getBallPosition()[0]+1){
@@ -229,8 +227,6 @@ int main(int argc, char* argv[])
     drawBoundingBoxesHSVChannels(balls, frame_copy);
 
     writeBboxToFile(INITIAL_BBOX_FILENAME, balls);    
-
-    std::cout << "halo" << std::endl;
 
     cv::imwrite(INITIAL_MASK_FILENAME,field_and_balls_mask);
 
@@ -250,11 +246,7 @@ int main(int argc, char* argv[])
     BallClassifier classifier(balls, frame);
     std::vector<Ball> res = classifier.classify();
 
-    for(Ball ball : res){
-        std::cout << "Ball: (" << ball.getBallCenter() << ") "  << std::endl;
-    }
-
-    // BallTracker videoTracker(frame, balls);
+    BallTracker videoTracker(frame, balls);
     // std::cout <<"halloz"<< std::endl;
 
     // // cv::VideoWriter output("output.avi", cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), 30, cv::Size(static_cast<int>(cap.get(cv::CAP_PROP_FRAME_WIDTH)),static_cast<int>(cap.get(cv::CAP_PROP_FRAME_HEIGHT))));
@@ -264,26 +256,27 @@ int main(int argc, char* argv[])
     // // std::vector<cv::Point> ballMovement;
     // // cv::cvtColor(frame,frame,cv::COLOR_HSV2BGR);
 
-    // for ( ;; ){
+    for ( ;; ){
 
-    //     cap >> frame;
-    //     balls = videoTracker.update(frame);
+        cap >> frame;
 
-    //     //debug test to see if bounding box and center of circle that defines ball gets updated by the function
-    //     for (int g = 0; g < balls.size(); g++){
-    //         cv::rectangle(frame, balls[g].getBoundingBox(), cv::Scalar(255,255,255),1,cv::LINE_AA);
-    //         //cv::circle(frame,cv::Point(static_cast<int>(balls[g].getBallPosition()[0]),static_cast<int>((balls[g].getBallPosition()[1]))),static_cast<int>(balls[g].getBallPosition()[2]), cv::Scalar(255,255,255),-1);
-    //     }
+        balls = videoTracker.update(frame);
 
-    //     // show image with the tracked object
-    //     cv::imshow("tracker",frame);
+        //debug test to see if bounding box and center of circle that defines ball gets updated by the function
+        for (int g = 0; g < balls.size(); g++){
+            cv::rectangle(frame, balls[g].getBoundingBox(), cv::Scalar(255,255,255),1, cv::LINE_AA);
+            cv::circle(frame,cv::Point(static_cast<int>(balls[g].getBallPosition()[0]),static_cast<int>((balls[g].getBallPosition()[1]))),static_cast<int>(balls[g].getBallPosition()[2]), cv::Scalar(255,255,255),-1);
+        }
 
-    //     //quit on ESC button
-    //     if(cv::waitKey(1)==27)break;
+        // show image with the tracked object
+        cv::imshow("tracker",frame);
+
+        //quit on ESC button
+        if(cv::waitKey(1)==27)break;
 
         
-    //     //output.write(frame);
-    // }
+        //output.write(frame);
+    }
 
     // // Get the ending timepoint
     // auto end = high_resolution_clock::now();
