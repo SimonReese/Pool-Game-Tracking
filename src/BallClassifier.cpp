@@ -1,18 +1,25 @@
 #include <BallClassifier.h>
 
-BallClassifier::BallClassifier(){  
+
+BallClassifier::BallClassifier(const std::vector<Ball> ballsToClassify, const cv::Mat fullGameImage){
+    if(ballsToClassify.empty()) throw std::invalid_argument("Error: empty list of balls to classify");
+    if(fullGameImage.empty()) throw std::invalid_argument("Error: empty game image");
+
+    // Initialize the list of balls to be classified
+    this->ballsVector = ballsToClassify;
+    this->fullGameImage = fullGameImage.clone();
 }
 
 float BallClassifier::calculateWhitePixelsRatio(const cv::Mat &inputBinaryImage) {
     // Count the number of white pixels in the binary image.
-    int whitePixels = cv::countNonZero(inputBinaryImage == 255);
+    int whitePixels = cv::countNonZero(inputBinaryImage == WHITE_COLOR);
 
     // Calculate the ratio of white pixels to the total number of pixels in the image.
     int totalPixels = inputBinaryImage.rows * inputBinaryImage.cols;
     return static_cast<float>(whitePixels) / totalPixels;
 }
 
-std::pair<Ball::BallType, float> BallClassifier::preliminaryBallClassifier(cv::Mat &cutOutImage){
+std::pair<Ball::BallType, float> BallClassifier::preliminaryBallClassifier(const cv::Mat &cutOutImage){
 
     // Convert BGR to HLS  
     cv::Mat hlsImage;
@@ -22,7 +29,7 @@ std::pair<Ball::BallType, float> BallClassifier::preliminaryBallClassifier(cv::M
     cv::inRange(hlsImage, cv::Scalar(H_LOW, L_LOW, S_LOW), cv::Scalar(H_HIGH, L_HIGH, S_HIGH), binaryImage);
 
     // calculate the ratio of white pixels to the total number of pixels in the image
-    float whitePixelsRatio = calculateWhitePixelsRatio(binaryImage);
+    float whitePixelsRatio = BallClassifier::calculateWhitePixelsRatio(binaryImage);
 
     // if the ratio of white pixels to the total number of pixels is greater than the classification threshold,
     // classify the ball as half white and update the white pixels ratio in the Ball object.
@@ -35,7 +42,7 @@ std::pair<Ball::BallType, float> BallClassifier::preliminaryBallClassifier(cv::M
     }
 }
 
-void BallClassifier::classify(std::vector<Ball> &ballsSet, const cv::Mat &fullGameImage){
+std::vector<Ball> BallClassifier::classify(){
 
     // maxRatio is the ratio to identify the white ball
     float maxRatio = 0.;
@@ -47,13 +54,13 @@ void BallClassifier::classify(std::vector<Ball> &ballsSet, const cv::Mat &fullGa
 
     // given a set of balls in a game the idea is to find the ball with the highest ratio which corresponds to the white ball
     // and the ball with the lowest white pixels ratio is the black ball.
-    for(int index = 0; index < ballsSet.size(); index++){
+    for(int index = 0; index < this->ballsVector.size(); index++){
 
         // crop the ball from the full game image and classify it using the preliminary ball classifier
-        cv::Mat cutOutImage = fullGameImage(ballsSet[index].getBoundingBox());
+        cv::Mat cutOutImage = this->fullGameImage(this->ballsVector[index].getBoundingBox());
         std::pair<Ball::BallType, float> classificationResult = preliminaryBallClassifier(cutOutImage);
 
-        ballsSet[index].setBallType(classificationResult.first);
+        ballsVector[index].setBallType(classificationResult.first);
 
         if(classificationResult.second > maxRatio){
             maxRatio = classificationResult.second;
@@ -65,158 +72,160 @@ void BallClassifier::classify(std::vector<Ball> &ballsSet, const cv::Mat &fullGa
     }
 
     // the ball with the highest white pixels ratio is the white ball
-    ballsSet[maxRatioBallIndex].setBallType(Ball::BallType::WHITE);
+    this->ballsVector[maxRatioBallIndex].setBallType(Ball::BallType::WHITE);
 
     // the ball with the lowest white pixels ratio is the black ball
-    ballsSet[minRatioBallIndex].setBallType(Ball::BallType::BLACK);
+    this->ballsVector[minRatioBallIndex].setBallType(Ball::BallType::BLACK);
+
+    return this->ballsVector;
 }
 
 
 
-void showHlsChannelsandBinary(const std::vector<cv::Mat> &channelsHlsImage, const cv::Mat &binaryImage, std::string windowName){
+// void showHlsChannelsandBinary(const std::vector<cv::Mat> &channelsHlsImage, const cv::Mat &binaryImage, std::string windowName){
 
-    int k = 13; // magnification factor
+//     int k = 13; // magnification factor
 
-    cv::Mat L = channelsHlsImage[1].clone();
-    cv::Mat S = channelsHlsImage[2].clone();
+//     cv::Mat L = channelsHlsImage[1].clone();
+//     cv::Mat S = channelsHlsImage[2].clone();
 
-    cv::Mat binaryClone = binaryImage.clone();
+//     cv::Mat binaryClone = binaryImage.clone();
 
-    // cutout images are very small, we need to enlarge them
-    cv::resize(S, S, cv::Size(S.rows*k, S.cols*k));
-    cv::resize(L, L, cv::Size(L.rows*k, L.cols*k));
-    cv::resize(binaryClone, binaryClone, cv::Size(binaryClone.rows*k, binaryClone.cols*k));
+//     // cutout images are very small, we need to enlarge them
+//     cv::resize(S, S, cv::Size(S.rows*k, S.cols*k));
+//     cv::resize(L, L, cv::Size(L.rows*k, L.cols*k));
+//     cv::resize(binaryClone, binaryClone, cv::Size(binaryClone.rows*k, binaryClone.cols*k));
 
-    // cv::imshow(windowName + "_S", S);
-    // cv::imshow(windowName + "_L", L);
-    cv::imshow(windowName + "_bin", binaryClone);
+//     // cv::imshow(windowName + "_S", S);
+//     // cv::imshow(windowName + "_L", L);
+//     cv::imshow(windowName + "_bin", binaryClone);
 
-}
+// }
 
-int evaluateBallsSet(const std::string datasetFolder, const std::string gameFolder, const std::string ballClassFolder){
+// int evaluateBallsSet(const std::string datasetFolder, const std::string gameFolder, const std::string ballClassFolder){
 
-    std::vector<cv::String> cutOutList = listFrames("../" + datasetFolder, gameFolder, ballClassFolder);
+//     std::vector<cv::String> cutOutList = listFrames("../" + datasetFolder, gameFolder, ballClassFolder);
 
-    Ball::BallType setClass;
-    int wrongClassCounter = 0;
+//     Ball::BallType setClass;
+//     int wrongClassCounter = 0;
 
-    (ballClassFolder == "full") ? setClass = Ball::BallType::FULL
-    : (ballClassFolder == "half") ? setClass = Ball::BallType::HALF
-    : throw std::invalid_argument("Invalid ball class folder: " + ballClassFolder);
-
-
-    for (cv::String cutOutName : cutOutList){
-
-        std::string imgPath = "../" + datasetFolder + "/" + gameFolder + "/" + ballClassFolder + "/" + cutOutName;
-        cv::Mat cutout = cv::imread( imgPath.c_str() );
-        std::pair<Ball::BallType, float> classificationResult = BallClassifier::preliminaryBallClassifier(cutout);
-
-        (classificationResult.first != setClass) ? wrongClassCounter++ : 0;
-
-    }
-
-    return wrongClassCounter;
-
-}
-
-void evaluteGames(std::string datasetFolder){
-
-    std::string datasetPath = "../" + datasetFolder;
-
-    std::vector<cv::String> gameFolders = listGameDirectories(datasetPath);
-
-    int wrongClassifiedFull;
-    int wrongClassifiedHalf;
-
-    int wrongClassifiedSum = 0;
-
-    for(cv::String game : gameFolders){
-
-        std::string ballClassFolder = "full";
-        wrongClassifiedFull = evaluateBallsSet(datasetFolder, game, ballClassFolder);   
-
-        std::cout << "================" << std::endl;
-
-        ballClassFolder = "half";
-        wrongClassifiedHalf = evaluateBallsSet(datasetFolder, game, ballClassFolder); 
-
-        std::cout << "Wrongly classified full balls in " << game << ": " << wrongClassifiedFull << std::endl;
-        std::cout << "Wrongly classified half balls in " << game << ": " << wrongClassifiedHalf << "\n"<< std::endl;
-        //std::cout << "================" << std::endl;
-        // std::cout << "Total wrong classified balls in " << gameFolder << ": " << wrongClassifiedFull + wrongClassifiedHalf << std::endl;
-
-        wrongClassifiedSum += wrongClassifiedFull + wrongClassifiedHalf;
-
-        // cv::waitKey(0);
-    }
+//     (ballClassFolder == "full") ? setClass = Ball::BallType::FULL
+//     : (ballClassFolder == "half") ? setClass = Ball::BallType::HALF
+//     : throw std::invalid_argument("Invalid ball class folder: " + ballClassFolder);
 
 
-    std::cout << "Total wrong classified balls in all games: " << wrongClassifiedSum << std::endl;
+//     for (cv::String cutOutName : cutOutList){
+
+//         std::string imgPath = "../" + datasetFolder + "/" + gameFolder + "/" + ballClassFolder + "/" + cutOutName;
+//         cv::Mat cutout = cv::imread( imgPath.c_str() );
+//         std::pair<Ball::BallType, float> classificationResult = BallClassifier::preliminaryBallClassifier(cutout);
+
+//         (classificationResult.first != setClass) ? wrongClassCounter++ : 0;
+
+//     }
+
+//     return wrongClassCounter;
+
+// }
+
+// void evaluteGames(std::string datasetFolder){
+
+//     std::string datasetPath = "../" + datasetFolder;
+
+//     std::vector<cv::String> gameFolders = listGameDirectories(datasetPath);
+
+//     int wrongClassifiedFull;
+//     int wrongClassifiedHalf;
+
+//     int wrongClassifiedSum = 0;
+
+//     for(cv::String game : gameFolders){
+
+//         std::string ballClassFolder = "full";
+//         wrongClassifiedFull = evaluateBallsSet(datasetFolder, game, ballClassFolder);   
+
+//         std::cout << "================" << std::endl;
+
+//         ballClassFolder = "half";
+//         wrongClassifiedHalf = evaluateBallsSet(datasetFolder, game, ballClassFolder); 
+
+//         std::cout << "Wrongly classified full balls in " << game << ": " << wrongClassifiedFull << std::endl;
+//         std::cout << "Wrongly classified half balls in " << game << ": " << wrongClassifiedHalf << "\n"<< std::endl;
+//         //std::cout << "================" << std::endl;
+//         // std::cout << "Total wrong classified balls in " << gameFolder << ": " << wrongClassifiedFull + wrongClassifiedHalf << std::endl;
+
+//         wrongClassifiedSum += wrongClassifiedFull + wrongClassifiedHalf;
+
+//         // cv::waitKey(0);
+//     }
+
+
+//     std::cout << "Total wrong classified balls in all games: " << wrongClassifiedSum << std::endl;
     
-}
+// }
 
 
 
-void saveTofile(const cv::Mat &inputImage, std::string imageName, std::string outputFolder){
+// void saveTofile(const cv::Mat &inputImage, std::string imageName, std::string outputFolder){
 
-    // Define the root folder
-    std::string rootFolderPath = "../" + CUTOUT_DIR;
+//     // Define the root folder
+//     std::string rootFolderPath = "../" + CUTOUT_DIR;
 
-    // Check if the folder exists, if not, create its
-    if (!cv::utils::fs::exists(rootFolderPath)) {
-        if (cv::utils::fs::createDirectory(rootFolderPath)) {
-            std::cout << "Directory created successfully: " << rootFolderPath << std::endl;
-        } else {
-            std::cout << "Failed to create directory: " << rootFolderPath << std::endl;
-            // return -1;
-        }
-    }
+//     // Check if the folder exists, if not, create its
+//     if (!cv::utils::fs::exists(rootFolderPath)) {
+//         if (cv::utils::fs::createDirectory(rootFolderPath)) {
+//             std::cout << "Directory created successfully: " << rootFolderPath << std::endl;
+//         } else {
+//             std::cout << "Failed to create directory: " << rootFolderPath << std::endl;
+//             // return -1;
+//         }
+//     }
 
-    // Check if the folder exists, if not, create its
-    if (!cv::utils::fs::exists(outputFolder)) {
-        if (cv::utils::fs::createDirectory(outputFolder)) {
-            std::cout << "Directory created successfully: " << outputFolder << std::endl;
-        } else {
-            std::cout << "Failed to create directory: " << outputFolder << std::endl;
-            // return -1;
-        }
-    }
+//     // Check if the folder exists, if not, create its
+//     if (!cv::utils::fs::exists(outputFolder)) {
+//         if (cv::utils::fs::createDirectory(outputFolder)) {
+//             std::cout << "Directory created successfully: " << outputFolder << std::endl;
+//         } else {
+//             std::cout << "Failed to create directory: " << outputFolder << std::endl;
+//             // return -1;
+//         }
+//     }
 
-    // Define the output file path
-    std::string outputPath = outputFolder + imageName + ".png";
+//     // Define the output file path
+//     std::string outputPath = outputFolder + imageName + ".png";
 
-    // Save the inputImage
-    if (cv::imwrite(outputPath, inputImage)) {
-        std::cout << "Image saved successfully to " << outputPath << std::endl;
-    } else {
-        std::cout << "Failed to save the image" << std::endl;
-    }
-}
+//     // Save the inputImage
+//     if (cv::imwrite(outputPath, inputImage)) {
+//         std::cout << "Image saved successfully to " << outputPath << std::endl;
+//     } else {
+//         std::cout << "Failed to save the image" << std::endl;
+//     }
+// }
 
-void cutOutBalls(const cv::Mat &inputImage, const std::vector<Ball>& balls, const std::string &gameFolder){
+// void cutOutBalls(const cv::Mat &inputImage, const std::vector<Ball>& balls, const std::string &gameFolder){
 
-    int i=0;
-    for (Ball ball : balls) {
+//     int i=0;
+//     for (Ball ball : balls) {
 
-        cv::Mat boundingBoxCutOut = inputImage(ball.getBoundingBox());
+//         cv::Mat boundingBoxCutOut = inputImage(ball.getBoundingBox());
 
-        // maybe for balls better to have a tuple for center and a variable just for the radius
-        cv::Mat circleMask = cv::Mat::zeros(boundingBoxCutOut.size(), CV_8UC1);
+//         // maybe for balls better to have a tuple for center and a variable just for the radius
+//         cv::Mat circleMask = cv::Mat::zeros(boundingBoxCutOut.size(), CV_8UC1);
 
-        cv::Point2i center(circleMask.cols /2, circleMask.rows /2);
-        circle(circleMask, center , 9, cv::Scalar(255), -1);
-        // Copy the original ROI to the ball cutout, but only where the mask is white (the ball is present)
-        cv::Mat circleCutOut;
+//         cv::Point2i center(circleMask.cols /2, circleMask.rows /2);
+//         circle(circleMask, center , 9, cv::Scalar(255), -1);
+//         // Copy the original ROI to the ball cutout, but only where the mask is white (the ball is present)
+//         cv::Mat circleCutOut;
 
-        // cv::bitwise_and(boundingBoxCutOut, boundingBoxCutOut, circleCutOut, circleMask);
-        boundingBoxCutOut.copyTo(circleCutOut, circleMask); 
+//         // cv::bitwise_and(boundingBoxCutOut, boundingBoxCutOut, circleCutOut, circleMask);
+//         boundingBoxCutOut.copyTo(circleCutOut, circleMask); 
 
-        // std::cout << "Ball center: " << ball.getBallCenterInBoundingBox() << boundingBoxCutOut.rows << std::endl;
+//         // std::cout << "Ball center: " << ball.getBallCenterInBoundingBox() << boundingBoxCutOut.rows << std::endl;
 
-        saveTofile(circleCutOut, "ball_cutout" + std::to_string(i), "../" + CUTOUT_DIR + "/" + gameFolder + "/" ); 
-        // cv:imshow("Ball Detection" + std::to_string(i), circleMask);
-        i++;
-    }
+//         saveTofile(circleCutOut, "ball_cutout" + std::to_string(i), "../" + CUTOUT_DIR + "/" + gameFolder + "/" ); 
+//         // cv:imshow("Ball Detection" + std::to_string(i), circleMask);
+//         i++;
+//     }
     
 
-}
+// }

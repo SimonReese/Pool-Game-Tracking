@@ -94,7 +94,7 @@ void my_HSV_callback2(int event, int x, int y, int flags, void* userdata, std::s
         // find bounding boxes of all circles and draws them
         
         drawBoundingBoxesHSVChannels(balls, no_mod_image);
-        cutOutBalls(no_mod_image, balls, gameFolder);
+        // cutOutBalls(no_mod_image, balls, gameFolder);
 
 
 
@@ -163,7 +163,7 @@ int main(int argc, char* argv[])
 
     std::string datasetFolder = "balls_cutout";
     
-    evaluteGames(datasetFolder);
+    // evaluteGames(datasetFolder);
 
     cv::waitKey(0);
 

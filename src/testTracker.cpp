@@ -9,6 +9,7 @@
 #include <chrono>
 
 #include "BallTracker.h"
+#include "BallClassifier.h"
 
 #define X_VALUE 11
 #define Y_VALUE 11
@@ -246,55 +247,63 @@ int main(int argc, char* argv[])
     
     std::cout <<"halloz"<< std::endl;
 
-    BallTracker videoTracker(frame, balls);
-    std::cout <<"halloz"<< std::endl;
+    BallClassifier classifier(balls, frame);
+    std::vector<Ball> res = classifier.classify();
 
-    // cv::VideoWriter output("output.avi", cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), 30, cv::Size(static_cast<int>(cap.get(cv::CAP_PROP_FRAME_WIDTH)),static_cast<int>(cap.get(cv::CAP_PROP_FRAME_HEIGHT))));
-
-    // std::vector<cv::Rect> rois;
-    
-    // std::vector<cv::Point> ballMovement;
-    // cv::cvtColor(frame,frame,cv::COLOR_HSV2BGR);
-
-    for ( ;; ){
-
-        cap >> frame;
-        balls = videoTracker.update(frame);
-
-        //debug test to see if bounding box and center of circle that defines ball gets updated by the function
-        for (int g = 0; g < balls.size(); g++){
-            cv::rectangle(frame, balls[g].getBoundingBox(), cv::Scalar(255,255,255),1,cv::LINE_AA);
-            //cv::circle(frame,cv::Point(static_cast<int>(balls[g].getBallPosition()[0]),static_cast<int>((balls[g].getBallPosition()[1]))),static_cast<int>(balls[g].getBallPosition()[2]), cv::Scalar(255,255,255),-1);
-        }
-
-        // show image with the tracked object
-        cv::imshow("tracker",frame);
-
-        //quit on ESC button
-        if(cv::waitKey(1)==27)break;
-
-        
-        //output.write(frame);
+    for(Ball ball : res){
+        std::cout << "Ball: (" << ball.getBallCenter() << ") "  << std::endl;
     }
 
-    // Get the ending timepoint
-    auto end = high_resolution_clock::now();
+    // BallTracker videoTracker(frame, balls);
+    // std::cout <<"halloz"<< std::endl;
 
-    // Calculate the duration
-    auto duration = duration_cast<milliseconds>(end - start);
+    // // cv::VideoWriter output("output.avi", cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), 30, cv::Size(static_cast<int>(cap.get(cv::CAP_PROP_FRAME_WIDTH)),static_cast<int>(cap.get(cv::CAP_PROP_FRAME_HEIGHT))));
 
-    // Output the duration
-    std::cout << "someFunction() took " << duration.count() << " milliseconds." << std::endl;
+    // // std::vector<cv::Rect> rois;
+    
+    // // std::vector<cv::Point> ballMovement;
+    // // cv::cvtColor(frame,frame,cv::COLOR_HSV2BGR);
+
+    // for ( ;; ){
+
+    //     cap >> frame;
+    //     balls = videoTracker.update(frame);
+
+    //     //debug test to see if bounding box and center of circle that defines ball gets updated by the function
+    //     for (int g = 0; g < balls.size(); g++){
+    //         cv::rectangle(frame, balls[g].getBoundingBox(), cv::Scalar(255,255,255),1,cv::LINE_AA);
+    //         //cv::circle(frame,cv::Point(static_cast<int>(balls[g].getBallPosition()[0]),static_cast<int>((balls[g].getBallPosition()[1]))),static_cast<int>(balls[g].getBallPosition()[2]), cv::Scalar(255,255,255),-1);
+    //     }
+
+    //     // show image with the tracked object
+    //     cv::imshow("tracker",frame);
+
+    //     //quit on ESC button
+    //     if(cv::waitKey(1)==27)break;
+
+        
+    //     //output.write(frame);
+    // }
+
+    // // Get the ending timepoint
+    // auto end = high_resolution_clock::now();
+
+    // // Calculate the duration
+    // auto duration = duration_cast<milliseconds>(end - start);
+
+    // // Output the duration
+    // std::cout << "someFunction() took " << duration.count() << " milliseconds." << std::endl;
 
 
-    writeBboxToFile(FINAL_BBOX_FILENAME, balls);
+    // writeBboxToFile(FINAL_BBOX_FILENAME, balls);
 
-    cv::Mat final_field_mask = drawBallsOnFieldMask(filled_field_contour,balls);
+    // cv::Mat final_field_mask = drawBallsOnFieldMask(filled_field_contour,balls);
 
-    cv::imwrite(FINAL_MASK_FILENAME,final_field_mask);
+    // cv::imwrite(FINAL_MASK_FILENAME,final_field_mask);
 
     /*release resources used for reading the frames of the input video and for saving the output video*/
     // output.release(); 
+
 	cap.release();
     return 0;
 }

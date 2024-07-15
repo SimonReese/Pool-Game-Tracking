@@ -4,6 +4,8 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 project(PoolGameTracking)
 
+set(CMAKE_PREFIX_PATH "/home/fed/cv_lab/cv_libs/local")
+
 # Required libraries
 find_package(OpenCV REQUIRED)
 
@@ -69,7 +71,7 @@ add_executable(mask_campo src/mask_campo_e_palline_bounding_box_palline.cpp)
 
 #just for testing purposes
 add_executable(testTracker src/testTracker.cpp)
-target_link_libraries(testTracker ${OpenCV_LIBS} MaskAndBalls BallTracker)
+target_link_libraries(testTracker ${OpenCV_LIBS} MaskAndBalls BallTracker BallClassifier)
 
 
 # Link libraries to files

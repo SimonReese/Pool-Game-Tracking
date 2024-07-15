@@ -42,12 +42,10 @@ class BallClassifier{
         static const int S_LOW = 30;
         static const int S_HIGH = 255;
 
-    public:
+        static const int WHITE_COLOR = 255;
 
-        /**
-        * Default constructor for initializing class.
-        */
-        BallClassifier();
+        std::vector<Ball> ballsVector;
+        cv::Mat fullGameImage;
 
         /**
          * Function to calculate the ratio of white pixels in the binary image.
@@ -61,53 +59,62 @@ class BallClassifier{
          * @param cutOutImage image of a ball to be classified
          * @return the type of the ball and the ratio of white pixels in the binary image
         */
+        static std::pair<Ball::BallType, float> preliminaryBallClassifier(const cv::Mat &cutOutImage);
 
-        static std::pair<Ball::BallType, float> preliminaryBallClassifier(cv::Mat &cutOutImage);
+    public:
+
+        BallClassifier() = delete;
 
         /**
-         * Function to identify and classify the black and white balls from a game
-         * @param ballsSet the set of balls in the fullGameImage
-         * @param fullGameImage the full size image of the game to be analyzed
+        * @brief constructor for initializing class.
+        * @param ballsToClassify vector of balls to classify
+        * @param fullGameImage image of a pool game with balls to classify
         */
-        static void classify(std::vector<Ball> &ballsSet, const cv::Mat &fullGameImage);
+        BallClassifier(const std::vector<Ball> ballsToClassify, const cv::Mat fullGameImage);
+
+        /**
+         * @brief Function that classifies the balls in the vector of balls of the game
+         * @return vector of classified balls
+        */
+        std::vector<Ball> classify();
 
 };
 
 
 
 
-/**
- * Function to show the HLS channels and binary image of a given image
- * @param channelsHlsImage vector of HLS channels of the input image
- * @param binaryImage binary image obtained by thresholding HLS image
-*/
-void showHlsChannelsandBinary(const std::vector<cv::Mat> &channelsHlsImage, const cv::Mat &binaryImage, std::string windowName);
+// /**
+//  * Function to show the HLS channels and binary image of a given image
+//  * @param channelsHlsImage vector of HLS channels of the input image
+//  * @param binaryImage binary image obtained by thresholding HLS image
+// */
+// void showHlsChannelsandBinary(const std::vector<cv::Mat> &channelsHlsImage, const cv::Mat &binaryImage, std::string windowName);
 
-/**
- * Function to evaluate the classification accuracy of the ball classifier on a class of balls in a game, in considers just full and half balls
- * @param datasetFolder name of the dataset folder
- * @param gameFolder name of the folder for the specific game we want to evaluate
- * @param ballClassFolder subfolder of game folder containing balls of the same class
- * @return number of balls wrongly classified
-*/
-int evaluateBallsSet(const std::string datasetFolder, const std::string gameFolder, const std::string ballClassFolder);
+// /**
+//  * Function to evaluate the classification accuracy of the ball classifier on a class of balls in a game, in considers just full and half balls
+//  * @param datasetFolder name of the dataset folder
+//  * @param gameFolder name of the folder for the specific game we want to evaluate
+//  * @param ballClassFolder subfolder of game folder containing balls of the same class
+//  * @return number of balls wrongly classified
+// */
+// int evaluateBallsSet(const std::string datasetFolder, const std::string gameFolder, const std::string ballClassFolder);
 
-/**
- * Function to evaluate the classification accuracy of the ball classifier on all games in a given dataset
- * @param datasetFolder name of the dataset folder
-*/
-void evaluteGames(std::string datasetFolder);
+// /**
+//  * Function to evaluate the classification accuracy of the ball classifier on all games in a given dataset
+//  * @param datasetFolder name of the dataset folder
+// */
+// void evaluteGames(std::string datasetFolder);
 
-/**
- * Function to save an image in a given folder
-*/
-void saveTofile(const cv::Mat &inputImage, std::string imageName, std::string outputFolder);
+// /**
+//  * Function to save an image in a given folder
+// */
+// void saveTofile(const cv::Mat &inputImage, std::string imageName, std::string outputFolder);
 
 
-/**
- * Function to extract just a ball image cutout from a given image
-*/
-void cutOutBalls(const cv::Mat &inputImage, const std::vector<Ball> &balls, const std::string &gameFolder);
+// /**
+//  * Function to extract just a ball image cutout from a given image
+// */
+// void cutOutBalls(const cv::Mat &inputImage, const std::vector<Ball> &balls, const std::string &gameFolder);
 
 
 #endif 
