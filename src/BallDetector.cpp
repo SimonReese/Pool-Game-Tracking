@@ -144,10 +144,26 @@ std::vector<Ball> BallDetector::detectBalls(const cv::Mat &image, const cv::Mat 
     }
 
     std::vector<Ball> balls = findBalls(image, tableMask, tableContours, tableCorners);
+
+    cv::Mat field_and_balls_mask = drawBallsOnFieldMask(tableMask,balls);
+    std::vector<cv::Rect> boundRect = findBoundingRectangles(field_and_balls_mask);
+
+    /*updates the bounding box value of each ball by assigning the bounding box that has center closest to the center of the circle that defines the ball*/
+    int offset_thres = 1;
+    for (int h = 0; h < boundRect.size(); h++){
+        for (int b = 0; b < balls.size(); b++){
+            if((boundRect[h].x+boundRect[h].width/2) >= balls[b].getBallPosition()[0]-offset_thres && (boundRect[h].x+boundRect[h].width/2) <= balls[b].getBallPosition()[0]+offset_thres){
+                if((boundRect[h].y+boundRect[h].height/2) >= balls[b].getBallPosition()[1]-offset_thres && (boundRect[h].y+boundRect[h].height/2) <= balls[b].getBallPosition()[1]+offset_thres){
+                    balls[b].setBoundingBox(boundRect[h]);
+                }
+            }
+        }   
+    }
+
     return balls;
 }
 
-cv::Mat drawBallsOnFieldMask(const cv::Mat field_mask, std::vector<Ball> balls){
+cv::Mat BallDetector::drawBallsOnFieldMask(const cv::Mat field_mask, std::vector<Ball> balls){
 
         /*draws each individual ball of the balls vector on the image that contains the mask of the field only without the balls*/
         cv::Mat field_mask_and_balls = field_mask.clone();
@@ -156,4 +172,48 @@ cv::Mat drawBallsOnFieldMask(const cv::Mat field_mask, std::vector<Ball> balls){
         }
 
     return field_mask_and_balls;
+}
+
+std::vector<cv::Rect> BallDetector::findBoundingRectangles(const cv::Mat field_mask_and_balls){
+
+        cv::Mat bbox_edges(field_mask_and_balls.size(),CV_8U);
+        cv::Canny(field_mask_and_balls,bbox_edges,100,400);
+        std::vector<std::vector<cv::Point> > contours;
+        findContours( bbox_edges, contours, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE );
+
+        std::vector<cv::Rect> boundRect;
+        cv::Rect rectHolder;
+        
+        for( size_t i = 0; i < contours.size(); i++ ){
+
+            if(rectHolder == cv::boundingRect(contours[i])){ //check to remove multiple bounding boxes exaclty stacked one over the other
+                contours.erase(contours.begin()+i);
+                i--;
+                continue;
+            }
+            rectHolder = boundingRect( contours[i] ); /*computes the bounding box of the single contour*/
+
+             /*removes unwanted bounding box that do not frame any ball by looking at the color of the pixel the mask that correspond to the center of the bounding box*/
+             /*!!!FUNDAMENTAL!!!*//*!!!FUNDAMENTAL!!!*//*!!!FUNDAMENTAL!!!*//*!!!FUNDAMENTAL!!!*//*!!!FUNDAMENTAL!!!*/
+             /*!!!FUNDAMENTAL!!!*//*!!!FUNDAMENTAL!!!*//*!!!FUNDAMENTAL!!!*//*!!!FUNDAMENTAL!!!*//*!!!FUNDAMENTAL!!!*/
+             /*CHANGE THE FUNCTION TO OPERATE ON THE MASK THAT HAS THE FINAL COLOR VALUES FOR EACH CLASS*/
+             /*!!!FUNDAMENTAL!!!*//*!!!FUNDAMENTAL!!!*//*!!!FUNDAMENTAL!!!*//*!!!FUNDAMENTAL!!!*//*!!!FUNDAMENTAL!!!*/
+             /*!!!FUNDAMENTAL!!!*//*!!!FUNDAMENTAL!!!*//*!!!FUNDAMENTAL!!!*//*!!!FUNDAMENTAL!!!*//*!!!FUNDAMENTAL!!!*/
+            if(field_mask_and_balls.at<uchar>(rectHolder.y+rectHolder.height/2,rectHolder.x+rectHolder.width/2) != 127){
+                contours.erase(contours.begin()+i);
+                i--;
+                continue;
+            }
+
+            /*removesall the bounding boxes that are too small or too large to represent a bounding box of a ball*/
+            if(rectHolder.height*rectHolder.width > 1000 || rectHolder.height*rectHolder.width < 100){ 
+                contours.erase(contours.begin()+i);
+                i--;
+                continue;
+            }
+
+            boundRect.push_back(rectHolder); /*stores the found bounding box in the vector that will be returned by the function*/
+        }
+
+    return boundRect;
 }
