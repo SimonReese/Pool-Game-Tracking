@@ -270,21 +270,12 @@ Draw::Draw(){
 }
 
 
-cv::Mat Draw::updateDrawing(std::vector<Ball> balls, std::vector<std::tuple<cv::Point2f, cv::Point2f> > displacements){
+cv::Mat Draw::updateDrawing(std::vector<Ball> balls){
     
     // Check that the perspective correction matrix was already computed
     if(!this->computedPerspective){
         throw std::runtime_error("Error. Requested a drawing update, but the perspective correction matrix was never computed.");
     }
-
-    // Correct perspective for trajectory points
-    std::vector<cv::Point2f> correctedPoints;
-    for(std::tuple<cv::Point2f, cv::Point2f> displacement : displacements){
-        correctedPoints.push_back(std::get<0>(displacement));
-        correctedPoints.push_back(std::get<1>(displacement));
-        std::cout << "Getting point" << std::get<0>(displacement) << ":" << std::get<1>(displacement) << std::endl;
-    }
-    cv::perspectiveTransform(correctedPoints, correctedPoints, this->perspectiveTrasformation);
     
     // Correct perspective for balls points
     std::vector<cv::Point2f> centers;
@@ -293,17 +284,9 @@ cv::Mat Draw::updateDrawing(std::vector<Ball> balls, std::vector<std::tuple<cv::
     }
     cv::perspectiveTransform(centers, centers, this->perspectiveTrasformation);
 
-    // Draw and update trajectories
-    for(int i = 0; i < correctedPoints.size(); i = i + 2){
-        cv::Point2f start = correctedPoints[i];        
-        cv::Point2f end = correctedPoints[i+1];        
-        // We draw a line and update drawing
-        std::cout << "Drawing " << start << " to " << end << std::endl;
-        cv::line(this->drawingNoBalls, start, end, cv::Scalar(255, 255, 255));
-    }
-
     // Draw balls
     cv::Mat drawing; // Drawing result to be returned
+    drawing = this->drawingNoBalls.clone();
     for (int i = 0; i < balls.size(); i++){
         Ball ball = balls[i];
         cv::Point center = centers[i];
@@ -329,7 +312,11 @@ cv::Mat Draw::updateDrawing(std::vector<Ball> balls, std::vector<std::tuple<cv::
             break;
         }
         std::cout << center << std::endl;
-        drawing = drawOver(this->drawingNoBalls, ballPNG, center);
+        // Draw trajectory points
+        cv::circle(this->drawingNoBalls, center, 2, cv::Scalar(255, 128, 0), -1);
+        // Draw pngs
+        //drawing = drawOver(this->drawingNoBalls, ballPNG, center);
+        cv::circle(drawing, center, 5, cv::Scalar(0, 255, 255), -1);
     }
 
     return drawing;

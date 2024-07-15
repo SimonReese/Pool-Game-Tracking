@@ -90,7 +90,7 @@ public:
      * @param balls a vector of balls objects with positions and class
      * @param displacements a vector of end and start point where we want to draw the trajectory line. Order of points must be the same in all
      */
-    cv::Mat updateDrawing(std::vector<Ball> balls, std::vector<std::tuple<cv::Point2f, cv::Point2f> > displacements);
+    cv::Mat updateDrawing(std::vector<Ball> balls);
 
     /**
      * Return perspective corrected table image
