@@ -1,3 +1,4 @@
+#include <iostream>
 #include <opencv2/core.hpp>
 #include "BallDetector.h"
 
@@ -134,8 +135,8 @@ std::vector<Ball> BallDetector::detectBalls(const cv::Mat &image, const cv::Mat 
     cv::cvtColor(image,hsvImage,cv::COLOR_BGR2HSV);
 
     //removes everything from the initial image apart from the pixels defined by the mask that segments the field
-    for (int i = 0; i < image.size().height; i++){
-        for (int j = 0; j < image.size().width; j++){
+    for (int i = 0; i < hsvImage.size().height; i++){
+        for (int j = 0; j < hsvImage.size().width; j++){
             if( (tableMask.at<uchar>(i,j)) == 0){
                 hsvImage.at<cv::Vec3b>(i,j) = cv::Vec3b(0,0,0);
             }
@@ -143,8 +144,7 @@ std::vector<Ball> BallDetector::detectBalls(const cv::Mat &image, const cv::Mat 
     }
 
     std::vector<Ball> balls = findBalls(image, tableMask, tableContours, tableCorners);
-
-    return std::vector<Ball>();
+    return balls;
 }
 
 cv::Mat drawBallsOnFieldMask(const cv::Mat field_mask, std::vector<Ball> balls){
