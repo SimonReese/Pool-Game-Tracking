@@ -10,6 +10,7 @@
 
 #include "Draw.h"
 #include "TableSegmenter.h"
+#include "BallDetector.h"
 
 int main(int argc, char* argv[]){
     
@@ -29,6 +30,7 @@ int main(int argc, char* argv[]){
     // Sart reading video
     cv::Mat frame;
     TableSegmenter segmenter;
+    BallDetector ballDetector;
     for( video >> frame; !frame.empty(); video >> frame){
         cv::imshow("Video", frame);
 
@@ -37,8 +39,12 @@ int main(int argc, char* argv[]){
         // Show masked frame
         cv::Mat maskedFrame = segmenter.getMaskedImage(frame, mask);
         cv::imshow("Masked frame", maskedFrame);
+
         // 2. Get table corners
-        std::vector<cv::Point2i> corners = segmenter.getFieldCorners(mask);        
+        std::vector<cv::Point2i> corners = segmenter.getFieldCorners(mask);      
+
+        // 3. Detect balls
+        ballDetector.detectBalls(frame, mask, segmenter.getTableContours(), corners); 
 
         cv::waitKey(25);
     }
