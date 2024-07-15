@@ -15,18 +15,21 @@ Ball::Ball(cv::Vec3f circle_radius_and_center){
     this->radius = static_cast<int>(circle_radius_and_center[2]);
     this->center = cv::Point(static_cast<int>(circle_radius_and_center[0]), static_cast<int>(circle_radius_and_center[1]));
     this->type = Ball::BallType::UNKNOWN;
+    this->bounding_box = cv::Rect(0,0,2,2);
 }
 
 Ball::Ball(cv::Vec3i circle_radius_and_center){
     this->radius = circle_radius_and_center[2];
     this->center = cv::Point(circle_radius_and_center[0], circle_radius_and_center[1]);
     this->type = Ball::BallType::UNKNOWN;
+    this->bounding_box = cv::Rect(0,0,2,2);
 }
 
 Ball::Ball(int radius, cv::Point center){
     this->radius = radius;
     this->center = center;
     this->type = Ball::BallType::UNKNOWN;
+    this->bounding_box = cv::Rect(0,0,2,2);
 }
 
 void Ball::setBoundingBox(cv::Rect bounding_box){

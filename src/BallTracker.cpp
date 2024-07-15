@@ -23,7 +23,7 @@ BallTracker::BallTracker(const cv::Mat first_frame, const std::vector<Ball> ball
             std::cerr << "Error: first video frame is empty" << std::endl;
             return;
         }
-
+    
         // vector of balls in the game initialization
         this->gameBalls = balls;
 
@@ -37,11 +37,16 @@ std::vector<cv::Ptr<cv::Tracker>> BallTracker::createTrackers(const cv::Mat &fir
     
     std::vector<cv::Ptr<cv::Tracker>> trackers; /*vector that will contain all the single trakcers, one per ball*/
     for (int i = 0; i < this->gameBalls.size(); i++){
-        cv::Ptr<cv::Tracker> tr = cv::TrackerCSRT::create(); /*creation of the tracker*/
-        tr->init(first_frame, this->gameBalls[i].getBoundingBox()); /*initialization of the tracker using the bounding box of the ball*/
-        trackers.push_back(tr);
-    }
 
+        
+        cv::Ptr<cv::Tracker> tr = cv::TrackerCSRT::create(); /*creation of the tracker*/
+
+        tr->init(first_frame, this->gameBalls[i].getBoundingBox()); /*initialization of the tracker using the bounding box of the ball*/
+        
+        trackers.push_back(tr);
+        return trackers;
+    }
+    
     return trackers;
 }
 
@@ -62,13 +67,15 @@ std::vector<Ball> BallTracker::update(const cv::Mat &frame){
 
     if(frame.empty()) throw std::runtime_error("Error: requeste update on empty frame");
     std::vector<cv::Rect> rois;
-
+    
     //update the tracking result
     for (int h = 0; h < this->ballTrackers.size(); h++){
         cv::Rect roi;
         this->ballTrackers[h]->update(frame,roi);
         rois.push_back(roi);
     }
+
+    
 
     BallTracker::updateBallsCenterAndBoundingBox(rois);
 

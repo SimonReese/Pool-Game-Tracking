@@ -14,6 +14,7 @@
 #include "BallDetector.h"
 #include "BallClassifier.h"
 #include "Ball.h"
+#include "BallTracker.h"
 
 int main(int argc, char* argv[]){
     
@@ -32,38 +33,55 @@ int main(int argc, char* argv[]){
 
     // Sart reading video
     cv::Mat frame;
+    cv::Mat firstFrame;
+    video >> firstFrame;
+
     TableSegmenter segmenter;
     Draw draw;
     BallDetector ballDetector;
+
+    // 1. Get table mask
+    cv::Mat mask = segmenter.getTableMask(firstFrame);
+    // Show masked frame
+    cv::Mat maskedFrame = segmenter.getMaskedImage(firstFrame, mask);
+
+    // 2. Get table corners
+    std::vector<cv::Point2i> corners = segmenter.getFieldCorners(mask);
+
+    // 3. Detect balls
+    std::vector<Ball> balls = ballDetector.detectBalls(firstFrame, mask, segmenter.getTableContours(), corners);
+
+    // DEBUG
+    draw.computePrespective(corners);
+
+    cv::imshow("n",firstFrame);
+    cv::waitKey(0);
+    
+    BallTracker tracker(firstFrame, balls);
+    // BallClassifier ballClassifier(balls, firstFrame);
+
     for( video >> frame; !frame.empty(); video >> frame){
         cv::imshow("Video", frame);
-
-        // 1. Get table mask
-        cv::Mat mask = segmenter.getTableMask(frame);
-        // Show masked frame
-        cv::Mat maskedFrame = segmenter.getMaskedImage(frame, mask);
         
+        
+        balls = tracker.update(frame);
 
-        // 2. Get table corners
-        std::vector<cv::Point2i> corners = segmenter.getFieldCorners(mask);      
-
-        // 3. Detect balls
-        std::vector<Ball> balls = ballDetector.detectBalls(frame, mask, segmenter.getTableContours(), corners);
         for(Ball ball : balls){
             cv::Vec2i center(ball.getBallPosition()[0], ball.getBallPosition()[1]);
-            cv::circle(maskedFrame, center, ball.getBallRadius(), cv::Scalar(0, 255, 128));
+            cv::circle(frame, center, ball.getBallRadius(), cv::Scalar(0, 255, 128));
         }
-        cv::imshow("Masked frame", maskedFrame);
 
-        // DEBUG
-        draw.computePrespective(corners);
+        cv::imshow("Masked frame", frame);
+
+        
         cv::Mat drawing = draw.updateDrawing(balls);
         cv::imshow("Draw", drawing);
         //4. Associate class to balls
         //BallClassifier::classify(balls, frame);
 
-        cv::waitKey(25);
+        cv::waitKey(1);
     }
+
     video.release(); \
     cv::waitKey(0);
     
