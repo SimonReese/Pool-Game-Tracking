@@ -2,6 +2,7 @@
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
+
 #include "Ball.h"
 
 Ball::Ball(){
@@ -32,7 +33,7 @@ void Ball::setBoundingBox(cv::Rect bounding_box){
     this->bounding_box = bounding_box;
 }
 
-cv::Rect Ball::getBoundingBox(){
+cv::Rect Ball::getBoundingBox() const{
     return bounding_box;
 }
 
@@ -56,7 +57,7 @@ cv::Vec3i Ball::getBallPosition(){
 }
 
 cv::Point Ball::getBallCenter(){
-    return cv::Point(this->center.x, this->center.y);
+    return center;
 }
 
 cv::Point Ball::getBallCenterInBoundingBox(){

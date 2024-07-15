@@ -241,11 +241,60 @@ int main(int argc, char* argv[])
 
     
     //============================================================================
-    BallTracker tracker(cap, balls);
 
-    cv::imshow("video", frame);
 
-    tracker.startTracking();
+    
+    std::cout <<"halloz"<< std::endl;
+
+    std::vector<cv::Ptr<cv::Tracker>> trackers = createTrackers(balls,frame);
+    std::cout <<"halloz"<< std::endl;
+
+    // cv::VideoWriter output("output.avi", cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), 30, cv::Size(static_cast<int>(cap.get(cv::CAP_PROP_FRAME_WIDTH)),static_cast<int>(cap.get(cv::CAP_PROP_FRAME_HEIGHT))));
+
+    std::vector<cv::Rect> rois;
+    
+    std::vector<cv::Point> ballMovement;
+    // cv::cvtColor(frame,frame,cv::COLOR_HSV2BGR);
+
+    for ( ;; ){
+
+        
+        // get frame from the video
+        cap >> frame;
+        
+        // stop the program if no more images
+        if(frame.rows==0 || frame.cols==0)
+        break;
+        
+        rois.clear();
+        ballMovement.clear();
+
+        //update the tracking result
+        for (int h = 0; h < trackers.size(); h++){
+            cv::Rect roi;
+            trackers[h]->update(frame,roi);
+            rois.push_back(roi);
+        }
+
+        ballMovement = computeBallMovement(balls,rois); /*balls still have the position relative to the previous frame*/ /*this vector contains pair of point that represent the ball movement from a frame to the next*/
+
+        updateBallValues(balls,rois);
+
+        //debug test to see if bounding box and center of circle that defines ball gets updated by the function
+        for (int g = 0; g < balls.size(); g++){
+            cv::rectangle(frame, balls[g].getBoundingBox(), cv::Scalar(255,255,255),1,cv::LINE_AA);
+            //cv::circle(frame,cv::Point(static_cast<int>(balls[g].getBallPosition()[0]),static_cast<int>((balls[g].getBallPosition()[1]))),static_cast<int>(balls[g].getBallPosition()[2]), cv::Scalar(255,255,255),-1);
+        }
+
+        // show image with the tracked object
+        cv::imshow("tracker",frame);
+
+        //quit on ESC button
+        if(cv::waitKey(1)==27)break;
+
+        
+        //output.write(frame);
+    }
 
     // Get the ending timepoint
     auto end = high_resolution_clock::now();
