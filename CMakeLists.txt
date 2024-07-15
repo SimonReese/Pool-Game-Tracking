@@ -78,7 +78,7 @@ target_link_libraries(evaluation_runner ${OpenCV_LIBS} EvaluationMetrics)
 target_link_libraries(draw_class ${OpenCV_LIBS} DrawingClass TableSegmenter BallClassifier FileSystemUtils BallDetector)
 target_link_libraries(mask_campo ${OpenCV_LIBS} MaskAndBalls BallClassifier FilesystemUtils)
 
-target_link_libraries(EvaluationMetrics ${OpenCV_LIBS} FileSystemUtils)
+target_link_libraries(EvaluationMetrics ${OpenCV_LIBS} FilesystemUtils)
 target_link_libraries(DrawingClass ${OpenCV_LIBS} MaskAndBalls)
 target_link_libraries(MaskAndBalls ${OpenCV_LIBS})
 target_link_libraries(TableSegmenter ${OpenCV_LIBS})
