@@ -291,32 +291,31 @@ cv::Mat Draw::updateDrawing(std::vector<Ball> balls){
         Ball ball = balls[i];
         cv::Point center = centers[i];
 
-        // Select png according to ball type
-        cv::Mat ballPNG;
+        // Select color according to ball type
+        cv::Scalar color;
         switch (ball.getBallType())
         {
         case Ball::BallType::WHITE:
-            ballPNG = this->whiteBallPNG;
+            color = cv::Scalar(255, 255, 255);
             break;
         case Ball::BallType::BLACK:
-            ballPNG = this->blackBallPNG;
+            color = cv::Scalar(0, 0, 0);
             break;
         case Ball::BallType::FULL:
-            ballPNG = this->solidBallPNG;
+            color = cv::Scalar(255, 0, 0);
             break;
         case Ball::BallType::HALF:
-            ballPNG = this->stripedBallPNG;
+            color = cv::Scalar(153, 153, 255);
             break;
         default:
-            ballPNG = this->unknownBallPNG;
+            color = cv::Scalar(255, 51, 153);
             break;
         }
-        std::cout << center << std::endl;
         // Draw trajectory points
-        cv::circle(this->drawingNoBalls, center, 2, cv::Scalar(255, 128, 0), -1);
+        cv::circle(this->drawingNoBalls, center, 2, cv::Scalar(102, 255, 255), -1);
         // Draw pngs
         //drawing = drawOver(this->drawingNoBalls, ballPNG, center);
-        cv::circle(drawing, center, 5, cv::Scalar(0, 255, 255), -1);
+        cv::circle(drawing, center, 10, color, -1);
     }
 
     return drawing;
