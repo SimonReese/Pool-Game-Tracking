@@ -52,7 +52,7 @@ void Ball::setBallPosition(int radius, cv::Point center){
 }
 
 cv::Vec3i Ball::getBallPosition(){
-    return cv::Vec3i(this->radius, this->center.x, this->center.y);
+    return cv::Vec3i(this->center.x, this->center.y, this->radius);
 }
 
 cv::Point Ball::getBallCenter(){
