@@ -243,11 +243,11 @@ cv::Mat Draw::drawOver(const cv::Mat &background, const cv::Mat &overlapping, co
 
     // Convert overlapping image to grayscale and create inverted mask
     cv::Mat grayscale;
+    
     cv::cvtColor(overlapping, grayscale, cv::COLOR_RGB2GRAY);
     cv::Mat mask, invMask;
     cv::threshold(grayscale, mask, 1, 255, cv::THRESH_BINARY);
     cv::bitwise_not(mask, invMask);
-
     // Use inverted mask to cut region, setting pixels to 0
     cv::Mat cutted;
     cv::bitwise_and(region, region, cutted, invMask);
@@ -263,7 +263,10 @@ cv::Mat Draw::drawOver(const cv::Mat &background, const cv::Mat &overlapping, co
 
 
 Draw::Draw(){
-    
+    this->blackBallPNG = this->whiteBallPNG = 
+        this->solidBallPNG = this->stripedBallPNG = 
+            this->unknownBallPNG = cv::imread("../res/assets/blackball.png");
+    this->drawingNoBalls = cv::imread("../res/assets/pool-table-350x640.png");
 }
 
 
@@ -277,10 +280,9 @@ cv::Mat Draw::updateDrawing(std::vector<Ball> balls, std::vector<std::tuple<cv::
     // Correct perspective for trajectory points
     std::vector<cv::Point2f> correctedPoints;
     for(std::tuple<cv::Point2f, cv::Point2f> displacement : displacements){
-        cv::Vec2f first = std::get<0>(displacement);
-        cv::Vec2f second = std::get<1>(displacement);
-        correctedPoints.push_back(first);
-        correctedPoints.push_back(second);
+        correctedPoints.push_back(std::get<0>(displacement));
+        correctedPoints.push_back(std::get<1>(displacement));
+        std::cout << "Getting point" << std::get<0>(displacement) << ":" << std::get<1>(displacement) << std::endl;
     }
     cv::perspectiveTransform(correctedPoints, correctedPoints, this->perspectiveTrasformation);
     
@@ -289,14 +291,15 @@ cv::Mat Draw::updateDrawing(std::vector<Ball> balls, std::vector<std::tuple<cv::
     for(Ball ball : balls){
         centers.push_back(ball.getBallCenter());
     }
-    cv::perspectiveTransform(centers, correctedPoints, this->perspectiveTrasformation);
+    cv::perspectiveTransform(centers, centers, this->perspectiveTrasformation);
 
     // Draw and update trajectories
     for(int i = 0; i < correctedPoints.size(); i = i + 2){
         cv::Point2f start = correctedPoints[i];        
         cv::Point2f end = correctedPoints[i+1];        
         // We draw a line and update drawing
-        cv::line(this->drawingNoBalls, start, end, cv::Scalar(0, 255, 255));
+        std::cout << "Drawing " << start << " to " << end << std::endl;
+        cv::line(this->drawingNoBalls, start, end, cv::Scalar(255, 255, 255));
     }
 
     // Draw balls
@@ -325,6 +328,7 @@ cv::Mat Draw::updateDrawing(std::vector<Ball> balls, std::vector<std::tuple<cv::
             ballPNG = this->unknownBallPNG;
             break;
         }
+        std::cout << center << std::endl;
         drawing = drawOver(this->drawingNoBalls, ballPNG, center);
     }
 

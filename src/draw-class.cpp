@@ -3,6 +3,7 @@
  */
 
 #include <iostream>
+#include <tuple>
 
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
@@ -31,6 +32,7 @@ int main(int argc, char* argv[]){
     // Sart reading video
     cv::Mat frame;
     TableSegmenter segmenter;
+    Draw draw;
     for( video >> frame; !frame.empty(); video >> frame){
         cv::imshow("Video", frame);
 
@@ -44,10 +46,21 @@ int main(int argc, char* argv[]){
 
         // 3. Detect balls
         std::vector<Ball> balls;
-        
+        std::vector<std::tuple<cv::Point2f, cv::Point2f>> points;
+        for(auto corner: corners){
+            Ball ball(1, cv::Point(500, 250));
+            balls.push_back(ball);
+            std::cout << corner << std::endl;
+            points.push_back(std::make_tuple(corner, cv::Point(500, 250)));
+        }
 
+        // DEBUG
+        draw.computePrespective(corners);
+        cv::Mat drawing = draw.updateDrawing(balls, points);
+        cv::imshow("Draw", drawing);
+        std::cout << "Endframe" << std::endl;
         //4. Associate class to balls
-        BallClassifier::classify(balls, frame);
+        //BallClassifier::classify(balls, frame);
 
         cv::waitKey(25);
     }
