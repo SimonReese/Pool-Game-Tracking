@@ -3,6 +3,7 @@
  */
 
 #include <iostream>
+#include <tuple>
 
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
@@ -10,6 +11,9 @@
 
 #include "Draw.h"
 #include "TableSegmenter.h"
+#include "BallDetector.h"
+#include "BallClassifier.h"
+#include "Ball.h"
 
 int main(int argc, char* argv[]){
     
@@ -29,6 +33,8 @@ int main(int argc, char* argv[]){
     // Sart reading video
     cv::Mat frame;
     TableSegmenter segmenter;
+    Draw draw;
+    BallDetector ballDetector;
     for( video >> frame; !frame.empty(); video >> frame){
         cv::imshow("Video", frame);
 
@@ -36,13 +42,32 @@ int main(int argc, char* argv[]){
         cv::Mat mask = segmenter.getTableMask(frame);
         // Show masked frame
         cv::Mat maskedFrame = segmenter.getMaskedImage(frame, mask);
-        cv::imshow("Masked frame", maskedFrame);
+        
+
         // 2. Get table corners
-        std::vector<cv::Point2i> corners = segmenter.getFieldCorners(mask);        
+        std::vector<cv::Point2i> corners = segmenter.getFieldCorners(mask);      
+
+        // 3. Detect balls
+        std::vector<Ball> balls = ballDetector.detectBalls(frame, mask, segmenter.getTableContours(), corners);
+        for(Ball ball : balls){
+            cv::Vec2i center(ball.getBallPosition()[0], ball.getBallPosition()[1]);
+            cv::circle(maskedFrame, center, ball.getBallRadius(), cv::Scalar(0, 255, 128));
+        }
+        cv::imshow("Masked frame", maskedFrame);
+
+        // DEBUG
+        /*
+        draw.computePrespective(corners);
+        cv::Mat drawing = draw.updateDrawing(balls, points);
+        cv::imshow("Draw", drawing);
+        std::cout << "Endframe" << std::endl;
+        */
+        //4. Associate class to balls
+        //BallClassifier::classify(balls, frame);
 
         cv::waitKey(25);
     }
-    video.release(); 
+    video.release(); \
     cv::waitKey(0);
     
 

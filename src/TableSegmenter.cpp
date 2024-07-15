@@ -232,6 +232,10 @@ std::vector<cv::Point2i> TableSegmenter::getFieldCorners(const cv::Mat &mask){
     std::vector<cv::Point2i> sorted_corners = findFieldCorners(approximate_field_lines);
     this->tableCorners = sorted_corners;
     this->cornersComputed = true;
+
+    // Use corners to compute contours
+    this->tableContours = defineBoundingPolygon(tableCorners, approximate_field_lines);
+
     return sorted_corners;
 }
 
@@ -239,4 +243,45 @@ cv::Mat TableSegmenter::getMaskedImage(const cv::Mat &frame, const cv::Mat &mask
     cv::Mat maskedFrame;
     cv::bitwise_and(frame, frame, maskedFrame, mask);
     return maskedFrame;
+}
+
+
+std::vector<cv::Point> TableSegmenter::defineBoundingPolygon(std::vector<cv::Point2i> sorted_corners, const cv::Mat approximate_field_lines){
+
+        cv::Mat boundaries(approximate_field_lines.size(),CV_8U);
+
+        /*draws the 4 lines that delimits the playing field based on the 4 sorted corners found before*/
+        for (int i = 0; i < sorted_corners.size(); i++){
+            cv::line(boundaries,sorted_corners[i%sorted_corners.size()],sorted_corners[(i+1)%sorted_corners.size()],255,1);
+        }
+
+        /*finds the contours of the playing field based on the 4 drawed lines*/
+        std::vector<std::vector<cv::Point>> boundaries_contours;
+        findContours( boundaries, boundaries_contours, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE );
+
+        /*removes all the contours found except the one with the largest area*/
+        double contour_max_area = 0;
+        for (int i = 0; i < boundaries_contours.size(); i++){
+            if(cv::contourArea(boundaries_contours[i]) > contour_max_area){  
+                contour_max_area = cv::contourArea(boundaries_contours[i]);
+            }
+        }
+
+        for (int i = 0; i < boundaries_contours.size(); i++){
+            if(cv::contourArea(boundaries_contours[i]) != contour_max_area){  
+                boundaries_contours.erase(boundaries_contours.begin()+i);
+                i--;
+            }
+        }
+        
+        
+        /*defines the bounding polygon that delimits the playing field*/
+        std::vector<cv::Point> boundaries_contours_poly( boundaries_contours.size() );
+        
+        for( size_t i = 0; i < boundaries_contours.size(); i++ )
+        {
+            approxPolyDP( boundaries_contours[i], boundaries_contours_poly, 1, true );
+        }
+
+    return boundaries_contours_poly;
 }

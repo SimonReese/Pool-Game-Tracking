@@ -1,8 +1,14 @@
+#include "Draw.h"
+
 #include <iostream>
+#include <tuple>
+#include <stdexcept>
+
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
-#include "Draw.h"
+
+#include "Ball.h"
 
 // TODO: FIX UNUSED HEADERS
 #include <algorithm>
@@ -223,32 +229,123 @@ std::vector<cv::Point> Draw::detectTableCorners() const{
 }
 
 
+cv::Mat Draw::drawOver(const cv::Mat &background, const cv::Mat &overlapping, const cv::Point position) const{
+    // Copy input image 
+    cv::Mat result = background.clone();
+    // Compute top left corner position of the overlapping object
+    cv::Point corner(
+        position.x - overlapping.cols / 2,
+        position.y - overlapping.rows / 2
+    );
+    // Create region of interest
+    cv::Rect rect(corner, cv::Size(overlapping.cols, overlapping.rows));
+    cv::Mat region = result(rect); // reference to a section of resulting image
 
-Draw::Draw(std::string fieldPath)
-    : fieldPath{fieldPath}{
+    // Convert overlapping image to grayscale and create inverted mask
+    cv::Mat grayscale;
+    
+    cv::cvtColor(overlapping, grayscale, cv::COLOR_RGB2GRAY);
+    cv::Mat mask, invMask;
+    cv::threshold(grayscale, mask, 1, 255, cv::THRESH_BINARY);
+    cv::bitwise_not(mask, invMask);
+    // Use inverted mask to cut region, setting pixels to 0
+    cv::Mat cutted;
+    cv::bitwise_and(region, region, cutted, invMask);
+
+    // Sum overlapping image to blacked areas in the cutted region
+    cv::Mat sum;
+    cv::add(overlapping, cutted, sum);
+
+    // Copy summed image to region
+    sum.copyTo(region);
+    return result;
 }
 
-void Draw::setCurrentFrame(const cv::Mat &currentFrame){
-    currentFrame.copyTo(this->currentFrame);
+
+Draw::Draw(){
+    this->blackBallPNG = this->whiteBallPNG = 
+        this->solidBallPNG = this->stripedBallPNG = 
+            this->unknownBallPNG = cv::imread("../res/assets/blackball.png");
+    this->drawingNoBalls = cv::imread("../res/assets/pool-table-350x640.png");
 }
 
-void Draw::getGameDraw(cv::Mat &outputDrawing) const{
-    // Currently just return the current frame
-    std::vector<cv::Point> corners = detectTableCorners();
-    outputDrawing = correctPrespective(corners);
+
+cv::Mat Draw::updateDrawing(std::vector<Ball> balls, std::vector<std::tuple<cv::Point2f, cv::Point2f> > displacements){
+    
+    // Check that the perspective correction matrix was already computed
+    if(!this->computedPerspective){
+        throw std::runtime_error("Error. Requested a drawing update, but the perspective correction matrix was never computed.");
+    }
+
+    // Correct perspective for trajectory points
+    std::vector<cv::Point2f> correctedPoints;
+    for(std::tuple<cv::Point2f, cv::Point2f> displacement : displacements){
+        correctedPoints.push_back(std::get<0>(displacement));
+        correctedPoints.push_back(std::get<1>(displacement));
+        std::cout << "Getting point" << std::get<0>(displacement) << ":" << std::get<1>(displacement) << std::endl;
+    }
+    cv::perspectiveTransform(correctedPoints, correctedPoints, this->perspectiveTrasformation);
+    
+    // Correct perspective for balls points
+    std::vector<cv::Point2f> centers;
+    for(Ball ball : balls){
+        centers.push_back(ball.getBallCenter());
+    }
+    cv::perspectiveTransform(centers, centers, this->perspectiveTrasformation);
+
+    // Draw and update trajectories
+    for(int i = 0; i < correctedPoints.size(); i = i + 2){
+        cv::Point2f start = correctedPoints[i];        
+        cv::Point2f end = correctedPoints[i+1];        
+        // We draw a line and update drawing
+        std::cout << "Drawing " << start << " to " << end << std::endl;
+        cv::line(this->drawingNoBalls, start, end, cv::Scalar(255, 255, 255));
+    }
+
+    // Draw balls
+    cv::Mat drawing; // Drawing result to be returned
+    for (int i = 0; i < balls.size(); i++){
+        Ball ball = balls[i];
+        cv::Point center = centers[i];
+
+        // Select png according to ball type
+        cv::Mat ballPNG;
+        switch (ball.getBallType())
+        {
+        case Ball::BallType::WHITE:
+            ballPNG = this->whiteBallPNG;
+            break;
+        case Ball::BallType::BLACK:
+            ballPNG = this->blackBallPNG;
+            break;
+        case Ball::BallType::FULL:
+            ballPNG = this->solidBallPNG;
+            break;
+        case Ball::BallType::HALF:
+            ballPNG = this->stripedBallPNG;
+            break;
+        default:
+            ballPNG = this->unknownBallPNG;
+            break;
+        }
+        std::cout << center << std::endl;
+        drawing = drawOver(this->drawingNoBalls, ballPNG, center);
+    }
+
+    return drawing;
 }
 
 /**
  * TOOD: define size of image to choose coordinates of perspective transfomration
  */
-cv::Mat Draw::correctPrespective(const std::vector<cv::Point>& corners) const{
-    /**
-     * TODO: optimize casting ? keep order
-     */
+void Draw::computePrespective(const std::vector<cv::Point>& corners){
+    
     std::vector<cv::Point2f> srcCoord;
-    for(cv::Point p : corners){
-        srcCoord.push_back((cv::Point2f) p);
-    }
+    // Convert from point2i to point2f
+    cv::Mat(corners).copyTo(srcCoord);
+    // for(cv::Point p : corners){
+    //     srcCoord.push_back((cv::Point2f) p);
+    // }
 
     // We want to check if table is oriented horizontaly or vertically
     float horiz = cv::norm(corners[0] - corners[1]);
@@ -285,42 +382,7 @@ cv::Mat Draw::correctPrespective(const std::vector<cv::Point>& corners) const{
     }
     
     // Compute transformation matrix
-    cv::Mat transformation = cv::getPerspectiveTransform(srcCoord, destCoord);
-
-    // Correct perspective
-    cv::warpPerspective(this->currentFrame, result, transformation, dsize);
-
-    return result;
+    this->perspectiveTrasformation = cv::getPerspectiveTransform(srcCoord, destCoord);
+    this->computedPerspective = true;
 }
 
-cv::Mat Draw::drawOver(const cv::Mat &background, const cv::Mat &overlapping, const cv::Point position) const{
-    // Copy input image 
-    cv::Mat result = background.clone();
-    // Compute top left corner position of the overlapping object
-    cv::Point corner(
-        position.x - overlapping.cols / 2,
-        position.y - overlapping.rows / 2
-    );
-    // Create region of interest
-    cv::Rect rect(corner, cv::Size(overlapping.cols, overlapping.rows));
-    cv::Mat region = result(rect); // reference to a section of resulting image
-
-    // Convert overlapping image to grayscale and create inverted mask
-    cv::Mat grayscale;
-    cv::cvtColor(overlapping, grayscale, cv::COLOR_RGB2GRAY);
-    cv::Mat mask, invMask;
-    cv::threshold(grayscale, mask, 1, 255, cv::THRESH_BINARY);
-    cv::bitwise_not(mask, invMask);
-
-    // Use inverted mask to cut region, setting pixels to 0
-    cv::Mat cutted;
-    cv::bitwise_and(region, region, cutted, invMask);
-
-    // Sum overlapping image to blacked areas in the cutted region
-    cv::Mat sum;
-    cv::add(overlapping, cutted, sum);
-
-    // Copy summed image to region
-    sum.copyTo(region);
-    return result;
-}

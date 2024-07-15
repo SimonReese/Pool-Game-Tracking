@@ -45,6 +45,11 @@ add_library(TableSegmenter
             include/TableSegmenter.h
             src/TableSegmenter.cpp)
 
+# BallTracker class
+add_library(BallDetector
+            include/BallDetector.h
+            src/BallDetector.cpp)
+
 # BallClassifier class
 add_library(BallClassifier
             include/BallClassifier.h
@@ -72,14 +77,15 @@ target_link_libraries(testTracker ${OpenCV_LIBS} MaskAndBalls BallTracker BallCl
 # Link libraries to files
 target_link_libraries(main ${OpenCV_LIBS})
 target_link_libraries(evaluation_runner ${OpenCV_LIBS} EvaluationMetrics)
-target_link_libraries(draw_class ${OpenCV_LIBS} DrawingClass TableSegmenter)
+target_link_libraries(draw_class ${OpenCV_LIBS} DrawingClass TableSegmenter BallClassifier FilesystemUtils BallDetector)
 target_link_libraries(mask_campo ${OpenCV_LIBS} MaskAndBalls BallClassifier FilesystemUtils)
 
 target_link_libraries(EvaluationMetrics ${OpenCV_LIBS} FilesystemUtils)
-target_link_libraries(DrawingClass ${OpenCV_LIBS})
+target_link_libraries(DrawingClass ${OpenCV_LIBS} MaskAndBalls)
 target_link_libraries(MaskAndBalls ${OpenCV_LIBS})
 target_link_libraries(TableSegmenter ${OpenCV_LIBS})
 target_link_libraries(BallClassifier ${OpenCV_LIBS})
+target_link_libraries(BallDetector ${OpenCV_LIBS} MaskAndBalls)
 
 target_link_libraries(FilesystemUtils ${OpenCV_LIBS})
 
