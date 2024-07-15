@@ -48,35 +48,23 @@ int main(int argc, char* argv[]){
         std::vector<cv::Point2i> corners = segmenter.getFieldCorners(mask);      
 
         // 3. Detect balls
-        std::vector<Ball> balls;
-        std::vector<std::tuple<cv::Point2f, cv::Point2f>> points;
-        for(auto corner: corners){
-            Ball ball(1, cv::Point(500, 250));
-            balls.push_back(ball);
-            std::cout << corner << std::endl;
-            points.push_back(std::make_tuple(corner, cv::Point(500, 250)));
+        std::vector<Ball> balls = ballDetector.detectBalls(frame, mask, segmenter.getTableContours(), corners);
+        for(Ball ball : balls){
+            cv::Vec2i center(ball.getBallPosition()[0], ball.getBallPosition()[1]);
+            cv::circle(maskedFrame, center, ball.getBallRadius(), cv::Scalar(0, 255, 128));
         }
+        cv::imshow("Masked frame", maskedFrame);
 
         // DEBUG
+        /*
         draw.computePrespective(corners);
         cv::Mat drawing = draw.updateDrawing(balls, points);
         cv::imshow("Draw", drawing);
         std::cout << "Endframe" << std::endl;
+        */
         //4. Associate class to balls
         //BallClassifier::classify(balls, frame);
 
-        // 3. Detect balls
-        std::vector<Ball> balls = ballDetector.detectBalls(frame, mask, segmenter.getTableContours(), corners); 
-        std::cout << "Detected balls: " << balls.size() << std::endl;    
-
-
-        // Draw balls over image
-        for (Ball ball : balls){
-            cv::Vec3f pos = ball.getBallPosition();
-            cv::Vec2i center(pos[0], pos[1]);
-            cv::circle(maskedFrame, center, ball.getBallRadius(), cv::Scalar(0, 255, 128));
-        }
-        cv::imshow("Masked frame", maskedFrame);
         cv::waitKey(25);
     }
     video.release(); \
