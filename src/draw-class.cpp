@@ -3,6 +3,7 @@
  */
 
 #include <iostream>
+#include <tuple>
 
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
@@ -11,6 +12,7 @@
 #include "Draw.h"
 #include "TableSegmenter.h"
 #include "BallDetector.h"
+#include "BallClassifier.h"
 #include "Ball.h"
 
 int main(int argc, char* argv[]){
@@ -31,6 +33,7 @@ int main(int argc, char* argv[]){
     // Sart reading video
     cv::Mat frame;
     TableSegmenter segmenter;
+    Draw draw;
     BallDetector ballDetector;
     for( video >> frame; !frame.empty(); video >> frame){
         cv::imshow("Video", frame);
@@ -43,6 +46,24 @@ int main(int argc, char* argv[]){
 
         // 2. Get table corners
         std::vector<cv::Point2i> corners = segmenter.getFieldCorners(mask);      
+
+        // 3. Detect balls
+        std::vector<Ball> balls;
+        std::vector<std::tuple<cv::Point2f, cv::Point2f>> points;
+        for(auto corner: corners){
+            Ball ball(1, cv::Point(500, 250));
+            balls.push_back(ball);
+            std::cout << corner << std::endl;
+            points.push_back(std::make_tuple(corner, cv::Point(500, 250)));
+        }
+
+        // DEBUG
+        draw.computePrespective(corners);
+        cv::Mat drawing = draw.updateDrawing(balls, points);
+        cv::imshow("Draw", drawing);
+        std::cout << "Endframe" << std::endl;
+        //4. Associate class to balls
+        //BallClassifier::classify(balls, frame);
 
         // 3. Detect balls
         std::vector<Ball> balls = ballDetector.detectBalls(frame, mask, segmenter.getTableContours(), corners); 

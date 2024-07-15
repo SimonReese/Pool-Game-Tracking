@@ -69,7 +69,7 @@ class BallClassifier{
          * @param ballsSet the set of balls in the fullGameImage
          * @param fullGameImage the full size image of the game to be analyzed
         */
-        static void secondaryBallClassifier(std::vector<Ball> &ballsSet, const cv::Mat &fullGameImage);
+        static void classify(std::vector<Ball> &ballsSet, const cv::Mat &fullGameImage);
 
 };
 

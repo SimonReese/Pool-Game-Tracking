@@ -35,7 +35,7 @@ std::pair<Ball::BallType, float> BallClassifier::preliminaryBallClassifier(cv::M
     }
 }
 
-void BallClassifier::secondaryBallClassifier(std::vector<Ball> &ballsSet, const cv::Mat &fullGameImage){
+void BallClassifier::classify(std::vector<Ball> &ballsSet, const cv::Mat &fullGameImage){
 
     // maxRatio is the ratio to identify the white ball
     float maxRatio = 0.;

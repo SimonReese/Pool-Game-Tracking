@@ -5,7 +5,11 @@
 #define DRAW
 
 #include <string>
+#include <tuple>
+
 #include <opencv2/core.hpp>
+
+#include "Ball.h"
 
 
 /**
@@ -17,39 +21,53 @@ private:
     // Current frame which needs to be drawed;
     cv::Mat currentFrame;
 
-    // Path to base field drew image
-    std::string fieldPath;
-
-    // Detect corners of table in the frame
-    std::vector<cv::Point> detectTableCorners() const;
-
-public:
+    /**
+     * Perspective transformation matrix
+     */
+    cv::Mat perspectiveTrasformation;
 
     /**
-     * Default constructor for initializing class.
+     * Check if we already computed the perspective transformation matrix
+     */
+    bool computedPerspective = false;
+
+    /**
+     * Store current drawing (without balls)
+     */
+    cv::Mat drawingNoBalls;
+
+    /**
+     * Store white ball schematic image
+     */
+    cv::Mat whiteBallPNG;
+
+    /**
+     * Store black ball schematic image
+     */
+    cv::Mat blackBallPNG;
+
+    /**
+     * Store solid ball schematic image
+     */
+    cv::Mat solidBallPNG;
+
+    /**
+     * Store striped ball schematic image
+     */
+    cv::Mat stripedBallPNG;
+
+    /**
+     * Store unknown ball schematic image
+     */
+    cv::Mat unknownBallPNG;
+
+    /**
+     * Detect corners of table in the frame.
+     * TODO: remove!
      * 
-     * @param fieldPath path to field file image which will be overdrawn.
-     */
-    Draw(std::string fieldPath);
-
-    /**
-     * Set current frame as reference for game status.
-     * The frame will be copied.
-     * @param currentFrame reference to the frame to consider, which will be copied.
-     */
-    void setCurrentFrame(const cv::Mat& currentFrame);
-
-    /**
-     * Return an image representing current game situation.
-     * @param outputDrawing output matrix that will be populated with drawing.
-     */
-    void getGameDraw(cv::Mat& outputDrawing) const;
-
-    /**
-     * Return perspective corrected table image
-     * @param corners a vector of point corners from top left in clockwise order.
-     */
-    cv::Mat correctPrespective(const std::vector<cv::Point>& corners) const;
+     *  @deprecated We want to use the specific class
+     */ 
+    std::vector<cv::Point> detectTableCorners() const;
 
     /**
      * Returns a new image composed by background image and the overlapping image
@@ -58,6 +76,29 @@ public:
      * @param position coordinates where the overlapping image will be placed with respect to the background image
      */
     cv::Mat drawOver(const cv::Mat& background, const cv::Mat& overlapping, const cv::Point2i position) const;
+
+public:
+
+    /**
+     * Default constructor for initializing class.
+     */
+    Draw();
+
+    /**
+     * Return an image representing current game situation.
+     * 
+     * @param balls a vector of balls objects with positions and class
+     * @param displacements a vector of end and start point where we want to draw the trajectory line. Order of points must be the same in all
+     */
+    cv::Mat updateDrawing(std::vector<Ball> balls, std::vector<std::tuple<cv::Point2f, cv::Point2f> > displacements);
+
+    /**
+     * Return perspective corrected table image
+     * @param corners a vector of point corners from top left in clockwise order.
+     */
+    void computePrespective(const std::vector<cv::Point>& corners);
+
+    
 
 };
 #endif
