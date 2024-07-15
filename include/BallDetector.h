@@ -40,6 +40,7 @@ class BallDetector{
 
     cv::Mat drawBallsOnFieldMask(const cv::Mat field_mask, std::vector<Ball> balls);
 
+    std::vector<cv::Rect> findBoundingRectangles(const cv::Mat field_mask_and_balls);
 };
 
 #endif
