@@ -246,7 +246,7 @@ cv::Mat TableSegmenter::getMaskedImage(const cv::Mat &frame, const cv::Mat &mask
 }
 
 
-std::vector<cv::Point> defineBoundingPolygon(std::vector<cv::Point2i> sorted_corners, const cv::Mat approximate_field_lines){
+std::vector<cv::Point> TableSegmenter::defineBoundingPolygon(std::vector<cv::Point2i> sorted_corners, const cv::Mat approximate_field_lines){
 
         cv::Mat boundaries(approximate_field_lines.size(),CV_8U);
 
