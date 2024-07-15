@@ -29,9 +29,11 @@ void updateBallValues(std::vector<Ball> &balls, std::vector<cv::Rect> rois){
     for (int i = 0; i < rois.size(); i++){
         balls[i].setBoundingBox(rois[i]); //updates the coordinates of the bounding box
 
-        cv::Vec3f temp = balls[i].getBallPosition();
-        cv::Vec3f new_position = cv::Vec3f(static_cast<float>(rois[i].x+rois[i].width/2),static_cast<float>(rois[i].y+rois[i].height/2),temp[2]); /*computes the new coordinates of the center of the cirlce that defines the ball*/
+        cv::Vec3i temp = balls[i].getBallPosition();
+        cv::Vec3i new_position = cv::Vec3i(static_cast<int>(rois[i].x+rois[i].width/2),static_cast<int>(rois[i].y+rois[i].height/2),temp[2]); /*computes the new coordinates of the center of the cirlce that defines the ball*/
         balls[i].setBallPosition(new_position); //updates the coordinates of the center of the circle that represent the ball
+
+        
     }
     
 }

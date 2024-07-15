@@ -60,7 +60,7 @@ public:
     /**
      * Return the bounding box of the ball
      */
-    cv::Rect getBoundingBox();
+    cv::Rect getBoundingBox() const;
 
     /**
      * Set the ball center and radius
@@ -110,6 +110,14 @@ public:
      * Set type of ball
      */
     void setBallType(BallType type);
+
+
+    /**
+     * 
+     * 
+     * setting center of the ball
+    */
+    void setBallCenter(cv::Point center);
 
     private:
 
