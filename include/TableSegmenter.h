@@ -35,6 +35,11 @@ class TableSegmenter{
     std::vector<cv::Point2i> tableCorners;
 
     /**
+     * Used to store table contours
+     */
+    std::vector<cv::Point> tableContours;
+
+    /**
      * Return a vector containing the mean color for each of the 3 channels (mainly used with HSV color space) with the kernel centered on the center of the image
      * @param image image where to compute the mean of the color
      * @param kernel_size size of the square kernel used. height = width = kernel_size
@@ -59,6 +64,8 @@ class TableSegmenter{
      * @param approximate_field_lines cv::Mat containing the draw of the 4 lines delimiting the playing field from which the 4 corners will be computed
      */
     std::vector<cv::Point2i> findFieldCorners(const cv::Mat approximate_field_lines) const;
+
+    std::vector<cv::Point> defineBoundingPolygon(std::vector<cv::Point2i> sorted_corners, const cv::Mat approximate_field_lines);
 
     public:
 
@@ -90,7 +97,7 @@ class TableSegmenter{
      */
     cv::Mat getMaskedImage(const cv::Mat& frame, const cv::Mat& mask) const;
 
-
+    std::vector<cv::Point> getTableContours() {return this->tableContours;};
 };
 
 #endif
