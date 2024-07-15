@@ -56,12 +56,9 @@ int main(int argc, char* argv[]){
         cv::imshow("Masked frame", maskedFrame);
 
         // DEBUG
-        /*
         draw.computePrespective(corners);
-        cv::Mat drawing = draw.updateDrawing(balls, points);
+        cv::Mat drawing = draw.updateDrawing(balls);
         cv::imshow("Draw", drawing);
-        std::cout << "Endframe" << std::endl;
-        */
         //4. Associate class to balls
         //BallClassifier::classify(balls, frame);
 
