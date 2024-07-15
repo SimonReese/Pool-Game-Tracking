@@ -18,7 +18,7 @@
 #include "Ball.h"
 
 class BallTracker {
-    
+
     private:
 
     // vector with a tracker for each ball in the field
@@ -26,7 +26,6 @@ class BallTracker {
 
     // vector containing all the balls in the field
     std::vector<Ball> gameBalls;
-
 
     /**
      * return a vector containing all the trackers initialized using the initial position of the balls
@@ -42,20 +41,14 @@ class BallTracker {
      */
     void updateBallsCenterAndBoundingBox(const std::vector<cv::Rect> &rois);
 
-
-
 public:
     
     // BallTracker constructor
-    BallTracker(cv::Mat first_frame, std::vector<Ball> &balls);
-
+    BallTracker(const cv::Mat first_frame, const std::vector<Ball> balls);
     /**
-     * 
      * @brief trackes the moving balls in the provided frame;
-     * 
     */
     std::vector<Ball> update(const cv::Mat &frame);
-
 
 };
 #endif

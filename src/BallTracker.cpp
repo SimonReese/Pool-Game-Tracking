@@ -8,13 +8,12 @@
 #include <fstream>
 #include <stdexcept>
 
-
 #include "FieldGeometryAndMask.h"
 #include "Ball.h"
 #include "BallTracker.h"
 
 
-BallTracker::BallTracker(cv::Mat first_frame, std::vector<Ball> &balls){
+BallTracker::BallTracker(const cv::Mat first_frame, const std::vector<Ball> balls){
         if (balls.empty()){
             std::cerr << "Error: balls vector is empty" << std::endl;
             return;
