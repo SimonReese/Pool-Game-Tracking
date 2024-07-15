@@ -11,6 +11,7 @@
 #include "Draw.h"
 #include "TableSegmenter.h"
 #include "BallDetector.h"
+#include "Ball.h"
 
 int main(int argc, char* argv[]){
     
@@ -38,17 +39,26 @@ int main(int argc, char* argv[]){
         cv::Mat mask = segmenter.getTableMask(frame);
         // Show masked frame
         cv::Mat maskedFrame = segmenter.getMaskedImage(frame, mask);
-        cv::imshow("Masked frame", maskedFrame);
+        
 
         // 2. Get table corners
         std::vector<cv::Point2i> corners = segmenter.getFieldCorners(mask);      
 
         // 3. Detect balls
-        ballDetector.detectBalls(frame, mask, segmenter.getTableContours(), corners); 
+        std::vector<Ball> balls = ballDetector.detectBalls(frame, mask, segmenter.getTableContours(), corners); 
+        std::cout << "Detected balls: " << balls.size() << std::endl;    
 
+
+        // Draw balls over image
+        for (Ball ball : balls){
+            cv::Vec3f pos = ball.getBallPosition();
+            cv::Vec2i center(pos[0], pos[1]);
+            cv::circle(maskedFrame, center, ball.getBallRadius(), cv::Scalar(0, 255, 128));
+        }
+        cv::imshow("Masked frame", maskedFrame);
         cv::waitKey(25);
     }
-    video.release(); 
+    video.release(); \
     cv::waitKey(0);
     
 
