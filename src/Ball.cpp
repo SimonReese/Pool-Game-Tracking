@@ -88,3 +88,27 @@ Ball::BallType Ball::getBallType() const{
 void Ball::setBallType(Ball::BallType type){
     this->type = type;
 }
+
+std::string Ball::typeToString(){
+    std::string type;
+    switch (this->type)
+    {
+    case Ball::BallType::FULL:
+        return "FULL";
+        break;
+    case Ball::BallType::HALF:
+        return "HALF";
+        break;
+    case Ball::BallType::WHITE:
+        return "WHITE";
+        break;
+    case Ball::BallType::BLACK:
+        return "BLACK";
+        break;
+    case Ball::BallType::UNKNOWN:
+        return "UNKNOWN";
+        break;
+    default:
+        break;
+    }
+}

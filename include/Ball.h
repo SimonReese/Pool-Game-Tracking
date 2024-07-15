@@ -1,8 +1,8 @@
 /**
  * @author federico Adami.
  */
-#ifndef BALL
-#define BALL
+#ifndef BALL_H
+#define BALL_H
 
 #include <opencv2/core.hpp>
 
@@ -15,11 +15,11 @@ class Ball{
 public:
 
     enum class BallType {
-        FULL,
-        HALF,
-        WHITE,
-        BLACK,
-        UNKNOWN
+        WHITE = 1,
+        BLACK = 2,
+        FULL = 3,
+        HALF = 4,
+        UNKNOWN = 6
     };
 
     /**
@@ -118,6 +118,9 @@ public:
      * setting center of the ball
     */
     void setBallCenter(cv::Point center);
+
+
+    std::string typeToString();
 
     private:
 

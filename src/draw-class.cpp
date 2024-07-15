@@ -54,11 +54,39 @@ int main(int argc, char* argv[]){
     // DEBUG
     draw.computePrespective(corners);
 
-    cv::imshow("n",firstFrame);
-    cv::waitKey(0);
     
+    BallClassifier ballClassifier(balls, firstFrame);
+    balls = ballClassifier.classify();
+
     BallTracker tracker(firstFrame, balls);
-    // BallClassifier ballClassifier(balls, firstFrame);
+    
+    // for(Ball ball : balls){
+
+    //     switch (ball.getBallType())
+    //         {
+    //         case Ball::BallType::FULL:
+    //             cv::circle(firstFrame, ball.getBallCenter(), ball.getBallRadius(), cv::Scalar(0, 0, 0), 3);
+    //             break;
+    //         case Ball::BallType::HALF:
+    //             cv::circle(firstFrame, ball.getBallCenter(), ball.getBallRadius(), cv::Scalar(0, 255, 0), 2);
+    //             break;
+    //         case Ball::BallType::WHITE:
+    //             cv::circle(firstFrame, ball.getBallCenter(), ball.getBallRadius(), cv::Scalar(255, 255 , 255), 2);
+    //             break;
+    //         case Ball::BallType::BLACK:
+    //             cv::circle(firstFrame, ball.getBallCenter(), ball.getBallRadius(), cv::Scalar(0, 0, 255), 3);
+    //             break;
+    //         case Ball::BallType::UNKNOWN:
+    //             break;
+    //         default:
+    //             break;
+    //         }
+    //     std::cout << "Ball pos: " << ball.getBallCenter() << "Ball class: " << ball.typeToString()  << std::endl;
+    // }
+
+    // cv::imshow("n",firstFrame);
+
+    // cv::waitKey(0);
 
     for( video >> frame; !frame.empty(); video >> frame){
         
@@ -84,7 +112,11 @@ int main(int argc, char* argv[]){
     
 
 
-    return 0;
+    // return 0;
+
+
+
+
     /*
     // Read a single frame image
     cv::Mat frame = cv::imread(inputFile);
