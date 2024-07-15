@@ -60,6 +60,12 @@ cv::Point Ball::getBallCenter(){
     return center;
 }
 
+
+void Ball::setBallCenter(cv::Point center){
+    this->center = center;
+}
+
+
 cv::Point Ball::getBallCenterInBoundingBox(){
 
     int center_x = this->center.x - bounding_box.x;

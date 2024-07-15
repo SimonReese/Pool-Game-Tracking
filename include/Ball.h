@@ -111,6 +111,14 @@ public:
      */
     void setBallType(BallType type);
 
+
+    /**
+     * 
+     * 
+     * setting center of the ball
+    */
+    void setBallCenter(cv::Point center);
+
     private:
 
     // i would suggest for future improvement to split radius from center
