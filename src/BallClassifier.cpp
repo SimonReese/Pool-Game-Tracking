@@ -1,14 +1,7 @@
 #include <BallClassifier.h>
 
 
-BallClassifier::BallClassifier(const std::vector<Ball> ballsToClassify, const cv::Mat fullGameImage){
-    if(ballsToClassify.empty()) throw std::invalid_argument("Error: empty list of balls to classify");
-    if(fullGameImage.empty()) throw std::invalid_argument("Error: empty game image");
-
-    // Initialize the list of balls to be classified
-    this->ballsVector = ballsToClassify;
-    this->fullGameImage = fullGameImage.clone();
-}
+BallClassifier::BallClassifier(){}
 
 float BallClassifier::calculateWhitePixelsRatio(const cv::Mat &inputBinaryImage) {
     // Count the number of white pixels in the binary image.
@@ -42,7 +35,14 @@ std::pair<Ball::BallType, float> BallClassifier::preliminaryBallClassifier(const
     }
 }
 
-std::vector<Ball> BallClassifier::classify(){
+std::vector<Ball> BallClassifier::classify(const std::vector<Ball> ballsToClassify, const cv::Mat fullGameImage){
+
+    if(ballsToClassify.empty()) throw std::invalid_argument("Error: empty list of balls to classify");
+    if(fullGameImage.empty()) throw std::invalid_argument("Error: empty game image");
+
+    // Set the list of balls to be classified
+    this->ballsVector = ballsToClassify;
+    this->fullGameImage = fullGameImage;
 
     // maxRatio is the ratio to identify the white ball
     float maxRatio = 0.;

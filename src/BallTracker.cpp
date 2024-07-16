@@ -21,6 +21,7 @@ BallTracker::BallTracker(const cv::Mat firstFrame, const std::vector<Ball> balls
         this->firstFrame = firstFrame;
         // vector of balls in the game initialization
         this->gameBalls = balls;
+
         //tracked vector initialization
         computeTrackedBalls();
 
@@ -64,7 +65,7 @@ bool BallTracker::compareBall(Ball a, Ball b){
 } 
 
 void BallTracker::computeTrackedBalls(){
-    const int numTrackedBalls = 3;
+    const int numTrackedBalls = 2;
     std::sort(this->gameBalls.begin(),this->gameBalls.end(), compareBall);
 
     std::copy(this->gameBalls.begin(), this->gameBalls.begin() + numTrackedBalls, std::back_inserter(this->trackedBalls));  
@@ -76,14 +77,21 @@ void BallTracker::computeTrackedBalls(){
 }
 
 
-std::vector<Ball> BallTracker::update(const cv::Mat &frame){
+bool BallTracker::update(const cv::Mat &frame, std::vector<Ball> &ballsToUpdate){
     if(frame.empty()) throw std::runtime_error("Error: requeste update on empty frame");
     std::vector<cv::Rect> rois;
+    
     
     //update the tracking result
     for (int h = 0; h < this->ballTrackers.size(); h++){
         cv::Rect roi;
-        this->ballTrackers[h]->update(frame,roi);
+        
+        bool ballFound = this->ballTrackers[h]->update(frame,roi);
+        if(!ballFound){
+            std::cout << "saltato" << std::endl;
+            return false;
+        }
+
         rois.push_back(roi);
     }
 
@@ -96,7 +104,11 @@ std::vector<Ball> BallTracker::update(const cv::Mat &frame){
 
     allBalls.insert( allBalls.end(), trackedBalls.begin(), trackedBalls.end() );
     allBalls.insert( allBalls.end(), gameBalls.begin(), gameBalls.end() );  
-    return allBalls;
+
+    ballsToUpdate.clear();
+    std::copy(allBalls.begin(), allBalls.end(), std::back_inserter(ballsToUpdate));
+
+    return true;
 }
 
 float BallTracker::ballsDistance(Ball first, Ball second){
@@ -108,7 +120,7 @@ void BallTracker::updateTracked(const cv::Mat& frame){
     for(Ball moving : this->trackedBalls){
         for(int i = 0; i < this->gameBalls.size(); i++){
 
-            if(BallTracker::ballsDistance(moving, this->gameBalls[i]) < 70.0){
+            if(BallTracker::ballsDistance(moving, this->gameBalls[i]) < 27.0){
                 this->trackedBalls.push_back(this->gameBalls[i]);
                 this->gameBalls.erase(this->gameBalls.begin() + i);
                 cv::Ptr<cv::Tracker> tr = cv::TrackerCSRT::create(); /*creation of the tracker*/

@@ -241,8 +241,8 @@ int main(int argc, char* argv[])
     
     std::cout <<"halloz"<< std::endl;
 
-    BallClassifier classifier(balls, frame);
-    std::vector<Ball> res = classifier.classify();
+    BallClassifier classifier;
+    balls = classifier.classify(balls, frame);
 
     BallTracker videoTracker(frame, balls);
     // std::cout <<"halloz"<< std::endl;
@@ -261,7 +261,7 @@ int main(int argc, char* argv[])
 
         cap >> frame;
 
-        balls = videoTracker.update(frame);
+        videoTracker.update(frame, balls);
 
         //debug test to see if bounding box and center of circle that defines ball gets updated by the function
         for (int g = 0; g < balls.size(); g++){

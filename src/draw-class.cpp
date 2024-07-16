@@ -61,8 +61,8 @@ int main(int argc, char* argv[]){
     draw.computePrespective(corners);
 
     
-    BallClassifier ballClassifier(balls, firstFrame);
-    balls = ballClassifier.classify();
+    BallClassifier ballClassifier;
+    balls = ballClassifier.classify(balls, firstFrame);
 
     BallTracker tracker(firstFrame, balls);
     
@@ -94,6 +94,8 @@ int main(int argc, char* argv[]){
 
     // cv::waitKey(0);
 
+    cv::imshow("n",firstFrame);
+
     //============================================================================
 
     // Get the starting timepoint
@@ -104,9 +106,15 @@ int main(int argc, char* argv[]){
 
     for( video >> frame; !frame.empty(); video >> frame){
 
-        cv::waitKey(0);
+        bool allBallsFound = tracker.update(frame, balls);
+        // if(!allBallsFound){
 
-        balls = tracker.update(frame);
+        //     balls = ballDetector.detectballsAlt(frame);
+        //     balls = ballClassifier.classify(balls, frame);
+        //     tracker = BallTracker(frame, balls);
+        //     tracker.update(frame, balls);
+            
+        // }
 
         for(Ball ball : balls){
             cv::circle(frame, ball.getBallCenter(), ball.getBallRadius(), cv::Scalar(0, 255, 128));
@@ -119,7 +127,7 @@ int main(int argc, char* argv[]){
         // 4. Associate class to balls
         // BallClassifier::classify(balls, frame);
 
-        
+        cv::waitKey(1);
     }
 
     // Get the ending timepoint

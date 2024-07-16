@@ -63,8 +63,8 @@ int main(int argc, char* argv[]){
         std::vector<Ball> balls = ballDetector.detectBalls(frame, mask, segmenter.getTableContours(), corners);
         
         // 4. Classify balls
-        BallClassifier ballClassifier(balls, frame);
-        balls = ballClassifier.classify();
+        BallClassifier ballClassifier;
+        balls = ballClassifier.classify(balls, frame);
 
         // 5. Draw classified balls over mask image
         //ballDetector.saveMaskToFile(mask, balls, predictedMaskPath); // Must merge balls class and table mask

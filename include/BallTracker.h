@@ -66,7 +66,7 @@ public:
     /**
      * @brief trackes the moving balls in the provided frame;
     */
-    std::vector<Ball> update(const cv::Mat &frame);
+    bool update(const cv::Mat &frame, std::vector<Ball> &ballsToUpdate);
 
 };
 #endif

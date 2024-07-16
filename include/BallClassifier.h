@@ -63,20 +63,18 @@ class BallClassifier{
 
     public:
 
-        BallClassifier() = delete;
-
         /**
         * @brief constructor for initializing class.
         * @param ballsToClassify vector of balls to classify
         * @param fullGameImage image of a pool game with balls to classify
         */
-        BallClassifier(const std::vector<Ball> ballsToClassify, const cv::Mat fullGameImage);
+        BallClassifier();
 
         /**
          * @brief Function that classifies the balls in the vector of balls of the game
          * @return vector of classified balls
         */
-        std::vector<Ball> classify();
+        std::vector<Ball> classify(const std::vector<Ball> ballsToClassify, const cv::Mat fullGameImage);
 
 };
 
