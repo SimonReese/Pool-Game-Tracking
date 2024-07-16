@@ -14,47 +14,66 @@ class EvaluationMetrics{
 
 private:
 
+    //************************************* CLASS ATTRIBUTES ******************************************** */
+
     /**
      * Dataset path.
      *
      * Path to the root of the dataset folder, containing source video frames and ground truth files.
      * Video frames names will be used as key names to find all other files.
      */
-    std::string datasetPath;
+    std::string gameClipFolder;
 
     /**
-     * Predictions path.
+     * Output folder path.
      *
      * Path to the root of the predictions folder, containing predictions files.
      */
-    std::string predictionsPath;
+    std::string outputFolder;
 
     /**
-     * Game folders
-     * 
-     * List of different games directories. In Dataset and Predictions paths it is expected 
-     * to have one or more game folders, where each game folder will contain other folders and files needed to evaluate metrics.
-     */
-    std::vector<std::string> gameFolders;
-
-    /**
-     * Name for all folders containing bounding boxes (both for dataset and predictions)
+     * Subfolder containing bounding boxes (both in gameClipFolder and outputFolder)
      */
     const std::string boundingBoxesFolder;
 
     /**
-     * Name for all folders containing masks images (both for dataset and predictions)
+     * Subfolder containing masks images (both in gameClipFolder and outputFolder)
      */
     const std::string masksFolder;
 
     /**
-     * Name for all folders containing frames (only in dataset folder)
+     * Subfolder containing frames (only in gameClipFolder folder)
      */
     const std::string framesFolder;
 
-    double computeIntersectionOverUnion(const std::vector<int>& groundTruth, const std::vector<int>& prediction) const;
+    /**
+     * Vector of all named frames found in frames subdirectoryspo
+     */
+    std::vector<std::string> framenames;
 
-    // Read a file of bounding boxes and return a vector of vectors eache representing a bounding box
+    /**
+     * Extension for the bbox files
+     */
+    const std::string frameFileExtension = ".png";
+
+    /**
+     * Extension for the masks files
+     */
+    const std::string maskFileExtension = ".png";
+
+    /**
+     * Extension for the bbox files
+     */
+    const std::string bboxFileExtension = "_bbox.txt";
+
+    /**
+     * Output metrics filename
+     */
+    const std::string metricsFileName = "metrics.txt";
+
+    //************************************* BOUNDING BOXES COMPUTATIONS ************************************** */
+
+
     /**
      * Read a file containing a list of bounding boxes.
      * 
@@ -64,67 +83,132 @@ private:
      */
     std::vector<std::vector<int> > readBoundingBoxFile(std::string filePath) const;
 
-    // Compute mean IoU between two files
-    double evaluateBoundingBoxes(std::string trueFile, std::string predictedFile) const;
+    /**
+     * Computes IoU between bounding boxes
+     * 
+     * In order to compute mAP, we need IoU values for the bounding boxes. To compute IoU between two 
+     * bounding boxes, we first check if the two are actually overlapping, and then we compute the 
+     * intersected area finding the maximum x, y values among the top left corners of the boxes, and the minimum w, h sizes.
+     * Union area will be the sum of the two rectangle areas minus the intersection.
+     * 
+     * @param firstBox the first bounding box
+     * @param secondBox the second bounding box
+     * 
+     * @return IoU of the two bounding boxes
+     */
+    double boxesIoU(const std::vector<int>& firstBox, const std::vector<int>& secondBox) const;
 
-    // Compute intersection over union between two masked images. Images must be single channel, uchar datatype.
-    // Each image pixel has a single value corresponding to a class. Up to 8 classes are supported.
-    double maskedIoU(const cv::Mat& maskedGroundTruth, const cv::Mat& maskedPrediction, int classes) const;
+    /**
+     * Compute IoU between two mask images.
+     * 
+     * This function performs IoU between two mask images, where each pixel in the mask has a value V
+     * corresponding to the class of the pixel (background = 0, playing field = 5, white ball = 1, etc...).
+     * In order to compute IoU, we remap each value V to the result of pow(2, v) (that is 0 -> 1, 
+     * 1 -> 2, 2 -> 4, 3 -> 8, etc...). In binary format, those value will not have overlapping 1's (1, 10, 100, etc..)
+     * and in this way we can easily filter out all the pixels belonging to a different class from the one considered 
+     * (that is, we perform bitwise_and operation between the filter value V for the class considered and the mask).
+     * Finally, we can easily compute: 
+     * - Intersection, as bitwise_and operations between the two masks
+     * - Union, as bitwise_or between the two masks
+     * Area is obtained by counting non zero pixels after each operations.
+     * Since masks images store single byte values, up to 7 classes are supported.
+     * 
+     * @param trueMask ground truth mask image
+     * @param predictedMask predicted mask image
+     * @param classes number of classes where IoU is computed (must be < 8)
+     * 
+     * @return a vector with IoU for each class
+     * 
+     * @throw `std::logic_error` if more than 7 classes are requested.
+     */
+    std::vector<double> masksIoU(const cv::Mat& trueMask, const cv::Mat& predictedMask, int classes) const;
 
-    void checkDatasetFolder();
+    /**
+     * Evaluate integrity of game clip folder.
+     * 
+     * We must be sure that the game clip folder exists, that the frames, masks and bounding boxes subfolders exits,
+     * and that for each frame in frames subfolder, a corresponding bounding box and mask exits in subfolders.
+     * 
+     * @throw `std::invalid_argument` if any of the required folders or files are missing. 
+     */
+    void checkGameClipFolderIntegrity();
 
-    void checkPredictionsFolder();
+    /**
+     * Evaluate integrity of game output folder.
+     * 
+     * We check that the output folder exists and has subfolders, otherwise we create missing ones
+     * 
+     * @throw `std::runtime_error` if a folder is missing but we couldn't create one. 
+     */
+    void checkOutputFolderIntegrity();
 
-    // Get frame names in specific game folder
-    std::vector<std::string> getFrameNames(std::string gameFolder) const;
+public:
 
-public: 
+    /**
+     * @return a vector of all path-to frame files in game clip folder
+     */
+    std::vector<std::string> getFrameFiles();
+
+    /**
+     * @return a vector of all path-to true mask files in game clip folder
+     */
+    std::vector<std::string> getTrueMaskFiles();
+
+    /**
+     * @return a vector of all path-to true bounding boxes files in game clip folder
+     */
+    std::vector<std::string> getTrueBoundingBoxFiles();
+
+    /**
+     * @return a vector of all path-to predicted mask files in output folder
+     */
+    std::vector<std::string> getPredictedMaskFiles();
+    
+    /**
+     * @return a vector of all path-to predicted bounding boxes files in output folder
+     */
+    std::vector<std::string> getPredictedBoundingBoxFiles();
+
 
     /**
      * Constructor to initialize Evaluation class.
      * 
-     * This constructor will take paths to dataset and predictions folders as parameters, along with names for masks, frames and bounding boxes folders.
-     * @param groundTruthPath path to the ground truth dataset folder
-     * @param predictionPath path to the predictions folder. Ground truth and predictions foders must have same structre. More specifically, they must respect the folder structure provided as-is in the Dataset folder.
-     * @param framesFolder name of folder containing frames images. Default value is `frames`.
-     * @param maksFolder name of folder containing masks images. Default value is `masks`.
-     * @param boundingBoxesFolder name of folder containing bounding boxes .txt files. Default value is `bounding_boxes`.
+     * This constructor will take path to game clip folder and path to output folder as parameters, along with names for masks, frames and bounding boxes subfolders.
+     * @param gameClipFolderPath path to the game clip folder
+     * @param outputFolderPath path to the output folder.
+     * @param framesFolder (optional) name of the subfolder containing frames images. Default value is `frames`.
+     * @param maksFolder (optional) name of the subfolder containing masks images. Default value is `masks`.
+     * @param boundingBoxesFolder (optional) name of the subfolder containing bounding boxes .txt files. Default value is `bounding_boxes`.
      * 
      * @throw `std::invalid_argument` if dataset folder or predictions folder are not accessible
      * @throw `std::logic_error` if dataset folder or predictions folder are not consistent with folders structure
      */
-    EvaluationMetrics(std::string datasetPath, std::string predictionsPath, std::string framesFolder = "frames", std::string masksFolder = "masks", std::string boundingBoxesFolder = "bounding_boxes");
-
-    // TEMPORARY FUNCTION TO COMPUTE MEAN IoU BETWEEN TWO FILES
-    double meanIoUtwoFiles(std::string firstFile, std::string secondFile) const ;
-
-    // TEMPORARY FUNCTION TO COMPUTE MASKED IMAGES IOU
-    double meanIoUMasked(std::string firstFile, std::string secondFile, int classes) const;
-
-    // TEMPORARY FUNCTION TO COMPUTE MASKED IMAGES IOU
-    double meanIoUMasked(const cv::Mat& firstImage, const cv::Mat& secondImage, int classes) const;
-
-    // TEMPORARY FUNCTION TO RUN ALL DATASET with remapped values
-    double meanIoUSegmentationREMAPPED(int classes) const;
+    EvaluationMetrics(std::string gameClipFolderPath, 
+                    std::string outputFolderPath, 
+                    std::string framesFolder = "frames", 
+                    std::string masksFolder = "masks", 
+                    std::string boundingBoxesFolder = "bounding_boxes"
+                    );
 
     /**
      * Computes segmentation IoU for each frame, in each game folder, for each class.
      * 
-     * @param classes the number of classes to consider
+     * @param trueMask path to true mask file
+     * @param predictedMask path to predicted mask file
+     * @param classes the number of classes to consider (default: 6)
      */
-    double meanIoUSegmentation(int classes) const;
+    double computeMasksIoU(std::string trueMask, std::string predictedMask, int classes = 6) const;
 
     /**
      * Computes mean Average Precision (mAP) across ball classes
      * 
      * @param predictedFilePath path of predicted bounding boxes file
      * @param groundTruthPath path of ground truth bounding boxes file
-     * @param classes total number of classes in predicted and ground truth files
+     * @param classes total number of classes in predicted and ground truth bounding boxes files (default: 4)
      * 
      * @return the class wise mean average precision
      */
     double computeMeanAveragePrecision(std::string predictedFilePath, std::string groundTruthPath, int classes = 4) const;
-
 };
 
 #endif
