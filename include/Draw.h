@@ -37,6 +37,21 @@ private:
     cv::Mat drawingNoBalls;
 
     /**
+     * Padding used to map corners of the frame to corners of the table draw schematic
+     */
+    const int padding = 20;
+
+    /**
+     * Path to the field schematic draw (vertical alignment)
+     */
+    const std::string verticalTablePath = "../res/assets/pool-table-350x640.png";
+
+    /**
+     * Path to the field schematic draw (horiziontal alignment)
+     */
+    const std::string horizontalTablePath = "../res/assets/pool-table-640x350.png";
+
+    /**
      * Returns a new image composed by background image and the overlapping image
      * @param background background image
      * @param overlapping the image that will be put over the background

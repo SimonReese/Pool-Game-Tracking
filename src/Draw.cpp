@@ -127,27 +127,27 @@ void Draw::computePrespective(const std::vector<cv::Point>& corners){
     if (horiz / vert < 1.7){
         // We will build a vertical pool table 
         destCoord = {
-            cv::Point(0, 0),
-            cv::Point(349, 0),
-            cv::Point(349, 639),
-            cv::Point(0, 639)
+            cv::Point(0 + this->padding, 0 + this->padding),
+            cv::Point(349 - this->padding, 0 + this->padding),
+            cv::Point(349 - this->padding, 639 - this->padding),
+            cv::Point(0 + this->padding, 639 - this->padding)
         };
         dsize = cv::Size(350, 640);
         result = cv::Mat(dsize, CV_8UC3);
-        this->drawingNoBalls = cv::imread("../res/assets/pool-table-350x640.png");
+        this->drawingNoBalls = cv::imread(this->verticalTablePath);
         
     }
     else {
         // We build a horizontal pool table
         destCoord = {
-            cv::Point(0, 0),
-            cv::Point(639, 0),
-            cv::Point(639, 349),
-            cv::Point(0, 349)
+            cv::Point(0 + this->padding, 0 + this->padding),
+            cv::Point(639 - this->padding, 0 + this->padding),
+            cv::Point(639- this->padding, 349- this->padding),
+            cv::Point(0 + this->padding, 349- this->padding)
         };
         dsize = cv::Size(640, 350);
         result = cv::Mat(dsize, CV_8UC3);
-        this->drawingNoBalls = cv::imread("../res/assets/pool-table-640x350.png");
+        this->drawingNoBalls = cv::imread(this->horizontalTablePath);
         
     }
     
