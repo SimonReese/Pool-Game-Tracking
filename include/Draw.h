@@ -62,14 +62,6 @@ private:
     cv::Mat unknownBallPNG;
 
     /**
-     * Detect corners of table in the frame.
-     * TODO: remove!
-     * 
-     *  @deprecated We want to use the specific class
-     */ 
-    std::vector<cv::Point> detectTableCorners() const;
-
-    /**
      * Returns a new image composed by background image and the overlapping image
      * @param background background image
      * @param overlapping the image that will be put over the background
