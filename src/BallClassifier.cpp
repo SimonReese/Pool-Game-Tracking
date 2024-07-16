@@ -61,6 +61,7 @@ std::vector<Ball> BallClassifier::classify(){
         std::pair<Ball::BallType, float> classificationResult = preliminaryBallClassifier(cutOutImage);
 
         ballsVector[index].setBallType(classificationResult.first);
+        ballsVector[index].setWhiteRatio(classificationResult.second);
 
         if(classificationResult.second > maxRatio){
             maxRatio = classificationResult.second;

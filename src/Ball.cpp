@@ -9,6 +9,8 @@ Ball::Ball(){
     this->radius = 0;
     this->center = cv::Point(0, 0);
     this->type = Ball::BallType::UNKNOWN;
+    this->bounding_box = cv::Rect(0,0,2,2);
+    this->whiteRatio = -1.0;
 }
 
 Ball::Ball(cv::Vec3f circle_radius_and_center){
@@ -16,6 +18,7 @@ Ball::Ball(cv::Vec3f circle_radius_and_center){
     this->center = cv::Point(static_cast<int>(circle_radius_and_center[0]), static_cast<int>(circle_radius_and_center[1]));
     this->type = Ball::BallType::UNKNOWN;
     this->bounding_box = cv::Rect(0,0,2,2);
+    this->whiteRatio = -1.0;
 }
 
 Ball::Ball(cv::Vec3i circle_radius_and_center){
@@ -23,6 +26,7 @@ Ball::Ball(cv::Vec3i circle_radius_and_center){
     this->center = cv::Point(circle_radius_and_center[0], circle_radius_and_center[1]);
     this->type = Ball::BallType::UNKNOWN;
     this->bounding_box = cv::Rect(0,0,2,2);
+    this->whiteRatio = -1.0;
 }
 
 Ball::Ball(int radius, cv::Point center){
@@ -30,6 +34,7 @@ Ball::Ball(int radius, cv::Point center){
     this->center = center;
     this->type = Ball::BallType::UNKNOWN;
     this->bounding_box = cv::Rect(0,0,2,2);
+    this->whiteRatio = -1.0;
 }
 
 void Ball::setBoundingBox(cv::Rect bounding_box){
@@ -87,6 +92,14 @@ Ball::BallType Ball::getBallType() const{
 
 void Ball::setBallType(Ball::BallType type){
     this->type = type;
+}
+
+void Ball::setWhiteRatio(float whiteRatio){
+    this->whiteRatio = whiteRatio;
+}
+
+float Ball::getWhiteRatio() const{
+    return whiteRatio;
 }
 
 std::string Ball::typeToString(){

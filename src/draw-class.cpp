@@ -5,6 +5,9 @@
 #include <iostream>
 #include <tuple>
 
+//just to see how fast the tracker runs, can then be removed
+#include <chrono>
+
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
@@ -17,6 +20,9 @@
 #include "BallTracker.h"
 
 int main(int argc, char* argv[]){
+
+    //just for chrono can then be removed
+    using namespace std::chrono;
     
     if (argc < 2){
         std::cerr << "Please provide a video path." << std::endl;
@@ -81,16 +87,25 @@ int main(int argc, char* argv[]){
     //         default:
     //             break;
     //         }
-    //     std::cout << "Ball pos: " << ball.getBallCenter() << "Ball class: " << ball.typeToString()  << std::endl;
+    //     std::cout << "Ball pos: " << ball.getWhiteRatio() << "Ball class: " << ball.typeToString()  << std::endl;
     // }
 
     // cv::imshow("n",firstFrame);
 
     // cv::waitKey(0);
 
+    //============================================================================
+
+    // Get the starting timepoint
+    auto start = high_resolution_clock::now();
+
+    
+    //============================================================================
+
     for( video >> frame; !frame.empty(); video >> frame){
-        
-        
+
+        cv::waitKey(0);
+
         balls = tracker.update(frame);
 
         for(Ball ball : balls){
@@ -101,11 +116,20 @@ int main(int argc, char* argv[]){
 
         cv::Mat drawing = draw.updateDrawing(balls);
         cv::imshow("Draw", drawing);
-        //4. Associate class to balls
-        //BallClassifier::classify(balls, frame);
+        // 4. Associate class to balls
+        // BallClassifier::classify(balls, frame);
 
-        cv::waitKey(10);
+        
     }
+
+    // Get the ending timepoint
+    auto end = high_resolution_clock::now();
+
+    // Calculate the duration
+    auto duration = duration_cast<milliseconds>(end - start);
+
+    // Output the duration
+    std::cout << "someFunction() took " << duration.count() << " milliseconds." << std::endl;
 
     video.release();
     cv::waitKey(0);

@@ -19,13 +19,17 @@
 
 class BallTracker {
 
-    private:
+private:
 
     // vector with a tracker for each ball in the field
     std::vector<cv::Ptr<cv::Tracker>> ballTrackers;
 
     // vector containing all the balls in the field
     std::vector<Ball> gameBalls;
+
+    std::vector<Ball> trackedBalls;
+
+    cv::Mat firstFrame;
 
     /**
      * return a vector containing all the trackers initialized using the initial position of the balls
@@ -40,6 +44,20 @@ class BallTracker {
      * @param rois vector containing the updated bounding boxes found using the tracker algorithm
      */
     void updateBallsCenterAndBoundingBox(const std::vector<cv::Rect> &rois);
+
+
+    /**
+     * @brief computes the vector of the balls most probabily are going to move
+     * 
+     * 
+    */
+    void computeTrackedBalls();
+
+    static bool compareBall(Ball a, Ball b);
+
+    static float ballsDistance(Ball first, Ball second);
+
+    void updateTracked(const cv::Mat& frame);
 
 public:
     

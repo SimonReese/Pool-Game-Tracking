@@ -111,7 +111,6 @@ public:
      */
     void setBallType(BallType type);
 
-
     /**
      * 
      * 
@@ -119,14 +118,19 @@ public:
     */
     void setBallCenter(cv::Point center);
 
-
     std::string typeToString();
+
+    void setWhiteRatio(float whiteRatio);
+
+    float getWhiteRatio() const;
 
     private:
 
     // i would suggest for future improvement to split radius from center
     // center and radius of the circle that identifies the ball
     int radius; 
+
+    float whiteRatio;
 
     cv::Point center;
 

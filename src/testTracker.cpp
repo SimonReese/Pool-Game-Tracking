@@ -127,8 +127,6 @@ int main(int argc, char* argv[])
     using namespace std::chrono;
 
     
-
-
     // if (argc < 3){
     //     std::cout << "Please enter dataset path (usually in (root)/res/Dataset/) and predictions path (usually in (root)/res/predictions/)" << std::endl;
     // }
@@ -234,7 +232,7 @@ int main(int argc, char* argv[])
     //============================================================================
 
     // Get the starting timepoint
-    auto start = high_resolution_clock::now();
+    // auto start = high_resolution_clock::now();
 
     
     //============================================================================
@@ -255,6 +253,9 @@ int main(int argc, char* argv[])
     
     // // std::vector<cv::Point> ballMovement;
     // // cv::cvtColor(frame,frame,cv::COLOR_HSV2BGR);
+
+    // Get the starting timepoint
+    auto start = high_resolution_clock::now();
 
     for ( ;; ){
 
