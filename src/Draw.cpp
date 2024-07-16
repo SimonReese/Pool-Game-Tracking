@@ -48,10 +48,7 @@ cv::Mat Draw::drawOver(const cv::Mat &background, const cv::Mat &overlapping, co
 
 
 Draw::Draw(){
-    this->blackBallPNG = this->whiteBallPNG = 
-        this->solidBallPNG = this->stripedBallPNG = 
-            this->unknownBallPNG = cv::imread("../res/assets/blackball.png");
-    this->drawingNoBalls = cv::imread("../res/assets/pool-table-350x640.png");
+    // Noting to do yet
 }
 
 

@@ -37,31 +37,6 @@ private:
     cv::Mat drawingNoBalls;
 
     /**
-     * Store white ball schematic image
-     */
-    cv::Mat whiteBallPNG;
-
-    /**
-     * Store black ball schematic image
-     */
-    cv::Mat blackBallPNG;
-
-    /**
-     * Store solid ball schematic image
-     */
-    cv::Mat solidBallPNG;
-
-    /**
-     * Store striped ball schematic image
-     */
-    cv::Mat stripedBallPNG;
-
-    /**
-     * Store unknown ball schematic image
-     */
-    cv::Mat unknownBallPNG;
-
-    /**
      * Returns a new image composed by background image and the overlapping image
      * @param background background image
      * @param overlapping the image that will be put over the background
