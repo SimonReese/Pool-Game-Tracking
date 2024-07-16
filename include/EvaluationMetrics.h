@@ -185,9 +185,9 @@ public:
      */
     EvaluationMetrics(std::string gameClipFolderPath, 
                     std::string outputFolderPath, 
-                    std::string framesFolder = "frames", 
-                    std::string masksFolder = "masks", 
-                    std::string boundingBoxesFolder = "bounding_boxes"
+                    std::string framesFolder = "frames/", 
+                    std::string masksFolder = "masks/", 
+                    std::string boundingBoxesFolder = "bounding_boxes/"
                     );
 
     /**
