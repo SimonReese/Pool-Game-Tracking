@@ -120,7 +120,7 @@ void BallTracker::updateTracked(const cv::Mat& frame){
     for(Ball moving : this->trackedBalls){
         for(int i = 0; i < this->gameBalls.size(); i++){
 
-            if(BallTracker::ballsDistance(moving, this->gameBalls[i]) < 27.0){
+            if(BallTracker::ballsDistance(moving, this->gameBalls[i]) < 25.0){
                 this->trackedBalls.push_back(this->gameBalls[i]);
                 this->gameBalls.erase(this->gameBalls.begin() + i);
                 cv::Ptr<cv::Tracker> tr = cv::TrackerCSRT::create(); /*creation of the tracker*/
