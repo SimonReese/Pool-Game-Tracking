@@ -30,10 +30,10 @@ int main(int argc, char* argv[]){
     std::vector<std::string> masks = evaluate.getTrueMaskFiles();
     std::vector<std::string> bboxes = evaluate.getTrueBoundingBoxFiles();
 
-    std::vector<std::string> omaks = evaluate.getPredictedMaskFiles();
+    std::vector<std::string> omasks = evaluate.getPredictedMaskFiles();
     std::vector<std::string> obboxes = evaluate.getPredictedBoundingBoxFiles();
 
-    std::vector<std::vector<std::string> > all{frames, masks, bboxes, omaks, obboxes};
+    std::vector<std::vector<std::string> > all{frames, masks, bboxes, omasks, obboxes};
 
     // DEBUG
     for(std::vector<std::string> strings: all){
@@ -79,8 +79,8 @@ int main(int argc, char* argv[]){
         std::string trueBBoxPath = bboxes[i];
         
         // Prepare output file paths
-        std::string predictedMaskPath = masks[i];
-        std::string predictedBBoxPath = bboxes[i];
+        std::string predictedMaskPath = omasks[i];
+        std::string predictedBBoxPath = obboxes[i];
 
         double mIoU = evaluate.computeMasksIoU(trueMaskPath, predictedMaskPath);
         double mAP = evaluate.computeMeanAveragePrecision(trueMaskPath, predictedMaskPath);
