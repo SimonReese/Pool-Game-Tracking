@@ -66,10 +66,10 @@ int main(int argc, char* argv[]){
         balls = ballClassifier.classify();
 
         // 5. Draw classified balls over mask image
-        ballDetector.saveMaskToFile(mask, balls, predictedMaskPath); // Must merge balls class and table mask
+        //ballDetector.saveMaskToFile(mask, balls, predictedMaskPath); // Must merge balls class and table mask
 
         // 6. Save balls bounding boxes
-        ballDetector.saveBoxesToFile(balls, predictedBBoxPath); // Must save bboxes to file
+        //ballDetector.saveBoxesToFile(balls, predictedBBoxPath); // Must save bboxes to file
     }
 
     // Perform metrics evaluation
@@ -85,7 +85,7 @@ int main(int argc, char* argv[]){
         double mAP = evaluate.computeMeanAveragePrecision(trueMaskPath, predictedMaskPath);
     }
 
-    return;
+    return 0;
 
     /*
 
