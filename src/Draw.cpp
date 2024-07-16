@@ -134,6 +134,7 @@ void Draw::computePrespective(const std::vector<cv::Point>& corners){
         };
         dsize = cv::Size(350, 640);
         result = cv::Mat(dsize, CV_8UC3);
+        this->drawingNoBalls = cv::imread("../res/assets/pool-table-350x640.png");
         
     }
     else {
@@ -146,6 +147,7 @@ void Draw::computePrespective(const std::vector<cv::Point>& corners){
         };
         dsize = cv::Size(640, 350);
         result = cv::Mat(dsize, CV_8UC3);
+        this->drawingNoBalls = cv::imread("../res/assets/pool-table-640x350.png");
         
     }
     
