@@ -360,7 +360,7 @@ double EvaluationMetrics::computeMeanAveragePrecision(std::string predictedFileP
         scoresIoU.push_back(current);
     }
     // DEBUG
-    std::cout << "GT Elements:";
+    std::cout << "Total ground truth elements for each class:";
     for (int i = 1; i <= classes; i++){
         std::cout << " " << countGT[i];
     }
@@ -413,7 +413,7 @@ double EvaluationMetrics::computeMeanAveragePrecision(std::string predictedFileP
             } else if (previousPrecision->second < cumulativePrecision) { // Otherwise if previous element found and prevoius value is lower
                 previousPrecision->second = cumulativePrecision; // Update value in map
             }
-            std::cout << "AP point is: " << previousPrecision->first << ", " << previousPrecision->second << std::endl;
+            //std::cout << "AP point is: " << previousPrecision->first << ", " << previousPrecision->second << std::endl;
         }
 
         // Pascal Voc 11 point interpolation
@@ -446,7 +446,7 @@ double EvaluationMetrics::computeMeanAveragePrecision(std::string predictedFileP
             }
             // Set current value
             interpolated[point] = bestSoFar;
-            std::cout << "Set interpolation " << point << " at " << bestSoFar << std::endl;
+            //std::cout << "Set interpolation " << point << " at " << bestSoFar << std::endl;
             // Move to next point
             point -= 0.1;
             
@@ -456,9 +456,10 @@ double EvaluationMetrics::computeMeanAveragePrecision(std::string predictedFileP
             averagePrecision += it->second;
         }
         averagePrecision /= 11;
+        std::cout << "Average precision for class " << i << " is: " << averagePrecision << std::endl;
         meanAveragePrecision += averagePrecision;
     }
     meanAveragePrecision /= classes;
-
+    std::cout << "Mean average precision is: " << meanAveragePrecision << std::endl;
     return meanAveragePrecision;
 }
