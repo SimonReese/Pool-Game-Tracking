@@ -77,7 +77,7 @@ target_link_libraries(testTracker ${OpenCV_LIBS} MaskAndBalls BallTracker BallCl
 
 # Link libraries to files
 target_link_libraries(main ${OpenCV_LIBS})
-target_link_libraries(evaluation_runner ${OpenCV_LIBS} EvaluationMetrics)
+target_link_libraries(evaluation_runner ${OpenCV_LIBS} EvaluationMetrics TableSegmenter MaskAndBalls BallDetector BallClassifier)
 target_link_libraries(draw_class ${OpenCV_LIBS} DrawingClass TableSegmenter BallClassifier FilesystemUtils BallDetector BallTracker)
 target_link_libraries(mask_campo ${OpenCV_LIBS} MaskAndBalls BallClassifier FilesystemUtils)
 

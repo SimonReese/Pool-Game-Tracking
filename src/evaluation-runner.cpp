@@ -44,6 +44,7 @@ int main(int argc, char* argv[]){
 
     // Compute outputs algorithm
     for (int i = 0; i < frames.size(); i++){
+        std::string framePath = frames[i];
         // Prepare output file paths
         std::string predictedMaskPath = masks[i];
         std::string predictedBBoxPath = bboxes[i];
