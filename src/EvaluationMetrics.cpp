@@ -295,7 +295,7 @@ EvaluationMetrics::EvaluationMetrics(std::string gameClipFolder, std::string out
 }
 
 
-double EvaluationMetrics::computeMasksIoU(std::string trueMask, std::string predictedMask, int classes = 6) const {
+double EvaluationMetrics::computeMasksIoU(std::string trueMask, std::string predictedMask, int classes) const {
     // Open the two maks
     cv::Mat truth = cv::imread(trueMask, cv::IMREAD_GRAYSCALE);
     cv::Mat predicted = cv::imread(predictedMask, cv::IMREAD_GRAYSCALE);
