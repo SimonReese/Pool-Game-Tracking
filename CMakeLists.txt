@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 project(PoolGameTracking)
 
 # Fede path
-set(CMAKE_PREFIX_PATH "/home/fed/cv_lab/cv_libs/local")
+#set(CMAKE_PREFIX_PATH "/home/fed/cv_lab/cv_libs/local")
 
 # Required libraries
 find_package(OpenCV REQUIRED)
