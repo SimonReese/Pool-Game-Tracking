@@ -1,16 +1,95 @@
+
 #include <iostream>
 #include <string>
 #include <vector>
+
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
+#include <opencv2/core/utils/filesystem.hpp>
+
 #include "EvaluationMetrics.h"
+#include "TableSegmenter.h"
+#include "Ball.h"
+#include "BallDetector.h"
+#include "BallClassifier.h"
 
 int main(int argc, char* argv[]){
-    if (argc != 1){
+
     if (argc < 3){
-        std::cerr << "Error. Please provide paths to dataset and predictions folders. " << std::endl;
+        std::cerr << "Error. Please provide path to gameX_clipX folder and path to output folder" << std::endl;
         return -1;
     }
+
+    // Save gameclip path and output path
+    std::string clipFolder = argv[1];
+    std::string outputFolder = argv[2];
+
+    // Instantiate evaluation metrics class
+    EvaluationMetrics evaluate(clipFolder, outputFolder);
+    std::vector<std::string> frames = evaluate.getFrameFiles();
+    std::vector<std::string> masks = evaluate.getTrueMaskFiles();
+    std::vector<std::string> bboxes = evaluate.getTrueBoundingBoxFiles();
+
+    std::vector<std::string> omaks = evaluate.getPredictedMaskFiles();
+    std::vector<std::string> obboxes = evaluate.getPredictedBoundingBoxFiles();
+
+    std::vector<std::vector<std::string> > all{frames, masks, bboxes, omaks, obboxes};
+
+    // DEBUG
+    for(std::vector<std::string> strings: all){
+        for(std::string file : strings){
+            std::cout << file << std::endl;
+        }
+    }
+
+    // Compute outputs algorithm
+    for (int i = 0; i < frames.size(); i++){
+        // Prepare output file paths
+        std::string predictedMaskPath = masks[i];
+        std::string predictedBBoxPath = bboxes[i];
+
+        cv::Mat frame = cv::imread(framePath);
+
+        // 1. Get table mask
+        TableSegmenter segmenter;
+        cv::Mat mask = segmenter.getTableMask(frame);
+
+        // 2. Get table corners
+        std::vector<cv::Point2i> corners = segmenter.getFieldCorners(mask);
+
+        // 3. Detect balls
+        BallDetector ballDetector;
+        std::vector<Ball> balls = ballDetector.detectBalls(frame, mask, segmenter.getTableContours(), corners);
+        
+        // 4. Classify balls
+        BallClassifier ballClassifier(balls, frame);
+        balls = ballClassifier.classify();
+
+        // 5. Draw classified balls over mask image
+        ballDetector.saveMaskToFile(mask, balls, predictedMaskPath); // Must merge balls class and table mask
+
+        // 6. Save balls bounding boxes
+        ballDetector.saveBoxesToFile(balls, predictedBBoxPath); // Must save bboxes to file
+    }
+
+    // Perform metrics evaluation
+    for (int i = 0; i < frames.size(); i++){
+        std::string trueMaskPath = masks[i];
+        std::string trueBBoxPath = bboxes[i];
+        
+        // Prepare output file paths
+        std::string predictedMaskPath = masks[i];
+        std::string predictedBBoxPath = bboxes[i];
+
+        double mIoU = evaluate.computeMasksIoU(trueMaskPath, predictedMaskPath);
+        double mAP = evaluate.computeMeanAveragePrecision(trueMaskPath, predictedMaskPath);
+    }
+
+    return;
+
+    /*
+
+    
 
     std::string datasetPath = argv[1];
     std::string predictionsPath = argv[2];
@@ -31,4 +110,5 @@ int main(int argc, char* argv[]){
     double IoU = metrics.meanIoUMasked(ground, pred, 3);
     std::cout << "IoU masked:" << IoU << std::endl;
     return 0;
+    */
 }
