@@ -402,18 +402,22 @@ double EvaluationMetrics::computeMeanAveragePrecision(std::string predictedFileP
             }
             
             // Compute precision and recall
-            cumulativePrecision = cumulativeTP / cumulativeTP + cumulativeFP;
+            cumulativePrecision = cumulativeTP / (cumulativeTP + cumulativeFP);
             cumulativeRecall = cumulativeTP / countGT[i];
-            
+            //std::cout << "I computed a cumPrecision of " << cumulativePrecision << "and a cumRecall of " << cumulativeRecall << std::endl;
+
             // Save precision and recall in a map
             // Chek if a point was already present
-            std::map<double, double>::iterator previousPrecision = curve.find(cumulativeRecall);
-            if (previousPrecision == curve.end()){ // If no previous element found
+            std::map<double, double>::iterator previousPoint = curve.find(cumulativeRecall);
+            if (previousPoint == curve.end()){ // If no previous element found
+                //std::cout << "I will insert " << cumulativePrecision << 
                 curve[cumulativeRecall] = cumulativePrecision; // Insert new element
-            } else if (previousPrecision->second < cumulativePrecision) { // Otherwise if previous element found and prevoius value is lower
-                previousPrecision->second = cumulativePrecision; // Update value in map
+            } else if (previousPoint->second < cumulativePrecision) { // Otherwise if previous element found and prevoius value is lower
+                //std::cout << "I have found a previous value of precision for this recall with value " << previousPoint->second << std::endl;
+                previousPoint->second = cumulativePrecision; // Update value in map
             }
-            //std::cout << "AP point is: " << previousPrecision->first << ", " << previousPrecision->second << std::endl;
+            //previousPoint = curve.find(cumulativeRecall);
+            //std::cout << "AP point is: (recall)" << previousPoint->first << ", (precision)" << previousPoint->second << std::endl;
         }
 
         // Pascal Voc 11 point interpolation
