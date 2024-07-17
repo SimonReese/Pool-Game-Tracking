@@ -8,7 +8,6 @@
 #include <fstream>
 #include <stdexcept>
 
-#include "FieldGeometryAndMask.h"
 #include "Ball.h"
 #include "BallTracker.h"
 

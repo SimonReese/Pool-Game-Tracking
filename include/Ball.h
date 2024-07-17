@@ -30,6 +30,7 @@ public:
 
     /**
      * Default constructor for initializing class.
+     * It uses a cv::Vec3f because of the format of output of the cv::HoughCircles function for detected circles
      * 
      * @param circle_radius_and_center center point and radius of the circle representing the ball
      */
@@ -61,12 +62,6 @@ public:
      * Return the bounding box of the ball
      */
     cv::Rect getBoundingBox() const;
-
-    /**
-     * Set the ball center and radius
-     * @param circle_radius_and_center parameters of the circle corresponding to the ball
-     */
-    void setBallPosition(cv::Vec3f circle_radius_and_center);
 
     /**
      * Set the ball center and radius
@@ -126,12 +121,12 @@ public:
 
     private:
 
-    // i would suggest for future improvement to split radius from center
-    // center and radius of the circle that identifies the ball
+    /*radius of the identified ball*/
     int radius; 
-
+    /*white pixel percentage of the ball*/
     float whiteRatio;
 
+    /*center of the identified ball*/
     cv::Point center;
 
     // Class of the ball
