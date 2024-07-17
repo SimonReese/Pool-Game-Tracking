@@ -127,7 +127,7 @@ int main(int argc, char* argv[]){
         // 4. Associate class to balls
         // BallClassifier::classify(balls, frame);
 
-        cv::waitKey(10);
+        cv::waitKey(1);
     }
 
     // Get the ending timepoint
