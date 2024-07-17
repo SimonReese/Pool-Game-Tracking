@@ -82,8 +82,8 @@ int main(int argc, char* argv[]){
         std::string predictedMaskPath = omasks[i];
         std::string predictedBBoxPath = obboxes[i];
 
-        double mIoU = evaluate.computeMasksIoU(trueMaskPath, trueMaskPath);
-        double mAP = evaluate.computeMeanAveragePrecision(trueBBoxPath, trueBBoxPath);
+        double mIoU = evaluate.computeMasksIoU(trueMaskPath, predictedMaskPath);
+        double mAP = evaluate.computeMeanAveragePrecision(trueBBoxPath, predictedBBoxPath);
     }
 
     return 0;

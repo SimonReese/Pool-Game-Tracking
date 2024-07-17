@@ -58,17 +58,16 @@ add_library(Ball
             include/Ball.h
             src/Ball.cpp)
 
-      
-
-
 # Add executables -----------------------------------
 add_executable(evaluation_runner src/evaluation-runner.cpp)
 add_executable(draw_class src/draw-class.cpp)
+add_executable(open_mask src/open-mask.cpp)
 
 
 # Link libraries to files
 target_link_libraries(evaluation_runner ${OpenCV_LIBS} EvaluationMetrics TableSegmenter BallDetector BallClassifier Ball)
 target_link_libraries(draw_class ${OpenCV_LIBS} DrawingClass TableSegmenter BallClassifier FilesystemUtils BallDetector BallTracker Ball)
+target_link_libraries(open_mask ${OpenCV_LIBS})
 
 target_link_libraries(EvaluationMetrics ${OpenCV_LIBS} FilesystemUtils)
 target_link_libraries(DrawingClass ${OpenCV_LIBS} Ball)
