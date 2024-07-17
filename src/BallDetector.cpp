@@ -1,8 +1,11 @@
 #include <iostream>
 #include <opencv2/core.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <fstream>
 #include "BallDetector.h"
-#include "BallsDetection.h"
-#include "FieldGeometryAndMask.h"
+#include "TableSegmenter.h"
+#include "Ball.h"
 
 cv::Vec3b BallDetector::fieldMeanColor(const cv::Mat& image, int kernel_size)const{
 
@@ -40,8 +43,7 @@ cv::Vec3b BallDetector::fieldMeanColor(const cv::Mat& image, int kernel_size)con
 
 }
 
-
-std::vector<Ball> BallDetector::findBalls(const cv::Mat only_table_image, const cv::Mat field_contour, std::vector<cv::Point> boundaries_contours_poly, std::vector<cv::Point2i> sorted_corners){
+std::vector<Ball> BallDetector::findBalls(const cv::Mat only_table_image, const cv::Mat field_contour, std::vector<cv::Point2i> sorted_corners){
 
         
         std::vector<cv::Mat> channels_masked_table;
@@ -91,7 +93,7 @@ std::vector<Ball> BallDetector::findBalls(const cv::Mat only_table_image, const 
                 /*erases all the circles with a distance less than min_dist from the polygon that defines the field boundaries*/
                 /*it erases most of the false positive cirlces that are located on the railings of the playing field*/
                 double min_dist = 8.2;
-                if (cv::pointPolygonTest(boundaries_contours_poly,center,true) < min_dist){
+                if (cv::pointPolygonTest(getTableContours(),center,true) < min_dist){
                     circles.erase(circles.begin()+i);
                     i--;
                     continue;
@@ -131,7 +133,7 @@ std::vector<Ball> BallDetector::findBalls(const cv::Mat only_table_image, const 
     return balls;
 }
 
-std::vector<Ball> BallDetector::detectBalls(const cv::Mat &image, const cv::Mat &tableMask, const std::vector<cv::Point> &tableContours, std::vector<cv::Point2i> tableCorners){
+std::vector<Ball> BallDetector::detectBalls(const cv::Mat &image, const cv::Mat &tableMask, std::vector<cv::Point2i> tableCorners){
     
     cv::Mat hsvImage; 
     cv::cvtColor(image,hsvImage,cv::COLOR_BGR2HSV);
@@ -145,10 +147,12 @@ std::vector<Ball> BallDetector::detectBalls(const cv::Mat &image, const cv::Mat 
         }
     }
 
-    std::vector<Ball> balls = findBalls(image, tableMask, tableContours, tableCorners);
+    defineBoundingPolygon(tableCorners,image);
+
+    std::vector<Ball> balls = findBalls(image, tableMask, tableCorners);
 
     cv::Mat field_and_balls_mask = drawBallsOnFieldMask(tableMask,balls);
-    std::vector<cv::Rect> boundRect = findBoundingRectangles(field_and_balls_mask);
+    std::vector<cv::Rect> boundRect = this->findBoundingRectangles(field_and_balls_mask);
 
     /*updates the bounding box value of each ball by assigning the bounding box that has center closest to the center of the circle that defines the ball*/
     int offset_thres = 1;
@@ -165,18 +169,25 @@ std::vector<Ball> BallDetector::detectBalls(const cv::Mat &image, const cv::Mat 
     return balls;
 }
 
-cv::Mat BallDetector::drawBallsOnFieldMask(const cv::Mat field_mask, std::vector<Ball> balls){
+cv::Mat BallDetector::drawBallsOnFieldMask(const cv::Mat field_mask, std::vector<Ball> balls){/*should draw all the class correctly on the mask*/
 
         /*draws each individual ball of the balls vector on the image that contains the mask of the field only without the balls*/
         cv::Mat field_mask_and_balls = field_mask.clone();
+
+        Ball::BallType type;
+
         for (int i = 0; i < balls.size(); i++){
-            cv::circle(field_mask_and_balls, cv::Point2i(static_cast<int>(balls[i].getBallPosition()[0]), static_cast<int>(balls[i].getBallPosition()[1])), static_cast<int>(balls[i].getBallPosition()[2]), 127, cv::FILLED, cv::LINE_AA);
+
+            /*gets ball class*/
+            type = balls[i].getBallType(); 
+            /*draws single ball on the mask using info about position and class*/
+            cv::circle(field_mask_and_balls, cv::Point2i(balls[i].getBallPosition()[0], balls[i].getBallPosition()[1]), balls[i].getBallPosition()[2], static_cast<int>(type), cv::FILLED, cv::LINE_AA);
         }
 
     return field_mask_and_balls;
 }
 
-std::vector<cv::Rect> BallDetector::findBoundingRectangles(const cv::Mat field_mask_and_balls){
+std::vector<cv::Rect> BallDetector::findBoundingRectangles(const cv::Mat field_mask_and_balls){ /*modified to consider all the class color for the balls*/
 
         cv::Mat bbox_edges(field_mask_and_balls.size(),CV_8U);
         cv::Canny(field_mask_and_balls,bbox_edges,100,400);
@@ -195,19 +206,17 @@ std::vector<cv::Rect> BallDetector::findBoundingRectangles(const cv::Mat field_m
             }
             rectHolder = boundingRect( contours[i] ); /*computes the bounding box of the single contour*/
 
-             /*removes unwanted bounding box that do not frame any ball by looking at the color of the pixel the mask that correspond to the center of the bounding box*/
-             /*!!!FUNDAMENTAL!!!*//*!!!FUNDAMENTAL!!!*//*!!!FUNDAMENTAL!!!*//*!!!FUNDAMENTAL!!!*//*!!!FUNDAMENTAL!!!*/
-             /*!!!FUNDAMENTAL!!!*//*!!!FUNDAMENTAL!!!*//*!!!FUNDAMENTAL!!!*//*!!!FUNDAMENTAL!!!*//*!!!FUNDAMENTAL!!!*/
-             /*CHANGE THE FUNCTION TO OPERATE ON THE MASK THAT HAS THE FINAL COLOR VALUES FOR EACH CLASS*/
-             /*!!!FUNDAMENTAL!!!*//*!!!FUNDAMENTAL!!!*//*!!!FUNDAMENTAL!!!*//*!!!FUNDAMENTAL!!!*//*!!!FUNDAMENTAL!!!*/
-             /*!!!FUNDAMENTAL!!!*//*!!!FUNDAMENTAL!!!*//*!!!FUNDAMENTAL!!!*//*!!!FUNDAMENTAL!!!*//*!!!FUNDAMENTAL!!!*/
-            if(field_mask_and_balls.at<uchar>(rectHolder.y+rectHolder.height/2,rectHolder.x+rectHolder.width/2) != 127){
+            /*removes unwanted bounding box that do not frame any ball by looking at the color of the pixel the mask that correspond to the center of the bounding box*/
+            /*gets color of the central pixel of the bounding box*/
+            uchar pixel_color = field_mask_and_balls.at<uchar>(rectHolder.y+rectHolder.height/2,rectHolder.x+rectHolder.width/2);
+            /*1: graylevel of white ball on mask, 2:graylevel of black ball on mask, 3:graylevel of solid color balls on mask, 4:graylevel of balls with stripes on mask, 6: graylevel of unknown class balls*/
+            if(pixel_color != 1 && pixel_color != 2 && pixel_color != 3 && pixel_color != 4 && pixel_color != 6){
                 contours.erase(contours.begin()+i);
                 i--;
                 continue;
             }
 
-            /*removesall the bounding boxes that are too small or too large to represent a bounding box of a ball*/
+            /*removes all the bounding boxes that are too small or too large to represent a bounding box of a ball*/
             if(rectHolder.height*rectHolder.width > 1000 || rectHolder.height*rectHolder.width < 100){ 
                 contours.erase(contours.begin()+i);
                 i--;
@@ -220,52 +229,31 @@ std::vector<cv::Rect> BallDetector::findBoundingRectangles(const cv::Mat field_m
     return boundRect;
 }
 
+/*funtion used to re-detect balls when the tracker fails to update*/
 std::vector<Ball> BallDetector::detectballsAlt(cv::Mat frame){
 
-    using namespace std;
+    TableSegmenter t;
+    
     cv::Mat frame_copy = frame.clone(); /*copy of the frame used for later processing and keeping intact the original frame*/
     cv::cvtColor(frame,frame_copy,cv::COLOR_BGR2HSV);
 
-    cv::Mat less_blur_image = frame_copy.clone(); /*copy of the frame that will be blurred*/
-
     cv::Mat no_blur_image = frame_copy.clone(); /*copy of the frame without any kind of blur*/
 
-    cv::GaussianBlur(less_blur_image,less_blur_image,cv::Size(3,3),0,0); // used to find balls later on
-
-    cv::GaussianBlur(frame_copy,frame_copy,cv::Size(7,7),0,0); // used to find field mask
+    cv::GaussianBlur(frame_copy,frame_copy,cv::Size(7,7),0,0); // used to find field mask 
         
-    cv::Vec3b mean_color = fieldMeanColor(frame_copy,11);
+    cv::Mat filled_field_contour = t.getTableMask(frame);
 
-    cv::Mat filled_field_contour = computeFieldMask(frame_copy,mean_color);
-    //cv::imshow("Maskera", filled_field_contour);
-    // cv::waitKey(0);
+    std::vector<cv::Point2i> sorted_corners = t.getFieldCorners(filled_field_contour);
 
-    cv::Mat approximate_field_lines = findFieldLines(filled_field_contour);
+    defineBoundingPolygon(sorted_corners,frame);
 
-    vector<cv::Point2i> sorted_corners = findFieldCorners(approximate_field_lines);
+    cv::Mat only_table_image = t.getMaskedImage(no_blur_image,filled_field_contour);
 
-    vector<cv::Point> boundaries_contours_poly = defineBoundingPolygon(sorted_corners,approximate_field_lines);
+    std::vector<Ball> balls = this->findBalls(only_table_image, filled_field_contour, sorted_corners);
 
-    cv::Mat only_table_image = no_blur_image.clone(); /*copy of the frame without any operation performed on it*/
+    cv::Mat field_and_balls_mask = drawBallsOnFieldMask(filled_field_contour,balls); 
 
-    //removes everything from the initial image apart from the pixels defined by the mask that segments the field
-    for (int i = 0; i < frame_copy.size().height; i++){
-        for (int j = 0; j < frame_copy.size().width; j++){
-            if( filled_field_contour.at<uchar>(i,j) == 0){
-                    only_table_image.at<cv::Vec3b>(i,j) = cv::Vec3b(0,0,0);
-            }
-        }
-    }
-
-    vector<Ball> balls = findBalls(only_table_image, filled_field_contour, boundaries_contours_poly, sorted_corners);
-
-    drawBallsHSVChannels(balls, frame_copy);
-
-    std::cout << "halo" << std::endl;
-
-    cv::Mat field_and_balls_mask = drawBallsOnFieldMask(filled_field_contour,balls);  
-
-    vector<cv::Rect> boundRect = findBoundingRectangles(field_and_balls_mask);
+    std::vector<cv::Rect> boundRect = this->findBoundingRectangles(field_and_balls_mask);
 
     
 
@@ -278,5 +266,82 @@ std::vector<Ball> BallDetector::detectballsAlt(cv::Mat frame){
             }
         }   
     }
+
     return balls;
 }
+
+void BallDetector::defineBoundingPolygon(std::vector<cv::Point2i> sorted_corners, const cv::Mat frame){
+
+        cv::Mat boundaries(frame.size(),CV_8U);
+
+        /*draws the 4 lines that delimits the playing field based on the 4 sorted corners found before*/
+        for (int i = 0; i < sorted_corners.size(); i++){
+            cv::line(boundaries,sorted_corners[i%sorted_corners.size()],sorted_corners[(i+1)%sorted_corners.size()],255,1);
+        }
+
+        /*finds the contours of the playing field based on the 4 drawed lines*/
+        std::vector<std::vector<cv::Point>> boundaries_contours;
+        findContours( boundaries, boundaries_contours, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE );
+
+        /*removes all the contours found except the one with the largest area*/
+        double contour_max_area = 0;
+        for (int i = 0; i < boundaries_contours.size(); i++){
+            if(cv::contourArea(boundaries_contours[i]) > contour_max_area){  
+                contour_max_area = cv::contourArea(boundaries_contours[i]);
+            }
+        }
+
+        for (int i = 0; i < boundaries_contours.size(); i++){
+            if(cv::contourArea(boundaries_contours[i]) != contour_max_area){  
+                boundaries_contours.erase(boundaries_contours.begin()+i);
+                i--;
+            }
+        }
+        
+        
+        /*defines the bounding polygon that delimits the playing field*/
+        std::vector<cv::Point> boundaries_contours_poly( boundaries_contours.size() );
+        
+        for( size_t i = 0; i < boundaries_contours.size(); i++ )
+        {
+            approxPolyDP( boundaries_contours[i], boundaries_contours_poly, 1, true );
+        }
+
+    /*sets table contours for this object*/
+    this->tableContours = boundaries_contours_poly;
+}
+
+
+    void BallDetector::saveMaskToFile(const cv::Mat &mask, std::vector<Ball> balls, std::string predictedMaskPath){
+        cv::Mat complete_mask = cv::Mat::zeros(mask.size(),CV_8U);
+        complete_mask = drawBallsOnFieldMask(mask,balls);
+        std::vector<uchar> conversionTable(256);
+        for (int i = 0; i < conversionTable.size(); i++){
+            if(i = 255){
+                conversionTable[i] = 5;
+            }else{
+                conversionTable[i] = i;
+            }  
+        }
+        cv::LUT(complete_mask,conversionTable,complete_mask);
+
+        cv::imwrite(predictedMaskPath,complete_mask);
+    }
+
+    void BallDetector::saveBoxesToFile(std::vector<Ball> balls, std::string predictedBBoxPath){
+
+        std::ofstream myfile;
+        myfile.open (predictedBBoxPath);
+
+        for(int i = 0; i < balls.size(); i++){
+            cv::Rect bbox = balls[i].getBoundingBox();
+            int top_left_x = bbox.x;
+            int top_left_y = bbox.y;
+            int width = bbox.width;
+            int height = bbox.height;
+            int ball_class = static_cast<int>(balls[i].getBallType());
+            std::string ball_output;
+            myfile << top_left_x << " " << top_left_y << " " << width << " " << height << " " << ball_class << std::endl;
+        }
+        myfile.close();
+    }

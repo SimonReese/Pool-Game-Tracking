@@ -55,7 +55,7 @@ int main(int argc, char* argv[]){
     std::vector<cv::Point2i> corners = segmenter.getFieldCorners(mask);
 
     // 3. Detect balls
-    std::vector<Ball> balls = ballDetector.detectBalls(firstFrame, mask, segmenter.getTableContours(), corners);
+    std::vector<Ball> balls = ballDetector.detectBalls(firstFrame, mask, corners);
 
     // DEBUG
     draw.computePrespective(corners);
@@ -63,6 +63,7 @@ int main(int argc, char* argv[]){
     
     BallClassifier ballClassifier;
     balls = ballClassifier.classify(balls, firstFrame);
+
 
     BallTracker tracker(firstFrame, balls);
     
@@ -129,6 +130,7 @@ int main(int argc, char* argv[]){
 
         cv::waitKey(10);
     }
+
 
     // Get the ending timepoint
     auto end = high_resolution_clock::now();

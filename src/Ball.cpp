@@ -45,11 +45,6 @@ cv::Rect Ball::getBoundingBox() const{
     return bounding_box;
 }
 
-void Ball::setBallPosition(cv::Vec3f circle_radius_and_center){
-    this->radius = static_cast<int>(circle_radius_and_center[2]);
-    this->center = cv::Point(static_cast<int>(circle_radius_and_center[0]), static_cast<int>(circle_radius_and_center[1]));
-}
-
 void Ball::setBallPosition(cv::Vec3i circle_radius_and_center){
     this->radius = circle_radius_and_center[2];
     this->center = cv::Point(circle_radius_and_center[0], circle_radius_and_center[1]);
@@ -122,6 +117,7 @@ std::string Ball::typeToString(){
         return "UNKNOWN";
         break;
     default:
+        return "UNKNOWN";
         break;
     }
 }
