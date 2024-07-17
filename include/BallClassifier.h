@@ -12,8 +12,7 @@
 #include <filesystem>
 
 
-#include "BallsDetection.h"
-#include "FieldGeometryAndMask.h"
+
 #include "Ball.h"
 #include "FilesystemUtils.h"
 

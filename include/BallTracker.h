@@ -14,7 +14,6 @@
 #include <fstream>
 
 
-#include "FieldGeometryAndMask.h"
 #include "Ball.h"
 
 class BallTracker {

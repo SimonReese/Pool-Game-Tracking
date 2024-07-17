@@ -23,7 +23,16 @@ class BallDetector{
      * 
      * @param only_table_image  hsv no blurred table image
      */
-    std::vector<Ball> findBalls(const cv::Mat only_table_image, const cv::Mat field_contour, std::vector<cv::Point> boundaries_contours_poly, std::vector<cv::Point2i> sorted_corners);
+    std::vector<Ball> findBalls(const cv::Mat only_table_image, const cv::Mat field_contour, std::vector<cv::Point2i> sorted_corners);
+
+    std::vector<cv::Rect> findBoundingRectangles(const cv::Mat field_mask_and_balls);
+
+    void defineBoundingPolygon(std::vector<cv::Point2i> sorted_corners, const cv::Mat frame);
+
+    /**
+     * Used to store table contours
+     */
+    std::vector<cv::Point> tableContours;
 
     public:
 
@@ -35,14 +44,19 @@ class BallDetector{
      * @param tableContours
      * @param tableCorners
      */
-    std::vector<Ball> detectBalls(const cv::Mat& image, const cv::Mat& tableMask, const std::vector<cv::Point>& tableContours, std::vector<cv::Point2i> tableCorners);
+    std::vector<Ball> detectBalls(const cv::Mat& image, const cv::Mat& tableMask, std::vector<cv::Point2i> tableCorners);
 
 
     cv::Mat drawBallsOnFieldMask(const cv::Mat field_mask, std::vector<Ball> balls);
 
-    std::vector<cv::Rect> findBoundingRectangles(const cv::Mat field_mask_and_balls);
 
     std::vector<Ball> detectballsAlt(cv::Mat frame);
+
+    std::vector<cv::Point> getTableContours() {return this->tableContours;};
+
+    void saveMaskToFile(const cv::Mat &mask, std::vector<Ball> balls, std::string predictedMaskPath);
+
+    void saveBoxesToFile(std::vector<Ball> balls, std::string predictedBBoxPath);
 };
 
 #endif
