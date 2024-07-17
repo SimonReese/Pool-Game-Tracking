@@ -1,7 +1,10 @@
+/**
+ * @author Simone Peraro.
+ */
+
 #include "Draw.h"
 
 #include <iostream>
-#include <tuple>
 #include <stdexcept>
 
 #include <opencv2/core.hpp>
@@ -10,9 +13,6 @@
 
 #include "Ball.h"
 
-// TODO: FIX UNUSED HEADERS
-#include <algorithm>
-#include <opencv2/core/mat.hpp>
 
 cv::Mat Draw::drawOver(const cv::Mat &background, const cv::Mat &overlapping, const cv::Point position) const{
     // Copy input image 
@@ -103,17 +103,12 @@ cv::Mat Draw::updateDrawing(std::vector<Ball> balls){
     return drawing;
 }
 
-/**
- * TOOD: define size of image to choose coordinates of perspective transfomration
- */
+
 void Draw::computePrespective(const std::vector<cv::Point>& corners){
     
     std::vector<cv::Point2f> srcCoord;
     // Convert from point2i to point2f
     cv::Mat(corners).copyTo(srcCoord);
-    // for(cv::Point p : corners){
-    //     srcCoord.push_back((cv::Point2f) p);
-    // }
 
     // We want to check if table is oriented horizontaly or vertically
     float horiz = cv::norm(corners[0] - corners[1]);
@@ -124,28 +119,32 @@ void Draw::computePrespective(const std::vector<cv::Point>& corners){
     cv::Mat result;
     cv::Size dsize;
     // Out table backgroud will have size of 340x650
-    if (horiz / vert < 1.7){
+    if (horiz / vert < this->tableRatio){
         // We will build a vertical pool table 
+        int w = this->tableDrawSize.width;
+        int h = this->tableDrawSize.height;
         destCoord = {
-            cv::Point(0 + this->padding, 0 + this->padding),
-            cv::Point(349 - this->padding, 0 + this->padding),
-            cv::Point(349 - this->padding, 639 - this->padding),
-            cv::Point(0 + this->padding, 639 - this->padding)
+            cv::Point(0, 0) + cv::Point(this->padding, this->padding),      // Top left corner, must add padding
+            cv::Point(w -1, 0) + cv::Point( - this->padding, this->padding), // Top right corner, must subtract and add padding
+            cv::Point(w -1, h -1) - cv::Point(this->padding, this->padding),  // Top right corner, must subtract padding
+            cv::Point(0, h -1) + cv::Point(this->padding, - this->padding)   // Top right corner, must add and subtract padding
         };
-        dsize = cv::Size(350, 640);
+        dsize = cv::Size(w, h);
         result = cv::Mat(dsize, CV_8UC3);
         this->drawingNoBalls = cv::imread(this->verticalTablePath);
         
     }
     else {
         // We build a horizontal pool table
+        int w = this->tableDrawSize.height; // Swap dimensions
+        int h = this->tableDrawSize.width;
         destCoord = {
-            cv::Point(0 + this->padding, 0 + this->padding),
-            cv::Point(639 - this->padding, 0 + this->padding),
-            cv::Point(639- this->padding, 349- this->padding),
-            cv::Point(0 + this->padding, 349- this->padding)
+            cv::Point(0, 0) + cv::Point(this->padding, this->padding),      // Top left corner, must add padding,
+            cv::Point(w -1, 0) + cv::Point( - this->padding, this->padding), // Top right corner, must subtract and add padding
+            cv::Point(w -1, h -1) - cv::Point(this->padding, this->padding),  // Top right corner, must subtract padding,
+            cv::Point(0, h -1) + cv::Point(this->padding, - this->padding)   // Top right corner, must add and subtract padding
         };
-        dsize = cv::Size(640, 350);
+        dsize = cv::Size(w, h);
         result = cv::Mat(dsize, CV_8UC3);
         this->drawingNoBalls = cv::imread(this->horizontalTablePath);
         
