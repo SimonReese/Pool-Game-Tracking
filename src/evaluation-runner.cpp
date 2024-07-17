@@ -46,8 +46,8 @@ int main(int argc, char* argv[]){
     for (int i = 0; i < frames.size(); i++){
         std::string framePath = frames[i];
         // Prepare output file paths
-        std::string predictedMaskPath = masks[i];
-        std::string predictedBBoxPath = bboxes[i];
+        std::string predictedMaskPath = omasks[i];
+        std::string predictedBBoxPath = obboxes[i];
 
         cv::Mat frame = cv::imread(framePath);
 
