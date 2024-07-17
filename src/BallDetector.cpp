@@ -166,6 +166,14 @@ std::vector<Ball> BallDetector::detectBalls(const cv::Mat &image, const cv::Mat 
         }   
     }
 
+    for (int i = 0; i < balls.size(); i++){
+        if (balls[i].getBoundingBox().x == 0 && balls[i].getBoundingBox().y == 0
+            && balls[i].getBoundingBox().height == 2 && balls[i].getBoundingBox().width == 2){
+                balls.erase(balls.begin() + i);
+                i--;
+        }
+    }
+
     return balls;
 }
 
@@ -181,7 +189,7 @@ cv::Mat BallDetector::drawBallsOnFieldMask(const cv::Mat field_mask, std::vector
             /*gets ball class*/
             type = balls[i].getBallType(); 
             /*draws single ball on the mask using info about position and class*/
-            cv::circle(field_mask_and_balls, cv::Point2i(balls[i].getBallPosition()[0], balls[i].getBallPosition()[1]), balls[i].getBallPosition()[2], static_cast<int>(type), cv::FILLED, cv::LINE_AA);
+            cv::circle(field_mask_and_balls, cv::Point2i(balls[i].getBallPosition()[0], balls[i].getBallPosition()[1]), balls[i].getBallPosition()[2], static_cast<int>(type), cv::FILLED, cv::LINE_8);
         }
 
     return field_mask_and_balls;
@@ -267,6 +275,14 @@ std::vector<Ball> BallDetector::detectballsAlt(cv::Mat frame){
         }   
     }
 
+    for (int i = 0; i < balls.size(); i++){
+        if (balls[i].getBoundingBox().x == 0 && balls[i].getBoundingBox().y == 0
+            && balls[i].getBoundingBox().height == 2 && balls[i].getBoundingBox().width == 2){
+                balls.erase(balls.begin() + i);
+                i--;
+        }
+    }
+
     return balls;
 }
 
@@ -317,7 +333,7 @@ void BallDetector::defineBoundingPolygon(std::vector<cv::Point2i> sorted_corners
         complete_mask = drawBallsOnFieldMask(mask,balls);
         std::vector<uchar> conversionTable(256);
         for (int i = 0; i < conversionTable.size(); i++){
-            if(i = 255){
+            if(i == 255){
                 conversionTable[i] = 5;
             }else{
                 conversionTable[i] = i;
