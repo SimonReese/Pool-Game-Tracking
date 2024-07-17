@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 project(PoolGameTracking)
 
 # Fede path
-#set(CMAKE_PREFIX_PATH "/home/fed/cv_lab/cv_libs/local")
+set(CMAKE_PREFIX_PATH "/home/fed/cv_lab/cv_libs/local")
 
 # Required libraries
 find_package(OpenCV REQUIRED)
@@ -58,8 +58,7 @@ add_library(Ball
             include/Ball.h
             src/Ball.cpp)
 
-target_link_libraries(BallTracker ${OpenCV_LIBS})       
-
+      
 
 
 # Add executables -----------------------------------
@@ -76,6 +75,7 @@ target_link_libraries(DrawingClass ${OpenCV_LIBS} Ball)
 target_link_libraries(TableSegmenter ${OpenCV_LIBS})
 target_link_libraries(BallClassifier ${OpenCV_LIBS})
 target_link_libraries(BallDetector ${OpenCV_LIBS} Ball)
+target_link_libraries(BallTracker ${OpenCV_LIBS} Ball) 
 
 target_link_libraries(FilesystemUtils ${OpenCV_LIBS})
 

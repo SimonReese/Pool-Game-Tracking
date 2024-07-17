@@ -20,52 +20,84 @@ class BallTracker {
 
 private:
 
-    // vector with a tracker for each ball in the field
+    /**
+     * vector containing the balls in the game that are not moving
+     */
+    std::vector<Ball> stillBalls;
+
+
+    /**
+     * vector containing the balls in the game that are moving
+     */
+    std::vector<Ball> movingBalls;
+
+
+    /**
+     * vector containing a tracker for each moving ball
+     */
     std::vector<cv::Ptr<cv::Tracker>> ballTrackers;
 
-    // vector containing all the balls in the field
-    std::vector<Ball> gameBalls;
 
-    std::vector<Ball> trackedBalls;
-
+    /**
+     * first frame for from the video of the game
+    */
     cv::Mat firstFrame;
 
     /**
-     * return a vector containing all the trackers initialized using the initial position of the balls
-     * @param balls vector containing all the balls
-     * @param first_frame cv::Mat containing the frame used for the initialization of the trackers
+     * @brief creates a tracker for each moving ball
+     * @param frame video frame used for the initialization of the trackers
+     * @return the vector of trackers, which has one tracker for each moving ball
      */
-    std::vector<cv::Ptr<cv::Tracker>> createTrackers(const cv::Mat &first_frame);
+    std::vector<cv::Ptr<cv::Tracker>> createTrackers(const cv::Mat &frame) const;
 
     /**
-     * update the values of the bounding box and the center of the circle of the ball based on the bounding boxes passed as argument
-     * @param balls vector containing all the balls
-     * @param rois vector containing the updated bounding boxes found using the tracker algorithm
+     * @brief update the values of the bounding box and the center of the ball based on the bounding boxes passed as argument
+     * @param newBoundingBoxes vector of updated bounding boxes found using the tracking algorithm
      */
-    void updateBallsCenterAndBoundingBox(const std::vector<cv::Rect> &rois);
-
+    void updateBallsCenterAndBoundingBox(const std::vector<cv::Rect> &newBoundingBoxes);
 
     /**
-     * @brief computes the vector of the balls most probabily are going to move
-     * 
-     * 
+     * @brief used in the constructor to find the white ball which is the one expected to move
+     * @param numTrackedBalls number of balls to consider when looking for the white ball
+     */
+    void findWhiteBall( int numTrackedBalls = 3);
+
+    /**
+     * @brief updates the movingBalls vector if a new moving ball is detected
+     * @param frame the current video frame of the game
+     */
+    void updateMovingBalls(const cv::Mat& frame, float collosionDistance = 25.0);
+
+    /**
+     * @param first first ball to compare
+     * @param second second ball to compare
+     * @return true if first ball has greater whiteRatio than second ball
+     */
+    static bool compareWhiteRatio(Ball first, Ball second);
+
+    /**
+     * @param first first ball to compare
+     * @param second second ball to compare
+     * @return the distance of the centers between first and second
     */
-    void computeTrackedBalls();
-
-    static bool compareBall(Ball a, Ball b);
-
     static float ballsDistance(Ball first, Ball second);
-
-    void updateTracked(const cv::Mat& frame);
 
 public:
     
-    // BallTracker constructor
-    BallTracker(const cv::Mat first_frame, const std::vector<Ball> balls);
     /**
-     * @brief trackes the moving balls in the provided frame;
+     * @brief the only constructor for this class
+     * @param firstFrame the first frame in the video 
+     * @param gameBalls vector of the balls detected in the game
     */
-    bool update(const cv::Mat &frame, std::vector<Ball> &ballsToUpdate);
+    BallTracker(const cv::Mat firstFrame, const std::vector<Ball> gameBalls);
+
+    /**
+     * @brief updates the state moving balls using the provided frame;
+     * @param currentFrame current frame of the video used to update the state of the balls
+     * @param ballsToUpdate vector of balls whose status is to be updated
+     * @return true if the update was successful and all the balls were tracked
+    */
+    bool update(const cv::Mat &currentFrame, std::vector<Ball> &ballsToUpdate);
 
 };
 #endif

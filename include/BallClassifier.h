@@ -6,18 +6,9 @@
 
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/core/utils/filesystem.hpp>
 #include <iostream>
-#include <fstream>
-#include <filesystem>
-
-
 
 #include "Ball.h"
-#include "FilesystemUtils.h"
-
-
-const std::string CUTOUT_DIR = "cutouts";
 
 /**
  * @brief classifies given balls
