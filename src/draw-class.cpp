@@ -30,7 +30,10 @@ int main(int argc, char* argv[]){
     // Read path string
     std::string inputFile = argv[1];
     std::string outputDir = argv[2];
-    const std::string videoName = "output-video.mp4";
+    // Compute output video name
+    std::cout << outputDir.substr(outputDir.find_last_of('/')) << std::endl;
+    std::string videoName = cv::utils::fs::join(outputDir ,"output-video-" + inputFile.substr(inputFile.find_last_of('/')+1));
+    std::cout << videoName << std::endl;
     // Try to open input video
     cv::VideoCapture video(inputFile);
     if(!video.isOpened()){  // Return error if cannot open
