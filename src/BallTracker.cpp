@@ -76,6 +76,9 @@ bool BallTracker::compareWhiteRatio(Ball first, Ball second){
 */
 void BallTracker::findWhiteBall( int numTrackedBalls ){
 
+    // avoid creating vector of moving balls that has more balls than the balls detected in the field
+    if(numTrackedBalls > stillBalls.size()) numTrackedBalls = stillBalls.size();
+
     // sort the balls based on their white ratio in descending order
     std::sort(this->stillBalls.begin(),this->stillBalls.end(), compareWhiteRatio);
 
