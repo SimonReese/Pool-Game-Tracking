@@ -66,13 +66,6 @@ private:
      */
     const std::string bboxFileExtension = "_bbox.txt";
 
-    /**
-     * Output metrics filename
-     */
-    const std::string metricsFileName = "metrics.txt";
-
-    //************************************* BOUNDING BOXES COMPUTATIONS ************************************** */
-
 
     /**
      * Read a file containing a list of bounding boxes.
@@ -141,6 +134,11 @@ private:
      * @throw `std::runtime_error` if a folder is missing but we couldn't create one. 
      */
     void checkOutputFolderIntegrity();
+
+    /**
+    * Sort tuple for key descending order
+    */
+    static bool sortTupleKeysDescending(std::tuple<double, int, bool>& first, std::tuple<double, int, bool>& second);
 
 public:
 

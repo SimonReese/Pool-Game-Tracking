@@ -98,7 +98,7 @@ int main(int argc, char* argv[]){
         std::string predictedBBoxPath = obboxes[i];
 
         // Output
-        std::cout << "\nRunning over true frame " << frames[i] << ":" << std::endl;
+        std::cout << "\nRunning over frame " << frames[i] << ":" << std::endl;
 
         double mIoU = evaluate.computeMasksIoU(trueMaskPath, predictedMaskPath);
         double mAP = evaluate.computeMeanAveragePrecision(trueBBoxPath, predictedBBoxPath);
