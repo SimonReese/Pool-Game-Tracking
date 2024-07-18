@@ -9,6 +9,7 @@
 
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
+#include <opencv2/core/utils/filesystem.hpp>
 
 #include "TableSegmenter.h"
 #include "Ball.h"
@@ -18,17 +19,19 @@
 #include "Draw.h"
 
 /**
- * Main runner needs an argument with a path to the video which needs to be analyzed
+ * Main runner needs an argument with a path to the video which needs to be analyzed and a path to save the video file.
  */
 int main(int argc, char* argv[]){
     // Check if video path is privided
-    if (argc < 2){
-        std::cerr << "Please provide a video path." << std::endl;
+    if (argc < 3){
+        std::cerr << "Please provide an input video path and a output folder path for output video." << std::endl;
         return -1;
     }
     // Read path string
     std::string inputFile = argv[1];
-    // Try to open video
+    std::string outputDir = argv[2];
+    const std::string videoName = "output-video.mp4";
+    // Try to open input video
     cv::VideoCapture video(inputFile);
     if(!video.isOpened()){  // Return error if cannot open
         std::cerr << "Error. Unable to open video " << inputFile << std::endl;
@@ -40,6 +43,13 @@ int main(int argc, char* argv[]){
     int milliseconds = 1000/fps;
     // Set target frametime
     std::chrono::duration<int, std::milli> targetFrameTIme(milliseconds); 
+    // Prepare output video
+    cv::VideoWriter outVideo(
+        cv::utils::fs::join(outputDir, videoName), 
+        cv::VideoWriter::fourcc('M', 'P', '4', 'V'), 
+        fps, 
+        cv::Size(video.get(cv::CAP_PROP_FRAME_WIDTH), video.get(cv::CAP_PROP_FRAME_HEIGHT))
+    );
 
     // Declare used objects
     TableSegmenter segmenter;
@@ -77,6 +87,12 @@ int main(int argc, char* argv[]){
 
     // 6. Start tracking the balls
     BallTracker tracker(firstFrame, balls);
+
+    // 7. Draw first frame
+    cv::Mat drawing = draw.updateDrawing(balls);
+    //cv::imshow("Draw", drawing);
+    cv::Mat overlay = Draw::displayOverlay(firstFrame, drawing);
+    cv::imshow("Overlay", overlay);
 
     cv::Mat frame;
     // Looping to read all frames
