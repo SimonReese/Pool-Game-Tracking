@@ -46,7 +46,7 @@ int main(int argc, char* argv[]){
     // Prepare output video
     cv::VideoWriter outVideo(
         cv::utils::fs::join(outputDir, videoName), 
-        cv::VideoWriter::fourcc('M', 'P', '4', 'V'), 
+        cv::VideoWriter::fourcc('m', 'p', '4', 'v'), 
         fps, 
         cv::Size(video.get(cv::CAP_PROP_FRAME_WIDTH), video.get(cv::CAP_PROP_FRAME_HEIGHT))
     );
@@ -93,7 +93,7 @@ int main(int argc, char* argv[]){
     //cv::imshow("Draw", drawing);
     cv::Mat overlay = Draw::displayOverlay(firstFrame, drawing);
     cv::imshow("Overlay", overlay);
-
+    outVideo << overlay;
     cv::Mat frame;
     // Looping to read all frames
     for( video >> frame; !frame.empty(); video >> frame){
@@ -128,7 +128,7 @@ int main(int argc, char* argv[]){
         //cv::imshow("Draw", drawing);
         cv::Mat overlay = Draw::displayOverlay(frame, drawing);
         cv::imshow("Overlay", overlay);
-        
+        outVideo << overlay;
         // Record ending time
         frameEndTime = std::chrono::system_clock::now();
         // Compute time remaining to display next frame at target framerate
@@ -150,13 +150,13 @@ int main(int argc, char* argv[]){
     // Print time statistics 
     meanFrameTime /= (video.get(cv::CAP_PROP_FRAME_COUNT) -1); // mean elaboration time
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime); //
-    std::cout << "mean frame time: " << meanFrameTime << "ms" << std::endl;
-    std::cout << "frame count: " << video.get(cv::CAP_PROP_FRAME_COUNT) -1 << "ms" << std::endl;
+    std::cout << "Mean frame time: " << meanFrameTime << "ms" << std::endl;
     // Close video resource
     video.release();
+    outVideo.release();
 
     // Output the duration
-    std::cout << "Runner took " << duration.count() << " milliseconds." << std::endl;
+    std::cout << "Runner took " << duration.count() << " ms." << std::endl;
 
     cv::waitKey(0);
 }
