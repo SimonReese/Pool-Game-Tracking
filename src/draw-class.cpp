@@ -65,7 +65,8 @@ int main(int argc, char* argv[]){
     std::vector<cv::Point2i> corners = segmenter.getFieldCorners(mask);
 
     // 3. Detect balls
-    std::vector<Ball> balls = ballDetector.detectBalls(firstFrame, mask, corners);
+    //std::vector<Ball> balls = ballDetector.detectBalls(firstFrame, mask, corners);
+    std::vector<Ball> balls = ballDetector.detectballsAlt(firstFrame);
 
     // 4. Compute perspective effect for drawing
     draw.computePrespective(corners);
@@ -83,10 +84,10 @@ int main(int argc, char* argv[]){
         // Store current time
         frameStartTime = std::chrono::system_clock::now();
         // Debug
-        cv::Mat circlesFrame = frame.clone();
-        cv::imshow("Video", frame);
-        cv::Mat maskedFrame = segmenter.getMaskedImage(frame, mask);
-        cv::imshow("Masked video", maskedFrame);
+        //cv::Mat circlesFrame = frame.clone();
+        //cv::imshow("Video", frame);
+        //cv::Mat maskedFrame = segmenter.getMaskedImage(frame, mask);
+        //cv::imshow("Masked video", maskedFrame);
 
         // Update ball tracking
         bool allBallsFound = tracker.update(frame, balls);
@@ -96,19 +97,21 @@ int main(int argc, char* argv[]){
             balls = ballDetector.detectballsAlt(frame); // detect
             balls = ballClassifier.classify(balls, frame); // classify
             tracker = BallTracker(frame, balls); // create new tracker with the detected balls
-            //tracker.update(frame, balls); // update tracker with current frames
+            tracker.update(frame, balls); // update tracker with current frames
         }
-
+        /*
         // Debug
         for(Ball ball : balls){
             cv::circle(circlesFrame, ball.getBallCenter(), ball.getBallRadius(), cv::Scalar(0, 255, 128));
         }
         cv::imshow("CircleFrame", circlesFrame);
-
+        */
         
         // Show current game status drawing
         cv::Mat drawing = draw.updateDrawing(balls);
-        cv::imshow("Draw", drawing);
+        //cv::imshow("Draw", drawing);
+        cv::Mat overlay = Draw::displayOverlay(frame, drawing);
+        cv::imshow("Overlay", overlay);
         
         // Record ending time
         frameEndTime = std::chrono::system_clock::now();
@@ -117,6 +120,7 @@ int main(int argc, char* argv[]){
         remainingTime = targetFrameTIme - elapsedTime; // time remaining
         meanFrameTime += std::chrono::duration_cast<std::chrono::milliseconds>(elapsedTime).count(); // record time required to compute each frame
         // Check if we need to wait a few milliseconds  before moving on to the next frame
+        /*
         if (std::chrono::duration_cast<std::chrono::milliseconds>(remainingTime).count() <= 0){
             // If remaining time is negative, we are running late, we need to move to next frame as early as possible
             cv::waitKey(1);
@@ -124,7 +128,8 @@ int main(int argc, char* argv[]){
             // Otherwise, we wait the remaining amout of time to keep the target framerate
             cv::waitKey(std::chrono::duration_cast<std::chrono::milliseconds>(remainingTime).count());
         }
-        
+        */
+       cv::waitKey(0);
     }
     // Save end time
     endTime = std::chrono::system_clock::now();

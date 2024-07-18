@@ -49,6 +49,12 @@ private:
     const double tableRatio = 1.7;
 
     /**
+     * This ratio is used to rescale the drawing image when creating the overlay.
+     * @see `displayOverlay()` implementation
+     */
+    static constexpr double overlayResizeRatio = 0.5;
+
+    /**
      * Perspective transformation matrix
      */
     cv::Mat perspectiveTrasformation;
@@ -65,12 +71,14 @@ private:
 
 
     /**
-     * Returns a new image composed by background image and the overlapping image
+     * Returns a new image composed by background image and the overlapping image.
+     * 
+     * Draw an overlapping image over the background image.
      * @param background background image
      * @param overlapping the image that will be put over the background
      * @param position coordinates where the overlapping image will be placed with respect to the background image
      */
-    cv::Mat drawOver(const cv::Mat& background, const cv::Mat& overlapping, const cv::Point2i position) const;
+    static cv::Mat drawOver(const cv::Mat& background, const cv::Mat& overlapping, const cv::Point2i position);
 
 public:
 
@@ -92,6 +100,11 @@ public:
      * @param corners a vector of point corners from top left in clockwise order.
      */
     void computePrespective(const std::vector<cv::Point>& corners);
+
+    /**
+     * Used to show drawing over frame
+     */
+    static cv::Mat displayOverlay(const cv::Mat& frame, const cv::Mat& drawing);
 
 };
 #endif
