@@ -1,9 +1,14 @@
-
+/**
+ * @author Simone Peraro
+ * 
+ * This runner will evaluate metrics of the system.
+ */
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <vector>
 
-#include <opencv2/core.hpp>
+#include <opencv2/core/mat.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/core/utils/filesystem.hpp>
 
@@ -13,6 +18,11 @@
 #include "BallDetector.h"
 #include "BallClassifier.h"
 
+/**
+ * This main runner requires a path to the gameX_clipX folder (with masks, frames and bboxes folders) and
+ * a path to a user defined folder where outputs will be stored 
+ * (the output folder and relatives subfolders will be created if not existent, using the name provided by user via the second command line argument)
+ */
 int main(int argc, char* argv[]){
 
     if (argc < 3){
@@ -33,6 +43,7 @@ int main(int argc, char* argv[]){
     std::vector<std::string> omasks = evaluate.getPredictedMaskFiles();
     std::vector<std::string> obboxes = evaluate.getPredictedBoundingBoxFiles();
 
+    /*
     std::vector<std::vector<std::string> > all{frames, masks, bboxes, omasks, obboxes};
 
     // DEBUG
@@ -41,6 +52,7 @@ int main(int argc, char* argv[]){
             std::cout << file << std::endl;
         }
     }
+    */
 
     // Compute outputs algorithm
     for (int i = 0; i < frames.size(); i++){
@@ -61,6 +73,7 @@ int main(int argc, char* argv[]){
         // 3. Detect balls
         BallDetector ballDetector;
         std::vector<Ball> balls = ballDetector.detectBalls(frame, mask, corners);
+        //std::vector<Ball> balls = ballDetector.detectballsAlt(frame);
         
         // 4. Classify balls
         BallClassifier ballClassifier;
@@ -72,7 +85,9 @@ int main(int argc, char* argv[]){
         // 6. Save balls bounding boxes
         ballDetector.saveBoxesToFile(balls, predictedBBoxPath); // Must save bboxes to file
     }
-
+    // Save metrics to file
+    std::fstream outFile(cv::utils::fs::join(outputFolder, "metrics.txt"), std::fstream::out);
+    outFile << "true_frame_name mIoU mAP" << std::endl;
     // Perform metrics evaluation
     for (int i = 0; i < frames.size(); i++){
         std::string trueMaskPath = masks[i];
@@ -82,8 +97,12 @@ int main(int argc, char* argv[]){
         std::string predictedMaskPath = omasks[i];
         std::string predictedBBoxPath = obboxes[i];
 
+        // Output
+        std::cout << "\nRunning over frame " << frames[i] << ":" << std::endl;
+
         double mIoU = evaluate.computeMasksIoU(trueMaskPath, predictedMaskPath);
         double mAP = evaluate.computeMeanAveragePrecision(trueBBoxPath, predictedBBoxPath);
+        outFile << frames[i] << " " << mIoU << " " << mAP << std::endl;
     }
 
     return 0;
