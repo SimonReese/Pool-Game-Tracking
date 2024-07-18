@@ -117,9 +117,9 @@ int main(int argc, char* argv[]){
             
         }
 
-        for(Ball ball : balls){
-            cv::circle(frame, ball.getBallCenter(), ball.getBallRadius(), cv::Scalar(0, 255, 128));
-        }
+        // for(Ball ball : balls){
+        //     cv::circle(frame, ball.getBallCenter(), ball.getBallRadius(), cv::Scalar(0, 255, 128));
+        // }
 
         cv::imshow("Masked frame", frame);
 
@@ -144,12 +144,7 @@ int main(int argc, char* argv[]){
     video.release();
     cv::waitKey(0);
     
-
-
     // return 0;
-
-
-
 
     /*
     // Read a single frame image
