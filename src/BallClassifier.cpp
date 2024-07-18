@@ -14,23 +14,24 @@ float BallClassifier::calculateWhitePixelsRatio(const cv::Mat &inputBinaryImage)
 
 std::pair<Ball::BallType, float> BallClassifier::preliminaryBallClassifier(const cv::Mat &cutOutImage){
 
-    // Convert BGR to HLS  
+    // Convert cutOutImage from BGR to HLS  
     cv::Mat hlsImage;
     cv::cvtColor(cutOutImage, hlsImage, cv::COLOR_BGR2HLS);
 
-    cv::Mat binaryImage; // binary image resulting from thresholding
+    cv::Mat binaryImage; // binary image resulting from thresholding with inRange function
     cv::inRange(hlsImage, cv::Scalar(H_LOW, L_LOW, S_LOW), cv::Scalar(H_HIGH, L_HIGH, S_HIGH), binaryImage);
 
     // calculate the ratio of white pixels to the total number of pixels in the image
     float whitePixelsRatio = BallClassifier::calculateWhitePixelsRatio(binaryImage);
 
     // if the ratio of white pixels to the total number of pixels is greater than the classification threshold,
-    // classify the ball as half white and update the white pixels ratio in the Ball object.
+    // classify the ball as half white and return the white pixels ratio.
     if (whitePixelsRatio > CLASSIFICATION_TH) {
-        
+
+        // ball classified as half (colored stripes)
         return std::pair<Ball::BallType, float>(Ball::BallType::HALF, whitePixelsRatio);
     } else {
-
+        // ball classified as full of one color
         return std::pair<Ball::BallType, float>(Ball::BallType::FULL, whitePixelsRatio);
     }
 }
@@ -59,16 +60,22 @@ std::vector<Ball> BallClassifier::classify(const std::vector<Ball> ballsToClassi
         // crop the ball from the full game image and classify it using the preliminary ball classifier
         cv::Mat cutOutImage = this->fullGameImage(this->ballsVector[index].getBoundingBox());
         std::pair<Ball::BallType, float> classificationResult = preliminaryBallClassifier(cutOutImage);
-
+        
+        // assigning to the ball the results from the classifier
         ballsVector[index].setBallType(classificationResult.first);
         ballsVector[index].setWhiteRatio(classificationResult.second);
 
+        // updating maxRatio and minRatio to find the white and black balls.
         if(classificationResult.second > maxRatio){
+
             maxRatio = classificationResult.second;
             maxRatioBallIndex = index;
+
         }else if(classificationResult.second < minRatio){
+
             minRatio = classificationResult.second;
             minRatioBallIndex = index;
+
         }
     }
 

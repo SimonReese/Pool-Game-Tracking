@@ -4,18 +4,13 @@
 #ifndef BALL_TRACKER_H
 #define BALL_TRACKER_H
 
-#include <opencv2/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/core/utility.hpp>
 #include <opencv2/tracking.hpp>
-#include <opencv2/videoio.hpp>
-#include <opencv2/core/utils/filesystem.hpp>
-#include <iostream>
-#include <fstream>
-
 
 #include "Ball.h"
 
+/**
+ * Class to track the different balls in the game
+ */
 class BallTracker {
 
 private:

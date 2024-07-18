@@ -1,19 +1,16 @@
-#include <opencv2/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/tracking.hpp>
-#include <iostream>
 #include <stdexcept>
-
 #include "BallTracker.h"
 
 
 BallTracker::BallTracker(const cv::Mat firstFrame, const std::vector<Ball> gameBalls){
 
         // the tracker cannot work if no balls are detected
-        if (gameBalls.empty()) throw std::logic_error("Error: balls vector is empty");
+        if (gameBalls.empty()) throw std::invalid_argument("Error: balls vector is empty");
 
         // need the first frame of the video to start the tracking of the balls
-        if(firstFrame.empty()) throw std::logic_error("Error: first video frame is empty");
+        if(firstFrame.empty()) throw std::invalid_argument("Error: first video frame is empty");
+
 
         //first frae of the video
         this->firstFrame = firstFrame;
@@ -29,16 +26,15 @@ BallTracker::BallTracker(const cv::Mat firstFrame, const std::vector<Ball> gameB
 }
 
 
-
-
 std::vector<cv::Ptr<cv::Tracker>> BallTracker::createTrackers(const cv::Mat &frame) const{
 
     // cannot create a tracker if the frame provided is empty
-    if(frame.empty()) throw std::runtime_error("Error: request initialization on empty frame");
+    if(frame.empty()) throw std::invalid_argument("Error: request initialization on empty frame");
     
     // vector that will contain all the trackers, one per ball
     std::vector<cv::Ptr<cv::Tracker>> trackers; 
     
+
     // initialization of each tracker using the bounding box of the ball, and push it into the vector of trackers
     for (int i = 0; i < this->movingBalls.size(); i++){
 
@@ -55,8 +51,6 @@ std::vector<cv::Ptr<cv::Tracker>> BallTracker::createTrackers(const cv::Mat &fra
 }
 
 
-
-
 void BallTracker::updateBallsCenterAndBoundingBox(const std::vector<cv::Rect> &newBoundingBoxes){
     
     for (int i = 0; i < newBoundingBoxes.size(); i++){
@@ -68,14 +62,10 @@ void BallTracker::updateBallsCenterAndBoundingBox(const std::vector<cv::Rect> &n
 }
 
 
-
-
 bool BallTracker::compareWhiteRatio(Ball first, Ball second){ 
     // white ratio comparison between the two balls
     return (first.getWhiteRatio() > second.getWhiteRatio()); 
 }
-
-
 
 
 /**
@@ -97,8 +87,6 @@ void BallTracker::findWhiteBall( int numTrackedBalls ){
 }
 
 
-
-
 float BallTracker::ballsDistance(Ball first, Ball second){
     // euclidean distance between the centers of the two balls
     return sqrt(pow(first.getBallCenter().x - second.getBallCenter().x, 2) + pow(first.getBallCenter().y - second.getBallCenter().y, 2));
@@ -112,22 +100,23 @@ float BallTracker::ballsDistance(Ball first, Ball second){
 */
 void BallTracker::updateMovingBalls(const cv::Mat& frame, float collosionDistance){
 
+    // cannot create a tracker if the frame provided is empty
+    if(frame.empty()) throw std::invalid_argument("Error: request initialization on empty frame");
+
     for(Ball moving : this->movingBalls){ 
         for(int i = 0; i < this->stillBalls.size(); i++){
 
             // check the distance between each moving ball and each still ball
             if(BallTracker::ballsDistance(moving, this->stillBalls[i]) < collosionDistance){
 
-                // a new moving ball is detected, it is added to the movingBalls vector
-                this->movingBalls.push_back(this->stillBalls[i]);
+                
+                this->movingBalls.push_back(this->stillBalls[i]); // a new moving ball added to the movingBalls vector
 
-                // remove still ball from the stillBalls vector
-                this->stillBalls.erase(this->stillBalls.begin() + i);
+                this->stillBalls.erase(this->stillBalls.begin() + i); // remove still ball from the stillBalls vector
                 
-                // a new tracker is created for the new moving ball
-                cv::Ptr<cv::Tracker> tr = cv::TrackerCSRT::create();
-                
-                // initialization of the tracker using the bounding box of the ball
+
+                // creation and initialization of the tracker using the bounding box of the new moving ball
+                cv::Ptr<cv::Tracker> tr = cv::TrackerCSRT::create(); 
                 tr->init(this->firstFrame, this->movingBalls.back().getBoundingBox()); 
                 this->ballTrackers.push_back(tr);
             }
@@ -138,12 +127,10 @@ void BallTracker::updateMovingBalls(const cv::Mat& frame, float collosionDistanc
 }
 
 
-
-
 bool BallTracker::update(const cv::Mat &currentFrame, std::vector<Ball> &ballsToUpdate){
     
     // cannot perform tracking if the frame provided is empty
-    if(currentFrame.empty()) throw std::runtime_error("Error: requeste update on empty frame");
+    if(currentFrame.empty()) throw std::invalid_argument("Error: requeste update on empty frame");
     std::vector<cv::Rect> BoundingBoxes;
     
     //update the tracking result
@@ -162,10 +149,10 @@ bool BallTracker::update(const cv::Mat &currentFrame, std::vector<Ball> &ballsTo
         BoundingBoxes.push_back(BBox);
     }
 
-    // update the center balls and their bounding boxes
+    // update balls center and their bounding boxes
     BallTracker::updateBallsCenterAndBoundingBox(BoundingBoxes);
 
-    // update the moving balls
+    // update the vector of moving balls
     BallTracker::updateMovingBalls(currentFrame);
 
     // combine all balls (moving and still) into one vector

@@ -4,9 +4,8 @@
 #ifndef BALL_CLASSIFIER_H
 #define BALL_CLASSIFIER_H
 
-#include <opencv2/highgui.hpp>
+
 #include <opencv2/imgproc/imgproc.hpp>
-#include <iostream>
 
 #include "Ball.h"
 
@@ -18,7 +17,7 @@ class BallClassifier{
         // classification threshold is 9.9% of the total number of pixels in the image
         static constexpr float CLASSIFICATION_TH = 0.099;
 
-        /*setting the ranges for every HLS on which perform the thresholding*/ 
+        /*setting the ranges for every HLS value on which perform the thresholding*/ 
 
         // HUE thresholds
         static const int H_LOW = 0;
@@ -55,13 +54,13 @@ class BallClassifier{
 
         /**
         * @brief constructor for initializing class.
-        * @param ballsToClassify vector of balls to classify
-        * @param fullGameImage image of a pool game with balls to classify
         */
         BallClassifier();
 
         /**
-         * @brief Function that classifies the balls in the vector of balls of the game
+         * @brief Function that classifies the balls based on their white pixels ratio
+         * @param ballsToClassify vector of balls to classify
+         * @param fullGameImage image of a pool game with balls to classify
          * @return vector of classified balls
         */
         std::vector<Ball> classify(const std::vector<Ball> ballsToClassify, const cv::Mat fullGameImage);
