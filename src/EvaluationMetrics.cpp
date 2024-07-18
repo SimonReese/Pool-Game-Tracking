@@ -15,8 +15,6 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/core/utils/filesystem.hpp>
 
-#include "FilesystemUtils.h"
-
 
 std::vector<std::vector<int> > EvaluationMetrics::readBoundingBoxFile(std::string filePath) const{
 
@@ -230,6 +228,10 @@ void EvaluationMetrics::checkOutputFolderIntegrity(){
     }
 }
 
+bool EvaluationMetrics::sortTupleKeysDescending(std::tuple<double, int, bool> &first, std::tuple<double, int, bool> &second){
+    // We want to sort tuples in decreasing order
+    return std::get<0>(first) > std::get<0>(second);
+}
 
 // --------------------- P U B L I C  F U N C T I O N S ---------------------------------------------
 
@@ -360,14 +362,15 @@ double EvaluationMetrics::computeMeanAveragePrecision(std::string predictedFileP
         scoresIoU.push_back(current);
     }
     // DEBUG
+    /*
     std::cout << "Total ground truth elements for each class:";
     for (int i = 1; i <= classes; i++){
         std::cout << " " << countGT[i];
     }
     std::cout << std::endl;
-
+    */
     // 3. Order tuples by IoU score
-    std::sort(scoresIoU.begin(), scoresIoU.end(), sortTupleKeysDescending);
+    std::sort(scoresIoU.begin(), scoresIoU.end(), EvaluationMetrics::sortTupleKeysDescending);
     
     /**
      * Threshold for IoU
