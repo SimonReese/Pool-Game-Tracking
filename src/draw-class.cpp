@@ -120,7 +120,6 @@ int main(int argc, char* argv[]){
         remainingTime = targetFrameTIme - elapsedTime; // time remaining
         meanFrameTime += std::chrono::duration_cast<std::chrono::milliseconds>(elapsedTime).count(); // record time required to compute each frame
         // Check if we need to wait a few milliseconds  before moving on to the next frame
-        /*
         if (std::chrono::duration_cast<std::chrono::milliseconds>(remainingTime).count() <= 0){
             // If remaining time is negative, we are running late, we need to move to next frame as early as possible
             cv::waitKey(1);
@@ -128,8 +127,7 @@ int main(int argc, char* argv[]){
             // Otherwise, we wait the remaining amout of time to keep the target framerate
             cv::waitKey(std::chrono::duration_cast<std::chrono::milliseconds>(remainingTime).count());
         }
-        */
-       cv::waitKey(0);
+        
     }
     // Save end time
     endTime = std::chrono::system_clock::now();
