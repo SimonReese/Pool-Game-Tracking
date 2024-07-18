@@ -360,12 +360,13 @@ double EvaluationMetrics::computeMeanAveragePrecision(std::string predictedFileP
         scoresIoU.push_back(current);
     }
     // DEBUG
+    /*
     std::cout << "Total ground truth elements for each class:";
     for (int i = 1; i <= classes; i++){
         std::cout << " " << countGT[i];
     }
     std::cout << std::endl;
-
+    */
     // 3. Order tuples by IoU score
     std::sort(scoresIoU.begin(), scoresIoU.end(), sortTupleKeysDescending);
     
