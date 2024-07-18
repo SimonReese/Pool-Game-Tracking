@@ -201,7 +201,7 @@ cv::Mat BallDetector::drawBallsOnFieldMask(const cv::Mat field_mask, std::vector
 
 std::vector<cv::Rect> BallDetector::findBoundingRectangles(const cv::Mat field_mask_and_balls){ /*modified to consider all the class color for the balls*/
 
-        cv::Mat bbox_edges(field_mask_and_balls.size(),CV_8U);
+        cv::Mat bbox_edges = cv::Mat::zeros(field_mask_and_balls.size(),CV_8U);
         cv::Canny(field_mask_and_balls,bbox_edges,100,400);
         std::vector<std::vector<cv::Point> > contours;
         findContours( bbox_edges, contours, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE );
@@ -294,7 +294,7 @@ std::vector<Ball> BallDetector::detectballsAlt(cv::Mat frame){
 
 void BallDetector::defineBoundingPolygon(std::vector<cv::Point2i> sorted_corners, const cv::Mat frame){
 
-        cv::Mat boundaries(frame.size(),CV_8U);
+        cv::Mat boundaries = cv::Mat::zeros(frame.size(),CV_8U);
 
         /*draws the 4 lines that delimits the playing field based on the 4 sorted corners found before*/
         for (int i = 0; i < sorted_corners.size(); i++){

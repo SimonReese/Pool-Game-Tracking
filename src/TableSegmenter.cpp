@@ -49,7 +49,7 @@ cv::Mat TableSegmenter::computeFieldMask(const cv::Mat image, cv::Vec3b mean_col
     uchar s_threshold = 80;  /*parameters to compute upper and lower threshold for each channel. Each value was obtained by averaging the quality of the mask obtained by this function*/ 
     uchar v_threshold = 137; /*on the first frame of each video clip */
 
-    cv::Mat mask(image.size().height,image.size().width,CV_8U);
+    cv::Mat mask = cv::Mat::zeros(image.size().height,image.size().width,CV_8U);
     uchar h_low,s_low,v_low,h_high,s_high,v_high;
 
     /*definition of the upper and lower threshold for each channel based on the 3 fixed values and the mean color received as input of the function*/
@@ -112,7 +112,7 @@ cv::Mat TableSegmenter::computeFieldMask(const cv::Mat image, cv::Vec3b mean_col
 
 cv::Mat TableSegmenter::findFieldLines(const cv::Mat field_contour)const{
     //computes edges of the contour of the field mask to help find the 4 lines that delimit the field
-    cv::Mat edges(field_contour.size().height,field_contour.size().width,CV_8U);
+    cv::Mat edges = cv::Mat::zeros(field_contour.size().height,field_contour.size().width,CV_8U);
 
     cv::Canny(field_contour,edges,127,127);
 
@@ -120,7 +120,7 @@ cv::Mat TableSegmenter::findFieldLines(const cv::Mat field_contour)const{
     std::vector<cv::Vec2f> lines; // will hold the results of the detection
     cv::HoughLines(edges, lines, 1.15, CV_PI/180, 125, 0, 0); // runs the actual detection of the lines
     std::vector<cv::Point2f> pts; //will contain only 2 lines points
-    cv::Mat only_lines(field_contour.size().height,field_contour.size().width,CV_8U); /*cv::Mat that will contain the 4 drawed lines corresponding to the 4 lines delimiting the field*/
+    cv::Mat only_lines = cv::Mat::zeros(field_contour.size().height,field_contour.size().width,CV_8U); /*cv::Mat that will contain the 4 drawed lines corresponding to the 4 lines delimiting the field*/
 
     //removes all lines with a similar rho value --> erases close lines
     float rho_thres = 40.0; /*value to define the range of lines with similar rho to eliminate. Value fixed after looking at the average result obtained on the first frame of each clip*/
