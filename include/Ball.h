@@ -44,9 +44,10 @@ public:
     Ball(cv::Vec3i circle_radius_and_center);
 
     /**
+     * Constructor for the initialization of an object Ball given the radius and the center point of the circle that represent the ball itself
      * 
-     * 
-     * 
+     * @param radius radius of the circle that encloses the ball
+     * @param center cv::Point that contains the center of the circle that encloses the ball
      * 
     */
 
@@ -107,8 +108,6 @@ public:
     void setBallType(BallType type);
 
     /**
-     * 
-     * 
      * setting center of the ball
     */
     void setBallCenter(cv::Point center);

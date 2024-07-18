@@ -1,8 +1,6 @@
 /**
- * @author .
- * TODO: who will maintain this file?
+ * @author Alessandro Bozzon
  */
-
 #ifndef TABLESEGMENTER_H
 #define TABLESEGMENTER_H
 
