@@ -1,6 +1,5 @@
 /**
- * @author .
- * TODO: who will maintain this file?
+ * @author Alessandro Bozzon
  */
 
 #include "TableSegmenter.h"
@@ -224,7 +223,7 @@ cv::Mat TableSegmenter::getTableMask(const cv::Mat &frame){
 }
 
 std::vector<cv::Point2i> TableSegmenter::getFieldCorners(const cv::Mat &mask){
-    // Check if corners already computed
+    // Check if corners already computed otherwise it computes them
     if(this->cornersComputed){
         return this->tableCorners;
     }
