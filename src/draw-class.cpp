@@ -1,173 +1,148 @@
 /**
  * @author Simone Peraro.
+ * 
+ * This file is the main runner for the real time pool tracking system.
  */
 
 #include <iostream>
-#include <tuple>
-
-//just to see how fast the tracker runs, can then be removed
 #include <chrono>
 
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
-#include <opencv2/imgproc.hpp>
 
-#include "Draw.h"
 #include "TableSegmenter.h"
+#include "Ball.h"
 #include "BallDetector.h"
 #include "BallClassifier.h"
-#include "Ball.h"
 #include "BallTracker.h"
+#include "Draw.h"
 
+/**
+ * Main runner needs an argument with a path to the video which needs to be analyzed
+ */
 int main(int argc, char* argv[]){
-
-    //just for chrono can then be removed
-    using namespace std::chrono;
-    
+    // Check if video path is privided
     if (argc < 2){
         std::cerr << "Please provide a video path." << std::endl;
         return -1;
     }
-
+    // Read path string
     std::string inputFile = argv[1];
-
+    // Try to open video
     cv::VideoCapture video(inputFile);
-    if(!video.isOpened()){
+    if(!video.isOpened()){  // Return error if cannot open
         std::cerr << "Error. Unable to open video " << inputFile << std::endl;
         return -1;
     }
 
-    // Sart reading video
-    cv::Mat frame;
-    cv::Mat firstFrame;
-    video >> firstFrame;
+    // Get video fps and compute milliseconds interval between each frame
+    double fps = video.get(cv::CAP_PROP_FPS);
+    int milliseconds = 1000/fps;
+    // Set target frametime
+    std::chrono::duration<int, std::milli> targetFrameTIme(milliseconds); 
 
+    // Declare used objects
     TableSegmenter segmenter;
     Draw draw;
     BallDetector ballDetector;
+    // Setup to record starting time
+    std::chrono::system_clock::time_point startTime, endTime; // Global start, end time
+    std::chrono::system_clock::time_point frameStartTime, frameEndTime; // Frame start, end time
+    std::chrono::system_clock::duration elapsedTime, remainingTime; // Frame elapsed and remaining time
+    double meanFrameTime = 0; // To compute mean frame time
+
+
+    // Sart reading video and extract first frame
+    cv::Mat firstFrame;
+    video >> firstFrame;
+    // Record start time
+    startTime = std::chrono::system_clock::now();
 
     // 1. Get table mask
     cv::Mat mask = segmenter.getTableMask(firstFrame);
-    // Show masked frame
-    cv::Mat maskedFrame = segmenter.getMaskedImage(firstFrame, mask);
 
     // 2. Get table corners
     std::vector<cv::Point2i> corners = segmenter.getFieldCorners(mask);
 
     // 3. Detect balls
-    std::vector<Ball> balls = ballDetector.detectBalls(firstFrame, mask, corners);
+    //std::vector<Ball> balls = ballDetector.detectBalls(firstFrame, mask, corners);
+    std::vector<Ball> balls = ballDetector.detectballsAlt(firstFrame);
 
-    // DEBUG
+    // 4. Compute perspective effect for drawing
     draw.computePrespective(corners);
 
-    
+    // 5. Classify balls
     BallClassifier ballClassifier;
     balls = ballClassifier.classify(balls, firstFrame);
 
-
+    // 6. Start tracking the balls
     BallTracker tracker(firstFrame, balls);
-    
-    // for(Ball ball : balls){
 
-    //     switch (ball.getBallType())
-    //         {
-    //         case Ball::BallType::FULL:
-    //             cv::circle(firstFrame, ball.getBallCenter(), ball.getBallRadius(), cv::Scalar(0, 0, 0), 3);
-    //             break;
-    //         case Ball::BallType::HALF:
-    //             cv::circle(firstFrame, ball.getBallCenter(), ball.getBallRadius(), cv::Scalar(0, 255, 0), 2);
-    //             break;
-    //         case Ball::BallType::WHITE:
-    //             cv::circle(firstFrame, ball.getBallCenter(), ball.getBallRadius(), cv::Scalar(255, 255 , 255), 2);
-    //             break;
-    //         case Ball::BallType::BLACK:
-    //             cv::circle(firstFrame, ball.getBallCenter(), ball.getBallRadius(), cv::Scalar(0, 0, 255), 3);
-    //             break;
-    //         case Ball::BallType::UNKNOWN:
-    //             break;
-    //         default:
-    //             break;
-    //         }
-    //     std::cout << "Ball pos: " << ball.getWhiteRatio() << "Ball class: " << ball.typeToString()  << std::endl;
-    // }
-
-    // cv::imshow("n",firstFrame);
-
-    // cv::waitKey(0);
-
-    cv::imshow("n",firstFrame);
-
-    //============================================================================
-
-    // Get the starting timepoint
-    auto start = high_resolution_clock::now();
-
-    
-    //============================================================================
-
+    cv::Mat frame;
+    // Looping to read all frames
     for( video >> frame; !frame.empty(); video >> frame){
+        // Store current time
+        frameStartTime = std::chrono::system_clock::now();
+        // Debug
+        //cv::Mat circlesFrame = frame.clone();
+        //cv::imshow("Video", frame);
+        //cv::Mat maskedFrame = segmenter.getMaskedImage(frame, mask);
+        //cv::imshow("Masked video", maskedFrame);
 
+        // Update ball tracking
         bool allBallsFound = tracker.update(frame, balls);
+        // Check if we found all balls
         if(!allBallsFound){
-
-            balls = ballDetector.detectballsAlt(frame);
-            balls = ballClassifier.classify(balls, frame);
-            tracker = BallTracker(frame, balls);
-            tracker.update(frame, balls);
-            
+            // If some balls got lost, try to detect them againq
+            balls = ballDetector.detectballsAlt(frame); // detect
+            balls = ballClassifier.classify(balls, frame); // classify
+            tracker = BallTracker(frame, balls); // create new tracker with the detected balls
+            tracker.update(frame, balls); // update tracker with current frames
         }
-
-        // for(Ball ball : balls){
-        //     cv::circle(frame, ball.getBallCenter(), ball.getBallRadius(), cv::Scalar(0, 255, 128));
-        // }
-
-        cv::imshow("Masked frame", frame);
-
+        /*
+        // Debug
+        for(Ball ball : balls){
+            cv::circle(circlesFrame, ball.getBallCenter(), ball.getBallRadius(), cv::Scalar(0, 255, 128));
+        }
+        cv::imshow("CircleFrame", circlesFrame);
+        */
+        
+        // Show current game status drawing
         cv::Mat drawing = draw.updateDrawing(balls);
-        cv::imshow("Draw", drawing);
-        // 4. Associate class to balls
-        // BallClassifier::classify(balls, frame);
-
-        cv::waitKey(1);
+        //cv::imshow("Draw", drawing);
+        cv::Mat overlay = Draw::displayOverlay(frame, drawing);
+        cv::imshow("Overlay", overlay);
+        
+        // Record ending time
+        frameEndTime = std::chrono::system_clock::now();
+        // Compute time remaining to display next frame at target framerate
+        elapsedTime = frameEndTime - frameStartTime;  // time spent tracking and drawing
+        remainingTime = targetFrameTIme - elapsedTime; // time remaining
+        meanFrameTime += std::chrono::duration_cast<std::chrono::milliseconds>(elapsedTime).count(); // record time required to compute each frame
+        // Check if we need to wait a few milliseconds  before moving on to the next frame
+        /*
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(remainingTime).count() <= 0){
+            // If remaining time is negative, we are running late, we need to move to next frame as early as possible
+            cv::waitKey(1);
+        } else {
+            // Otherwise, we wait the remaining amout of time to keep the target framerate
+            cv::waitKey(std::chrono::duration_cast<std::chrono::milliseconds>(remainingTime).count());
+        }
+        */
+       cv::waitKey(0);
     }
-
-
-    // Get the ending timepoint
-    auto end = high_resolution_clock::now();
-
-    // Calculate the duration
-    auto duration = duration_cast<milliseconds>(end - start);
+    // Save end time
+    endTime = std::chrono::system_clock::now();
+    // Print time statistics 
+    meanFrameTime /= (video.get(cv::CAP_PROP_FRAME_COUNT) -1); // mean elaboration time
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime); //
+    std::cout << "mean frame time: " << meanFrameTime << "ms" << std::endl;
+    std::cout << "frame count: " << video.get(cv::CAP_PROP_FRAME_COUNT) -1 << "ms" << std::endl;
+    // Close video resource
+    video.release();
 
     // Output the duration
-    std::cout << "someFunction() took " << duration.count() << " milliseconds." << std::endl;
+    std::cout << "Runner took " << duration.count() << " milliseconds." << std::endl;
 
-    video.release();
     cv::waitKey(0);
-    
-    // return 0;
-
-    /*
-    // Read a single frame image
-    cv::Mat frame = cv::imread(inputFile);
-    // Construct Draw object
-    Draw drawing("");
-    // Set frame
-    drawing.setCurrentFrame(frame);
-    // Get drawing
-    cv::Mat result;
-    drawing.getGameDraw(result);
-    cv::imshow("Correction", result);
-    cv::imshow("Original", frame);
-    cv::waitKey(0);
-    return 0;
-    // Testing overlapping function
-    cv::Mat spiderMan = cv::imread("../res/spider-man-3.png");
-    cv::Mat testImage = cv::imread("../res/opencv-test-image.png");
-    cv::resize(spiderMan, spiderMan, cv::Size(300, 300));
-    cv::Mat over = drawing.drawOver(testImage, spiderMan, cv::Point(testImage.cols / 2, testImage.rows / 2));
-    cv::imshow("Overlap", over);
-    //animation();
-    cv::waitKey(0);
-    return 0; 
-    */
 }

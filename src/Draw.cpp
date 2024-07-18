@@ -14,7 +14,7 @@
 #include "Ball.h"
 
 
-cv::Mat Draw::drawOver(const cv::Mat &background, const cv::Mat &overlapping, const cv::Point position) const{
+cv::Mat Draw::drawOver(const cv::Mat &background, const cv::Mat &overlapping, const cv::Point position){
     // Copy input image 
     cv::Mat result = background.clone();
     // Compute top left corner position of the overlapping object
@@ -27,11 +27,8 @@ cv::Mat Draw::drawOver(const cv::Mat &background, const cv::Mat &overlapping, co
     cv::Mat region = result(rect); // reference to a section of resulting image
 
     // Convert overlapping image to grayscale and create inverted mask
-    cv::Mat grayscale;
-    
-    cv::cvtColor(overlapping, grayscale, cv::COLOR_RGB2GRAY);
     cv::Mat mask, invMask;
-    cv::threshold(grayscale, mask, 1, 255, cv::THRESH_BINARY);
+    mask = cv::Mat(overlapping.size(), CV_8UC1, cv::Scalar(255));
     cv::bitwise_not(mask, invMask);
     // Use inverted mask to cut region, setting pixels to 0
     cv::Mat cutted;
@@ -155,3 +152,29 @@ void Draw::computePrespective(const std::vector<cv::Point>& corners){
     this->computedPerspective = true;
 }
 
+cv::Mat Draw::displayOverlay(const cv::Mat &frame, const cv::Mat &drawing){
+    // We want to put drawing in bottom left corner of the frame
+    // We also may want to resize the image
+    cv::Mat scaledDrawing;
+    cv::resize(drawing, scaledDrawing, cv::Size(), Draw::overlayResizeRatio, Draw::overlayResizeRatio);
+
+    // Compute the top left corner position of drawing over frame image
+    cv::Point corner = cv::Point(
+        0,
+        frame.rows - scaledDrawing.rows
+    );
+
+    // Compute position of center of drawing
+    cv::Point center = cv::Point(
+        scaledDrawing.cols / 2,
+        scaledDrawing.rows / 2
+    );
+
+    // Compute position of the center with respect to frame
+    cv::Point position = center + corner;
+
+    // Draw overlay
+    cv::Mat result = Draw::drawOver(frame, scaledDrawing, position);
+
+    return result;
+}
