@@ -31,9 +31,8 @@ int main(int argc, char* argv[]){
     std::string inputFile = argv[1];
     std::string outputDir = argv[2];
     // Compute output video name
-    std::cout << outputDir.substr(outputDir.find_last_of('/')) << std::endl;
     std::string videoName = cv::utils::fs::join(outputDir ,"output-video-" + inputFile.substr(inputFile.find_last_of('/')+1));
-    std::cout << videoName << std::endl;
+    std::cout << "Saving output video to " <<videoName << std::endl;
     // Try to open input video
     cv::VideoCapture video(inputFile);
     if(!video.isOpened()){  // Return error if cannot open
@@ -48,11 +47,16 @@ int main(int argc, char* argv[]){
     std::chrono::duration<int, std::milli> targetFrameTIme(milliseconds); 
     // Prepare output video
     cv::VideoWriter outVideo(
-        cv::utils::fs::join(outputDir, videoName), 
+        videoName, 
         cv::VideoWriter::fourcc('m', 'p', '4', 'v'), 
         fps, 
         cv::Size(video.get(cv::CAP_PROP_FRAME_WIDTH), video.get(cv::CAP_PROP_FRAME_HEIGHT))
     );
+    std::cout << cv::utils::fs::join(outputDir, videoName) << std::endl;
+    if(!outVideo.isOpened()){
+        std::cerr << "Error. Unable to write video " << videoName << std::endl;
+        return -1;
+    }
 
     // Declare used objects
     TableSegmenter segmenter;
@@ -128,7 +132,7 @@ int main(int argc, char* argv[]){
         
         // Show current game status drawing
         cv::Mat drawing = draw.updateDrawing(balls);
-        //cv::imshow("Draw", drawing);
+        cv::imshow("Draw", drawing);
         cv::Mat overlay = Draw::displayOverlay(frame, drawing);
         cv::imshow("Overlay", overlay);
         outVideo << overlay;
