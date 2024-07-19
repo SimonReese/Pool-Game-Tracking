@@ -30,9 +30,14 @@ int main(int argc, char* argv[]){
     // Read path string
     std::string inputFile = argv[1];
     std::string outputDir = argv[2];
-    // Compute output video name
-    std::string videoName = cv::utils::fs::join(outputDir ,"output-video-" + inputFile.substr(inputFile.find_last_of('/')+1));
-    std::cout << "Saving output video to " <<videoName << std::endl;
+    // Compute output video and drawing name
+    std::string clipName = inputFile.substr(inputFile.find_last_of('/')+1);
+    std::string videoName = cv::utils::fs::join(outputDir ,"output-video-" + clipName);
+    std::string drawName = cv::utils::fs::join(outputDir, "drawing-" + clipName.substr(0, clipName.find_last_of('.'))) + ".png";
+    
+    std::cout << "Saving output video to " << videoName << std::endl;
+    std::cout << "Final drawing will be saved to " << drawName << std::endl;
+
     // Try to open input video
     cv::VideoCapture video(inputFile);
     if(!video.isOpened()){  // Return error if cannot open
@@ -106,11 +111,13 @@ int main(int argc, char* argv[]){
     for( video >> frame; !frame.empty(); video >> frame){
         // Store current time
         frameStartTime = std::chrono::system_clock::now();
-        // Debug
-        //cv::Mat circlesFrame = frame.clone();
-        //cv::imshow("Video", frame);
-        //cv::Mat maskedFrame = segmenter.getMaskedImage(frame, mask);
-        //cv::imshow("Masked video", maskedFrame);
+        
+        // cv::imshow("Video", frame);  // Show video frame
+        
+        /* Show masked frame
+        cv::Mat maskedFrame = segmenter.getMaskedImage(frame, mask);
+        cv::imshow("Masked video", maskedFrame);
+        */
 
         // Update ball tracking
         bool allBallsFound = tracker.update(frame, balls);
@@ -122,20 +129,25 @@ int main(int argc, char* argv[]){
             tracker = BallTracker(frame, balls); // create new tracker with the detected balls
             tracker.update(frame, balls); // update tracker with current frames
         }
-        /*
-        // Debug
+
+        /* Draw circles over detected balls
+        cv::Mat circlesFrame = frame.clone();
         for(Ball ball : balls){
             cv::circle(circlesFrame, ball.getBallCenter(), ball.getBallRadius(), cv::Scalar(0, 255, 128));
         }
         cv::imshow("CircleFrame", circlesFrame);
         */
         
-        // Show current game status drawing
-        cv::Mat drawing = draw.updateDrawing(balls);
-        cv::imshow("Draw", drawing);
-        cv::Mat overlay = Draw::displayOverlay(frame, drawing);
+        // Update current game status drawing
+        drawing = draw.updateDrawing(balls); // last frame drawing will be saved along with the video
+        // cv::imshow("Draw", drawing);     // Show update drawing
+        // Update overlay drawing
+        overlay = Draw::displayOverlay(frame, drawing);
         cv::imshow("Overlay", overlay);
+
+        // Write overlay frame to video
         outVideo << overlay;
+
         // Record ending time
         frameEndTime = std::chrono::system_clock::now();
         // Compute time remaining to display next frame at target framerate
@@ -152,15 +164,19 @@ int main(int argc, char* argv[]){
         }
         
     }
+
     // Save end time
     endTime = std::chrono::system_clock::now();
+    // Close video resource
+    video.release();
+    outVideo.release();
+    // Save last drawing image
+    cv::imwrite(drawName, drawing);
     // Print time statistics 
     meanFrameTime /= (video.get(cv::CAP_PROP_FRAME_COUNT) -1); // mean elaboration time
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime); //
     std::cout << "Mean frame time: " << meanFrameTime << "ms" << std::endl;
-    // Close video resource
-    video.release();
-    outVideo.release();
+    
 
     // Output the duration
     std::cout << "Runner took " << duration.count() << " ms." << std::endl;
