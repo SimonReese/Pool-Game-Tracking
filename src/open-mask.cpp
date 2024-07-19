@@ -14,7 +14,7 @@ void openMask(std::string maskPath, std::string winname);
 
 int main(int argc, char* argv[]){
     if (argc < 3){
-        std::cerr << "specify true mask path and predicted mask path" << std::endl;
+        std::cerr << "Specify true mask path and predicted mask path." << std::endl;
     }
 
     std::string maskPath = argv[1];
