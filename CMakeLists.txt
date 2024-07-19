@@ -1,3 +1,4 @@
+# Autor Simone Peraro.
 # Setup project requirements
 cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 set(CMAKE_CXX_STANDARD 11)
@@ -10,10 +11,6 @@ find_package(OpenCV REQUIRED)
 # Select directories for including headers
 include_directories(${OPENCV_INCLUDE_DIRS}
                     include)
-
-
-# Add libraries ------------------------------------
-# Utility library - TODO: check if needed
 
 
 # Add classes --------------------------------------

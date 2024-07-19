@@ -1,9 +1,15 @@
+/**
+ * @author Simone Peraro.
+ */
+
 #include <iostream>
 
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 
-#include "EvaluationMetrics.h"
+/**
+ * Open a mask remapping its values to better show segmented pixels
+ */
 void openMask(std::string maskPath, std::string winname);
 
 int main(int argc, char* argv[]){
