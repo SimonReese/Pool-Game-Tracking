@@ -43,16 +43,8 @@ int main(int argc, char* argv[]){
     std::vector<std::string> omasks = evaluate.getPredictedMaskFiles();
     std::vector<std::string> obboxes = evaluate.getPredictedBoundingBoxFiles();
 
-    /*
-    std::vector<std::vector<std::string> > all{frames, masks, bboxes, omasks, obboxes};
-
-    // DEBUG
-    for(std::vector<std::string> strings: all){
-        for(std::string file : strings){
-            std::cout << file << std::endl;
-        }
-    }
-    */
+    // Create name for output frame with bboxes
+    std::string boxesFrameName = cv::utils::fs::join(outputFolder, "bboxes-");
 
     // Compute outputs algorithm
     for (int i = 0; i < frames.size(); i++){
@@ -84,6 +76,14 @@ int main(int argc, char* argv[]){
 
         // 6. Save balls bounding boxes
         ballDetector.saveBoxesToFile(balls, predictedBBoxPath); // Must save bboxes to file
+
+        // 7. Write bounding boxes to frame and save file
+        std::string frameName = frames[i].substr(frames[i].find_last_of('/') + 1);
+        std::cout << "Saving bounding boxes to " << boxesFrameName + frameName << std::endl;
+        for(Ball ball : balls){
+            cv::rectangle(frame, ball.getBoundingBox(), cv::Scalar(51, 255, 255));
+        }
+        cv::imwrite(boxesFrameName + frameName, frame);
     }
     // Save metrics to file
     std::fstream outFile(cv::utils::fs::join(outputFolder, "metrics.txt"), std::fstream::out);
