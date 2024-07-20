@@ -372,12 +372,7 @@ double EvaluationMetrics::computeMeanAveragePrecision(std::string predictedFileP
     // 3. Order tuples by IoU score
     std::sort(scoresIoU.begin(), scoresIoU.end(), EvaluationMetrics::sortTupleKeysDescending);
     
-    /**
-     * Threshold for IoU
-     * TODO: set parameter globally
-     * TODO: split huge codeblock
-     */
-    double IoUThreshold = 0.5;
+    
 
     double meanAveragePrecision = 0;
     // 4. Now, for each ball class, compute average precision
@@ -398,7 +393,7 @@ double EvaluationMetrics::computeMeanAveragePrecision(std::string predictedFileP
             }
 
             // Update TP and FP
-            if (!std::get<2>(score) || std::get<0>(score) < IoUThreshold ){ // If class is incorrect or class is correct but the score is too low, we have a false positive 
+            if (!std::get<2>(score) || std::get<0>(score) < this->IoUThreshold ){ // If class is incorrect or class is correct but the score is too low, we have a false positive 
                 cumulativeFP++;
             } else { // otherwise, if class is good and score is good we have a true positive
                 cumulativeTP++;

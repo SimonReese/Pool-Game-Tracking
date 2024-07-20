@@ -66,6 +66,11 @@ private:
      */
     const std::string bboxFileExtension = "_bbox.txt";
 
+    /**
+     * Threshold for IoU
+     */
+    double IoUThreshold = 0.5;
+
 
     /**
      * Read a file containing a list of bounding boxes.
