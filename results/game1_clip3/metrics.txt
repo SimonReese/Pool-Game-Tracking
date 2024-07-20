@@ -1,0 +1,3 @@
+true_frame_name mIoU mAP
+../res/Dataset/game1_clip3/frames/frame_first.png 0.808025 1
+../res/Dataset/game1_clip3/frames/frame_last.png 0.77418 1
