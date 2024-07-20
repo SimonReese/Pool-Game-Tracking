@@ -58,3 +58,11 @@ Also, a simple executable is provided to show two masks files, remapped in more 
 ```bash
 ./open_mask path/to/mask/file.png path/to/antoher/mask/file.png
 ```
+
+## Output provided examples
+The project also provides outputs for each game clip already generated in `/results/` folder. It is possible to regenerate those runnig the following commands:
+```bash
+./run_live path/to/dataset/gameX_clipY/gameX_clipY.mp4 ../results/gameX_clipY/;
+./run_evaluation path/to/dataset/gameX_clipY/ ../results/gameX_clipY/;
+```
+Tip: running `./run_evaluation` first will create the `gameX_clipY/` folder (if not existing), which can then be used as destination folder for `./run_live` command
