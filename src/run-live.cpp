@@ -18,7 +18,7 @@
 #include "BallTracker.h"
 #include "Draw.h"
 
-const bool DEBUG_MODE = true; // Change this to run in debug mode
+const bool DEBUG_MODE = false; // Change this to run in debug mode
 
 /**
  * Main runner needs an argument with a path to the video which needs to be analyzed and a path to save the video file.
