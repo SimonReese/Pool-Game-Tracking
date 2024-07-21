@@ -1,4 +1,7 @@
-#include <BallClassifier.h>
+/**
+ * @author Federico Adami
+ */
+#include "BallClassifier.h"
 
 
 BallClassifier::BallClassifier(){}

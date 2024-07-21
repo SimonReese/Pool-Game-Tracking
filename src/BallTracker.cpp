@@ -1,3 +1,7 @@
+/**
+ * @author Federico Adami
+ */
+
 #include <opencv2/tracking.hpp>
 #include <stdexcept>
 #include "BallTracker.h"
