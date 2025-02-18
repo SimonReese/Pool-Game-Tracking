@@ -1,5 +1,5 @@
 
-![Software in action]()
+![Software in action](software_view.png)
 
 
 # Pool Game Tracking System
