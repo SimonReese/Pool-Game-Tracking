@@ -1,5 +1,11 @@
+
+![Software in action]()
+
+
 # Pool Game Tracking System
 This project contains a pool game tracking system developed by Alessandro Bozzon, Federico Adami and Simone Peraro.
+
+Project report: [View the PDF](Project_Report.pdf)
 
 ## Requirements
 The project requires:
